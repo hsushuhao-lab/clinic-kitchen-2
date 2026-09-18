@@ -1,0 +1,32 @@
+{
+  "character_id": "patient_office",
+  "name": "焦慮上班族 (Anxious Office Worker)",
+  "archetype": "Exhausted corporate worker experiencing late-evening stress and craving",
+  "design_rules": {
+    "proportions": "Adult realistic human proportion (1.75m standing, 1.25m seated)",
+    "face": "Weary expression, strained eyebrows, needing culinary stress-relief",
+    "hair": "Slightly disheveled short black hair",
+    "wardrobe": {
+      "jacket": "Deep navy corporate business suit blazer",
+      "shirt": "Light blue dress shirt with dark blue tie",
+      "trousers": "Dark formal slacks and black dress shoes"
+    }
+  },
+  "model_asset": "assets/models/characters/patient_office_placeholder.glb",
+  "action_states": [
+    "seated_anxious",
+    "consult_explain_craving",
+    "anticipate_cooking",
+    "receive_dish",
+    "first_bite_reaction",
+    "satisfied_relief"
+  ],
+  "turnaround_views": {
+    "front": "assets/characters/patient_office/patient_office_front.png",
+    "back": "assets/characters/patient_office/patient_office_back.png",
+    "side_left": "assets/characters/patient_office/patient_office_side_left.png",
+    "side_right": "assets/characters/patient_office/patient_office_side_right.png",
+    "three_quarter": "assets/characters/patient_office/patient_office_three_quarter.png",
+    "composite_sheet": "assets/characters/patient_office/patient_office_turnaround_sheet.png"
+  }
+}

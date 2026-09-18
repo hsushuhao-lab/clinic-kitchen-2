@@ -1,0 +1,52 @@
+{
+  "recipe_id": "classic_mapo_tofu",
+  "name": "經典麻婆豆腐 (Classic Mapo Tofu)",
+  "context": "虛構遊戲舒壓設定；非戒菸療效或正式醫療處方",
+  "ingredients": [
+    {
+      "id": "tofu",
+      "name": "板豆腐",
+      "prep_method": "切丁 (1.5cm 方塊)，鹽水汆燙保水去豆腥",
+      "state_transitions": ["raw_block", "diced_cubes", "simmered_in_sauce", "plated_garnished"]
+    },
+    {
+      "id": "pork",
+      "name": "溫體絞肉",
+      "prep_method": "粗絞肥瘦 3:7，熱油煸炒至香酥微焦",
+      "state_transitions": ["raw_mince", "browned_crispy"]
+    },
+    {
+      "id": "douban",
+      "name": "郫縣豆瓣醬",
+      "prep_method": "細剁爆炒，慢火煸出紅亮油與醇厚醬香",
+      "state_transitions": ["paste_in_jar", "red_oil_released"]
+    },
+    {
+      "id": "garlic",
+      "name": "大蒜",
+      "prep_method": "拍碎細切末，與豆豉同爆出辛香",
+      "state_transitions": ["whole_clove", "minced_fine"]
+    },
+    {
+      "id": "pepper",
+      "name": "大紅袍花椒",
+      "prep_method": "小火焙香研磨成細粉，出鍋前撒頂提麻",
+      "state_transitions": ["whole_peppercorn", "ground_powder_dusted"]
+    },
+    {
+      "id": "scallion",
+      "name": "青蔥",
+      "prep_method": "切蔥花，起鍋前撒入保持翠綠清甜",
+      "state_transitions": ["whole_stalk", "chopped_rings_garnished"]
+    }
+  ],
+  "culinary_states": [
+    "1. 熱鍋滑油 (Heat Wok & Coat with Oil)",
+    "2. 下絞肉炒至散酥金黃 (Brown Minced Pork)",
+    "3. 下豆瓣醬、蒜末爆出紅油與蒜香 (Bloom Douban & Aromatics)",
+    "4. 注入高湯，輕推入豆腐丁煨煮入味 (Simmer Tofu Gently in Savory Broth)",
+    "5. 勾薄芡三次收汁，紅亮油潤 (Thicken Sauce Smoothly)",
+    "6. 撒入大紅袍花椒粉與青蔥花 (Dust Peppercorn & Scallion)",
+    "7. 盛入溫熱白瓷大碗，端回診間 (Plate into Ceramic Bowl & Serve)"
+  ]
+}

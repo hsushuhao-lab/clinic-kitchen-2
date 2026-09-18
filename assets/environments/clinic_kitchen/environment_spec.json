@@ -1,0 +1,54 @@
+{
+  "environment_id": "clinic_kitchen_continuous",
+  "name": "Clinic Kitchen 2.0 物理連續場景",
+  "architectural_type": "Continuous Clinical Consultation to Commercial Kitchen Facility",
+  "model_asset": "assets/models/environment/clinic_kitchen_scene.glb",
+  "dimensions": {
+    "length_x": 25.6,
+    "width_z": 7.0,
+    "ceiling_height_y": 3.6
+  },
+  "zones": {
+    "clinic": {
+      "x_range": [-12.5, -3.0],
+      "lighting": "Cool clinical daylight troffers (5500K)",
+      "flooring": "Light neutral medical vinyl tiles (#d7dedb)",
+      "primary_furniture": [
+        "Doctor's executive oak desk with dual EMR monitors, keyboard, phone",
+        "Doctor's ergonomic mesh swivel task chair",
+        "Patient consultation padded chair",
+        "Dual-door medical supply and medicine cabinet",
+        "Padded examination couch with privacy screen"
+      ]
+    },
+    "prep_transition": {
+      "x_range": [-3.0, 3.0],
+      "lighting": "Neutral clean white illumination (4200K)",
+      "flooring": "Seamless non-porous grey hygienic epoxy (#bcc5c3)",
+      "primary_furniture": [
+        "Dual-basin deep stainless scrub sink with chrome gooseneck faucet",
+        "Double-door commercial stainless steel refrigeration unit",
+        "Two-tier stainless steel mobile utility cart / trolley",
+        "Kitchen clinical prescription terminal and order ticket printer"
+      ]
+    },
+    "kitchen": {
+      "x_range": [3.0, 13.0],
+      "lighting": "Warm commercial task lighting (3200K) + dynamic wok flame glow",
+      "flooring": "Non-slip terracotta/slate quarry tile (#826f63)",
+      "primary_furniture": [
+        "Heavy-duty stainless steel prep workbench with maple end-grain cutting board",
+        "Three-tier wall spice & sauce rack holding chili paste, garlic, peppercorn",
+        "Commercial cast-iron wok cooking station with high-output burner ring",
+        "Overhead stainless exhaust hood with baffle filters",
+        "Insulated commercial stainless rice cooker on stand",
+        "Ceramic plating pass and service staging counter"
+      ]
+    }
+  },
+  "walkable_corridor": {
+    "clear_width": ">= 1.8m",
+    "unobstructed_axis": "Full continuous transit along X from -11.5m to +12.0m"
+  },
+  "collision_obstacles": 14
+}

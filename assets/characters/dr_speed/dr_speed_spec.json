@@ -1,0 +1,41 @@
+{
+  "character_id": "dr_speed",
+  "name": "DR. SPEED (急診特調醫師)",
+  "role": "Lead Physician & Clinical Chef",
+  "design_rules": {
+    "proportions": "Adult realistic human proportion (1.78m height, 7.8 heads tall)",
+    "face": "Sculpted adult face, focused gaze, light skin tone",
+    "hair": "Short neat dark hair",
+    "glasses": "Modern transparent-rimmed rectangular spectacles",
+    "wardrobe": {
+      "outer": "Tailored knee-length white consultation lab coat with lapels and breast pocket",
+      "inner": "Light cyan/blue collared dress shirt with dark tie",
+      "accessories": "Medical stethoscope draped across neck; clinical ID badge on left lapel",
+      "lower": "Charcoal grey tailored trousers and black leather dress shoes"
+    }
+  },
+  "model_asset": "assets/models/characters/dr_speed_placeholder.glb",
+  "skeleton_rig": {
+    "bones": ["Root", "Hips", "Spine", "Chest", "Neck", "Head", "LeftShoulder", "LeftArm", "LeftForearm", "LeftHand", "RightShoulder", "RightArm", "RightForearm", "RightHand", "LeftUpLeg", "LeftLeg", "LeftFoot", "RightUpLeg", "RightLeg", "RightFoot"]
+  },
+  "action_states": [
+    "idle_consultation",
+    "walk_corridor",
+    "sprint_urgent",
+    "talk_patient",
+    "print_prescription",
+    "gather_fridge",
+    "prep_knife_cut",
+    "wok_stir_fry",
+    "carry_service_tray",
+    "serve_dish"
+  ],
+  "turnaround_views": {
+    "front": "assets/characters/dr_speed/dr_speed_front.png",
+    "back": "assets/characters/dr_speed/dr_speed_back.png",
+    "side_left": "assets/characters/dr_speed/dr_speed_side_left.png",
+    "side_right": "assets/characters/dr_speed/dr_speed_side_right.png",
+    "three_quarter": "assets/characters/dr_speed/dr_speed_three_quarter.png",
+    "composite_sheet": "assets/characters/dr_speed/dr_speed_turnaround_sheet.png"
+  }
+}

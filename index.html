@@ -11,7 +11,7 @@
 <body>
 <div id="app">
   <header class="hud">
-    <div><strong>CLINIC KITCHEN 2.0</strong><span>R2 · 2D 功能原型｜非 3D 成品</span></div>
+    <div><strong>CLINIC KITCHEN 2.0</strong><span>即時 3D 診間—過渡—後廚｜Three.js WebGL</span></div>
     <div class="controls">WASD / Arrow：移動　Shift：快走　E：互動　R：重置</div>
   </header>
   <main id="world" tabindex="0" aria-label="Clinic Kitchen walkthrough">
@@ -39,16 +39,25 @@
       <div id="player" class="player" aria-label="值班醫師"><div class="doctor-model"><div class="hair"></div><div class="face"><span class="glasses"></span></div><div class="coat"><span class="shirt"></span><span class="badge">DR</span></div><div class="legs"></div></div></div>
     </div>
     <div id="prompt" class="prompt">走到物件旁按 E 互動</div>
-  <details class="mission">
-    <summary>探索任務與紀錄</summary>
-    <p>不看說明，也能理解前面是診間、中間是備料過渡區、後面是廚房，而且三區屬於同一個空間。</p>
-    <ol><li>走到病人椅</li><li>走到料理處方機</li><li>走到冰箱</li><li>走到炒鍋</li></ol>
+  <details class="mission" open>
+    <summary>任務進度與探索紀錄</summary>
+    <div id="missionStage" class="mission-stage">目前階段：<strong>1. 診間問診</strong></div>
+    <ol id="missionSteps">
+      <li id="step-0" class="is-active">1. 走到病人椅按 E 問診</li>
+      <li id="step-1">2. 走到醫師桌或處方機開單</li>
+      <li id="step-2">3. 走到冰箱取出料理食材</li>
+      <li id="step-3">4. 備料檯切配豆腐與辛香料</li>
+      <li id="step-4">5. 炒鍋開火下鍋並翻炒 3 次</li>
+      <li id="step-5">6. 盛盤麻婆豆腐裝入瓷碗</li>
+      <li id="step-6">7. 端餐回診間送餐給病人</li>
+      <li id="step-7">8. 病人品嚐第一口與評分</li>
+    </ol>
     <div id="log">尚未互動</div>
   </details>
   </main>
 
   <section id="cookingDeck" class="cooking-deck" aria-label="備料與煮菜操作區" tabindex="0">
-    <div class="cook-head"><div><span>LOWER WORKBENCH</span><h2>備料・煮菜</h2></div><strong id="cookObjective">備妥豆腐、絞肉、豆瓣醬、蒜，再開火下鍋</strong></div>
+    <div class="cook-head"><div><span>LOWER WORKBENCH</span><h2>備料・煮菜</h2></div><strong id="cookObjective">階段 1/8：前往診間病人椅進行問診</strong></div>
     <div class="cook-columns">
       <div class="prep-bench"><h3>備料 PREP</h3><div class="ingredient-tray"><button data-food="tofu"><i class="food-art tofu-art"></i><span>豆腐</span></button><button data-food="pork"><i class="food-art pork-art"></i><span>絞肉</span></button><button data-food="douban"><i class="food-art douban-art"></i><span>豆瓣醬</span></button><button data-food="garlic"><i class="food-art garlic-art"></i><span>蒜</span></button><button data-food="pepper"><i class="food-art pepper-art"></i><span>花椒</span></button><button data-food="scallion"><i class="food-art scallion-art"></i><span>青蔥</span></button></div><div class="board"><div id="boardFood">砧板空著</div><button id="cutBtn" disabled>切配</button></div></div>
       <div class="wok-bench"><h3>炒鍋 WOK</h3><div class="wok-visual"><div class="steam steam-a"></div><div class="steam steam-b"></div><div id="flame" class="flame"><span></span><span></span><span></span></div><div class="wok-rim"></div><div id="wokContents">空鍋</div></div><div class="wok-actions"><button id="heatBtn">開火</button><button id="addBtn" disabled>下鍋</button><button id="stirBtn" disabled>翻炒</button><button id="plateBtn" disabled>盛盤</button></div></div>
@@ -56,7 +65,31 @@
     </div>
   </section>
 
+  <div id="dialogModal" class="dialog-modal" hidden>
+    <div class="dialog-backdrop"></div>
+    <div class="dialog-window" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+      <div class="dialog-header">
+        <span class="dialog-badge" id="dialogBadge">CLINIC EMR</span>
+        <h3 id="dialogTitle">診間評估</h3>
+      </div>
+      <div class="dialog-content" id="dialogContent"></div>
+      <div class="dialog-score" id="dialogScore" hidden>
+        <div class="score-stars">★★★★★</div>
+        <div class="score-number" id="dialogScoreText">滿意度：100% (極致舒壓)</div>
+      </div>
+      <div class="dialog-disclaimer" id="dialogDisclaimer">
+        【設定聲明】麻婆豆腐為虛構遊戲舒壓料理設定，提供感官撫慰與心理放鬆，非臨床醫療處方，不具戒菸或戒斷醫療療效。
+      </div>
+      <div class="dialog-footer">
+        <button id="dialogActionBtn" class="dialog-btn primary">確認繼續 (Enter / E)</button>
+        <button id="dialogCloseBtn" class="dialog-btn secondary">關閉 (Esc)</button>
+      </div>
+    </div>
+  </div>
+
 </div>
+<script src="src/three.min.js?v=r2-20260918"></script>
+<script src="src/scene3d.js?v=r2-20260918"></script>
 <script src="src/main.js?v=r2-20260918"></script>
 </body>
 </html>

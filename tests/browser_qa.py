@@ -29,7 +29,8 @@ def main():
                       lambda m: '<script>' + (ROOT / m[1]).read_text(encoding='utf-8') + '</script>', html)
     with sync_playwright() as pw:
         exe = shutil.which('chromium')
-        browser = pw.chromium.launch(headless=True, **({'executable_path': exe} if exe else {}))
+        gl_args = ['--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader', '--enable-webgl', '--in-process-gpu']
+        browser = pw.chromium.launch(headless=True, args=gl_args, **({'executable_path': exe} if exe else {}))
         page = browser.new_page(viewport={'width':1440, 'height':900})
         page.on('pageerror', lambda e: errors.append(str(e)))
         page.on('requestfailed', lambda r: failures.append(r.url))

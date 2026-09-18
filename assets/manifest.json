@@ -1,6 +1,6 @@
 {
   "version": "R2",
-  "production_models": 0,
+  "production_models": 3,
   "assets": [
     {
       "path": "assets/art_direction/approved/art_bible_poster.png",
@@ -201,6 +201,30 @@
       "format": "JPEG",
       "role": "preview",
       "source_name": "realistic_ui_board.png"
+    },
+    {
+      "path": "assets/models/environment/clinic_kitchen_scene.glb",
+      "bytes": 196980,
+      "sha256": "3c314407648c015e0a30a0ae2a519969503e4ec7a84b99c1693eaf7be986c552",
+      "format": "GLB",
+      "role": "production_3d_environment",
+      "source_name": "tools/build_models.py"
+    },
+    {
+      "path": "assets/models/characters/dr_speed_placeholder.glb",
+      "bytes": 45244,
+      "sha256": "ec50723355b40a20acd1749635cb34621a1ca399f543c640f178e03fb4694829",
+      "format": "GLB",
+      "role": "production_3d_character_placeholder",
+      "source_name": "tools/build_models.py"
+    },
+    {
+      "path": "assets/models/characters/patient_office_placeholder.glb",
+      "bytes": 15652,
+      "sha256": "1e45acb3317854e85e65f1b9925fadb3de41b3498ed7e9f6be1296c486260820",
+      "format": "GLB",
+      "role": "production_3d_patient_placeholder",
+      "source_name": "tools/build_models.py"
     }
   ]
 }
