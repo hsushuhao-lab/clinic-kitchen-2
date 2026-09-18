@@ -1,0 +1,14 @@
+{
+  "transport": "local in-memory rendering; HTTP navigation blocked by environment policy",
+  "desktop_deck_top": 900,
+  "desktop_deck_visible_without_page_scroll": false,
+  "plate_allowed_without_tofu_or_stir": true,
+  "reset_clears_pot": false,
+  "mobile_player_box": {
+    "x": -455,
+    "y": -58.5,
+    "width": 62,
+    "height": 112
+  },
+  "mobile_player_visible": false
+}

@@ -1,0 +1,303 @@
+{
+  "release": "R2",
+  "description": "Source/assets/handoff package; no .git/private-history or original private photos",
+  "source_runtime_remote_commit": "d92fc0ee13a36a1ed48d53d27d66eb03bb471123",
+  "self_excluded": "RELEASE_MANIFEST.json",
+  "files": [
+    {
+      "path": ".github/workflows/qa.yml",
+      "bytes": 1029,
+      "sha256": "6371453fb8316d06d272776b04366d763be5b4162dd5f775c8e22098c7ee9530"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 161,
+      "sha256": "61c3d27ffc9905c9d69c0f85714988236d94e97b764bacea499ae9afc7c3ea5e"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2743,
+      "sha256": "3e402b0e9a765276700f50d4462be11fa8ea69112eb34614f90fdb45adabc2e5"
+    },
+    {
+      "path": "REPOSITORY_SETUP.md",
+      "bytes": 841,
+      "sha256": "3d8ebf9e1bc0aeeb9473fc1a22d87bc7ffdeb24c981462f3f39dc28aadfc4179"
+    },
+    {
+      "path": "art-review.html",
+      "bytes": 2988,
+      "sha256": "1acb9b4783ed4b6a6f4ac7751323cfa65ccb2f124db3e8c6a30331471d708814"
+    },
+    {
+      "path": "assets/art_direction/approved/art_bible_poster.png",
+      "bytes": 2443760,
+      "sha256": "5035fc1d25f846e443cbcc8a78ab4b6c131986bea719d44a7d9c6b1bdc002e23"
+    },
+    {
+      "path": "assets/art_direction/approved/clinic_layout.png",
+      "bytes": 3142828,
+      "sha256": "bd8bf3b404f08ab417493b232d3a800596a8c357fd97c4ff7eda13af3f9d9436"
+    },
+    {
+      "path": "assets/art_direction/approved/cooking_mode.png",
+      "bytes": 3510318,
+      "sha256": "636bef6f01c12f8644bfe6b4c504d39f5b5aa4823bb281f7b8915a97c30c1c92"
+    },
+    {
+      "path": "assets/art_direction/approved/doctor_concepts.png",
+      "bytes": 3290840,
+      "sha256": "bbdb86634a431a7555a5c4c557bd90b885ce32adf75bd55b3c261d83e34b0dfb"
+    },
+    {
+      "path": "assets/art_direction/approved/patient_npcs.png",
+      "bytes": 3444835,
+      "sha256": "f30774a30821d84d3d95d45d39b4a11830a7ef1d8814b29c47ee507bb2ccad67"
+    },
+    {
+      "path": "assets/art_direction/approved/props_station.png",
+      "bytes": 3384394,
+      "sha256": "cefcd59a85540b12e75c72ca11653996bdedafa69b252ffdc97c12150e03d903"
+    },
+    {
+      "path": "assets/art_direction/approved/realistic_ui_board.png",
+      "bytes": 2517482,
+      "sha256": "dacc3a02f8754c28792dd0b3b17dd4e632149e3d6259c1fa8b473b013b9dd818"
+    },
+    {
+      "path": "assets/art_direction/web/art_bible_poster.jpg",
+      "bytes": 294691,
+      "sha256": "866ec672975a3b5eaac9f5cf1778325b587d81ac28f6361f13424dcfda1b66b5"
+    },
+    {
+      "path": "assets/art_direction/web/clinic_layout.jpg",
+      "bytes": 290471,
+      "sha256": "d84b83305123d42ee2a224eed903dbd5c58ec63eea1b7b040a6bc0983bc6d0aa"
+    },
+    {
+      "path": "assets/art_direction/web/cooking_mode.jpg",
+      "bytes": 376108,
+      "sha256": "621c5e4b7b99ab9206a7e70ef8a365ff177bcbebbf6efac7308a2d7682ffd3f7"
+    },
+    {
+      "path": "assets/art_direction/web/doctor_concepts.jpg",
+      "bytes": 334820,
+      "sha256": "3a22d7d5e5e9c19b59abea177f6a20bc6834e6c22bf21a376893eae2f93ee26d"
+    },
+    {
+      "path": "assets/art_direction/web/patient_npcs.jpg",
+      "bytes": 384511,
+      "sha256": "fe2e19e428a21c56bd8abadb945ee7c160f2dfe567ab1ab5f21f4f11674daaa8"
+    },
+    {
+      "path": "assets/art_direction/web/props_station.jpg",
+      "bytes": 335364,
+      "sha256": "bae0f32f77852a708e457fe314d4dbc7146f83afeb08bb6ca68853272a047c30"
+    },
+    {
+      "path": "assets/art_direction/web/realistic_ui_board.jpg",
+      "bytes": 307403,
+      "sha256": "a36a376a6e746124de09f4d0cf63b517a96b1c0b87d0782de3bb7e44af3f1093"
+    },
+    {
+      "path": "assets/candidates/characters/doctors/doctors_sheet.webp",
+      "bytes": 75702,
+      "sha256": "6e39cecafc41aca1b1305f88f61b5bb694346d7c15f8da2cbc551900f3485960"
+    },
+    {
+      "path": "assets/candidates/characters/patients/patients_sheet.webp",
+      "bytes": 112210,
+      "sha256": "234f9738a0444d7c7d7c06e65f968510e195a4b1b4a070e8dc375e0ea4d264ce"
+    },
+    {
+      "path": "assets/candidates/environments/clinic_scene.webp",
+      "bytes": 83408,
+      "sha256": "ae9053998a522436ec4fe1bfd03c51bf1e7884e2d0f86e0ca2f4aaa091d1af3d"
+    },
+    {
+      "path": "assets/candidates/environments/cooking_hero.webp",
+      "bytes": 171080,
+      "sha256": "6855a3e99e4211eebbc5b2d6351d25244b697c61d0db07bc2d82aa13f4334397"
+    },
+    {
+      "path": "assets/candidates/environments/cooking_scene.webp",
+      "bytes": 123094,
+      "sha256": "7dc4f345f23d8a85487a2e9beee19661545e2010bd401fb19748e4e24c3658c6"
+    },
+    {
+      "path": "assets/candidates/ingredients/ingredients_sheet.webp",
+      "bytes": 24854,
+      "sha256": "6cb189d7d26e9c911712af13d7aaf418b713d0f578ef723bfc964aa89baff848"
+    },
+    {
+      "path": "assets/manifest.json",
+      "bytes": 6757,
+      "sha256": "b5116bcb6d9cf5588204632228030396adfb8565b3edb92890f7e050139354d9"
+    },
+    {
+      "path": "docs/00_START_HERE.md",
+      "bytes": 563,
+      "sha256": "858c688ed5524819634fa25dfc9b4b542a5af9abce87268e673a91710e8d9b9f"
+    },
+    {
+      "path": "docs/AGENT_PROMPT.md",
+      "bytes": 3305,
+      "sha256": "53a1f05c5c4775392cfa9ad1ea2d93c6270267ad0488d248652c5e603879b92c"
+    },
+    {
+      "path": "docs/ASSET_INDEX.md",
+      "bytes": 2001,
+      "sha256": "c4e1bebcff8d4f1bdc43359356793278563fe1dae4d1025e6166e65771be8c98"
+    },
+    {
+      "path": "docs/CK2_REBUILD_PLAN.md",
+      "bytes": 136,
+      "sha256": "590b5ce37c2a70d2717b8e3048057548fa141c3e3ce8c765bef4250b1e5ccf92"
+    },
+    {
+      "path": "docs/CURRENT_STATUS.md",
+      "bytes": 1080,
+      "sha256": "fe72c6835d1083ee0ecb1d483ee6ac7d854c4da5626dc9008802fa442f6da205"
+    },
+    {
+      "path": "docs/DESIGN_SPEC.md",
+      "bytes": 3035,
+      "sha256": "6482b693d779251a170583503a286a66bf7da7c5ca11c50a2d29f5731c890c63"
+    },
+    {
+      "path": "docs/MATERIALS_MANIFEST.md",
+      "bytes": 1131,
+      "sha256": "fd81e36e70f1833474e3bfab0ae2e0f2eaa15c40344be0e0d760372c3cd3455a"
+    },
+    {
+      "path": "docs/MIGRATION_LOG.md",
+      "bytes": 1383,
+      "sha256": "085c460cde7d33c25ab2b1b53b96967ddcbdcd0b1383b1d2f83979b0e7990d9b"
+    },
+    {
+      "path": "docs/PRIVATE_ASSET_POLICY.md",
+      "bytes": 686,
+      "sha256": "a176b509b5f2b27815de17ed67b82021519cf657ef5f86c8fb07a1dd3272a5fa"
+    },
+    {
+      "path": "docs/RELEASE_REPORT.md",
+      "bytes": 3144,
+      "sha256": "7ed4132fce5eee5a14af779df883220fb3cef53e8ba11167666394d42713ac78"
+    },
+    {
+      "path": "index.html",
+      "bytes": 4150,
+      "sha256": "755a5848bc2d546ab5e4b75fbfe43cae06e0318735f01b54a16667f4a09caf1e"
+    },
+    {
+      "path": "qa/baseline/baseline.json",
+      "bytes": 378,
+      "sha256": "bbe15bb678ab05fd0a3d67b0b7d917cdaa7043beeaadcc8155d6206416b90300"
+    },
+    {
+      "path": "qa/baseline/before-desktop.png",
+      "bytes": 415835,
+      "sha256": "2087e775b98f800324c164e038cf52178bb865134ab7be4310b32e5430e3ddfd"
+    },
+    {
+      "path": "qa/baseline/before-mobile.png",
+      "bytes": 99461,
+      "sha256": "33eae7552e98bbcc65ab9d9295d4ddcca37292f67dbdb6cabf86652a275792e8"
+    },
+    {
+      "path": "qa/github-ci/ORIGIN.json",
+      "bytes": 579,
+      "sha256": "f5fedccd26aab956085523a6ce94040eee25d31cd982a77afe4cab096a6eb402"
+    },
+    {
+      "path": "qa/github-ci/browser-report.json",
+      "bytes": 2610,
+      "sha256": "f605b96b169deeac658dc34b0caf4613bd63d015cf5d330945684cbbafa5c598"
+    },
+    {
+      "path": "qa/github-ci/cooked-desktop.png",
+      "bytes": 363067,
+      "sha256": "bcb4de4238c59973b978464d73ae729c45a39b27935b5797c1a486d16ba9f156"
+    },
+    {
+      "path": "qa/github-ci/layout-1440.png",
+      "bytes": 340626,
+      "sha256": "ef3bec6d65dd7f94a98db580060010e3443264f156855fb1633240a9b8233229"
+    },
+    {
+      "path": "qa/github-ci/layout-390.png",
+      "bytes": 101659,
+      "sha256": "24628de33db24bf239b6952b890f138df22b3e4d198b1b4430dd7284e661efb5"
+    },
+    {
+      "path": "qa/github-ci/layout-768.png",
+      "bytes": 215872,
+      "sha256": "f00aeb8a82c7c7c0d40af3159194be5ac8874092ff3e8495aea0584a843b86b9"
+    },
+    {
+      "path": "qa/release-local/browser-report.json",
+      "bytes": 2619,
+      "sha256": "74e203f2a08910eb433a76cf7f4e2dbfffc865ac8b822b419a7f8714cf945fdc"
+    },
+    {
+      "path": "qa/release-local/cooked-desktop.png",
+      "bytes": 359508,
+      "sha256": "5122001aec0ecb23e46d9d805f76c5f0de4c28be1ca5c4fa79c886fab6ee0378"
+    },
+    {
+      "path": "qa/release-local/layout-1440.png",
+      "bytes": 338809,
+      "sha256": "164335ee75c9c5a6c804c180bac4fba7aaf1f57bd24dc2270b539264f9460c2e"
+    },
+    {
+      "path": "qa/release-local/layout-390.png",
+      "bytes": 98064,
+      "sha256": "f1ec7dc9aec2cc1be49d376c33240401159273f19ba12963a2ae3b581d3c94c4"
+    },
+    {
+      "path": "qa/release-local/layout-768.png",
+      "bytes": 213197,
+      "sha256": "180d4de30d30c99c307a9100e1bb648e6e62c775cfcec03a03995c942fa07207"
+    },
+    {
+      "path": "r2-fixes.css",
+      "bytes": 1799,
+      "sha256": "cc5d6f0c9c7319d1fe8120bab72c837fe9b4685e7687c15ba4540344c330ebdf"
+    },
+    {
+      "path": "requirements-qa.txt",
+      "bytes": 34,
+      "sha256": "2ad6e98a22ef57e5252d674e059a31f885881a45eee3e9d04cce077d1db3f538"
+    },
+    {
+      "path": "src/main.js",
+      "bytes": 7350,
+      "sha256": "1d7bd37af93c3f60b5c21820033d88735ed8c2eaa365c79f6742b60091e2cd04"
+    },
+    {
+      "path": "styles.css",
+      "bytes": 11911,
+      "sha256": "35a45cac4295b5348f329d19c275c3d93211cdfd46b09825ca1b6fa24f9d2883"
+    },
+    {
+      "path": "tests/browser_qa.py",
+      "bytes": 7171,
+      "sha256": "69ab28e0188dc95f201d0c8e442002ac1760c1f695f640c4a371d1523c932b20"
+    },
+    {
+      "path": "tests/smoke_test.py",
+      "bytes": 1336,
+      "sha256": "9f4b29377df00b0f11c2641fe1418f673f1d1ecb5c7562b839c057c9dd914e9e"
+    },
+    {
+      "path": "tools/publish_main.py",
+      "bytes": 4130,
+      "sha256": "c8cee1c8a0dcbf8dd00e5712f97c85451fcde543e23d7d799b1c7b5620018262"
+    },
+    {
+      "path": "tools/verify_assets.py",
+      "bytes": 1370,
+      "sha256": "434a44b586a4640abcd16f3003fbe6599b03af056ac68c250b1819aa8082935f"
+    }
+  ]
+}

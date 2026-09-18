@@ -1,0 +1,206 @@
+{
+  "version": "R2",
+  "production_models": 0,
+  "assets": [
+    {
+      "path": "assets/art_direction/approved/art_bible_poster.png",
+      "bytes": 2443760,
+      "sha256": "5035fc1d25f846e443cbcc8a78ab4b6c131986bea719d44a7d9c6b1bdc002e23",
+      "width": 1536,
+      "height": 1024,
+      "format": "PNG",
+      "role": "approved_reference",
+      "source_name": "a_detailed_layout_style_concept_art_board_poster.png"
+    },
+    {
+      "path": "assets/art_direction/approved/clinic_layout.png",
+      "bytes": 3142828,
+      "sha256": "bd8bf3b404f08ab417493b232d3a800596a8c357fd97c4ff7eda13af3f9d9436",
+      "width": 1448,
+      "height": 1086,
+      "format": "PNG",
+      "role": "approved_reference",
+      "source_name": "ChatGPT Image 2026年9月17日 下午03_16_51 (2).png"
+    },
+    {
+      "path": "assets/art_direction/approved/cooking_mode.png",
+      "bytes": 3510318,
+      "sha256": "636bef6f01c12f8644bfe6b4c504d39f5b5aa4823bb281f7b8915a97c30c1c92",
+      "width": 1448,
+      "height": 1086,
+      "format": "PNG",
+      "role": "approved_reference",
+      "source_name": "ChatGPT Image 2026年9月17日 下午03_16_51 (3).png"
+    },
+    {
+      "path": "assets/art_direction/approved/doctor_concepts.png",
+      "bytes": 3290840,
+      "sha256": "bbdb86634a431a7555a5c4c557bd90b885ce32adf75bd55b3c261d83e34b0dfb",
+      "width": 1448,
+      "height": 1086,
+      "format": "PNG",
+      "role": "approved_reference",
+      "source_name": "ChatGPT Image 2026年9月17日 下午03_16_51 (1).png"
+    },
+    {
+      "path": "assets/art_direction/approved/patient_npcs.png",
+      "bytes": 3444835,
+      "sha256": "f30774a30821d84d3d95d45d39b4a11830a7ef1d8814b29c47ee507bb2ccad67",
+      "width": 1448,
+      "height": 1086,
+      "format": "PNG",
+      "role": "approved_reference",
+      "source_name": "ChatGPT Image 2026年9月17日 下午03_16_51 (5).png"
+    },
+    {
+      "path": "assets/art_direction/approved/props_station.png",
+      "bytes": 3384394,
+      "sha256": "cefcd59a85540b12e75c72ca11653996bdedafa69b252ffdc97c12150e03d903",
+      "width": 1448,
+      "height": 1086,
+      "format": "PNG",
+      "role": "approved_reference",
+      "source_name": "ChatGPT Image 2026年9月17日 下午03_16_51 (4).png"
+    },
+    {
+      "path": "assets/art_direction/approved/realistic_ui_board.png",
+      "bytes": 2517482,
+      "sha256": "dacc3a02f8754c28792dd0b3b17dd4e632149e3d6259c1fa8b473b013b9dd818",
+      "width": 1536,
+      "height": 1024,
+      "format": "PNG",
+      "role": "approved_reference",
+      "source_name": "a_detailed_realistic_game_ui_style_concept_image.png"
+    },
+    {
+      "path": "assets/art_direction/web/clinic_layout.jpg",
+      "bytes": 290471,
+      "sha256": "d84b83305123d42ee2a224eed903dbd5c58ec63eea1b7b040a6bc0983bc6d0aa",
+      "width": 1200,
+      "height": 900,
+      "format": "JPEG",
+      "role": "preview",
+      "source_name": "clinic_layout.png"
+    },
+    {
+      "path": "assets/art_direction/web/cooking_mode.jpg",
+      "bytes": 376108,
+      "sha256": "621c5e4b7b99ab9206a7e70ef8a365ff177bcbebbf6efac7308a2d7682ffd3f7",
+      "width": 1200,
+      "height": 900,
+      "format": "JPEG",
+      "role": "preview",
+      "source_name": "cooking_mode.png"
+    },
+    {
+      "path": "assets/art_direction/web/doctor_concepts.jpg",
+      "bytes": 334820,
+      "sha256": "3a22d7d5e5e9c19b59abea177f6a20bc6834e6c22bf21a376893eae2f93ee26d",
+      "width": 1200,
+      "height": 900,
+      "format": "JPEG",
+      "role": "preview",
+      "source_name": "doctor_concepts.png"
+    },
+    {
+      "path": "assets/art_direction/web/patient_npcs.jpg",
+      "bytes": 384511,
+      "sha256": "fe2e19e428a21c56bd8abadb945ee7c160f2dfe567ab1ab5f21f4f11674daaa8",
+      "width": 1200,
+      "height": 900,
+      "format": "JPEG",
+      "role": "preview",
+      "source_name": "patient_npcs.png"
+    },
+    {
+      "path": "assets/art_direction/web/props_station.jpg",
+      "bytes": 335364,
+      "sha256": "bae0f32f77852a708e457fe314d4dbc7146f83afeb08bb6ca68853272a047c30",
+      "width": 1200,
+      "height": 900,
+      "format": "JPEG",
+      "role": "preview",
+      "source_name": "props_station.png"
+    },
+    {
+      "path": "assets/candidates/characters/doctors/doctors_sheet.webp",
+      "bytes": 75702,
+      "sha256": "6e39cecafc41aca1b1305f88f61b5bb694346d7c15f8da2cbc551900f3485960",
+      "width": 1020,
+      "height": 438,
+      "format": "WEBP",
+      "role": "candidate_raster_not_3d",
+      "source_name": null
+    },
+    {
+      "path": "assets/candidates/characters/patients/patients_sheet.webp",
+      "bytes": 112210,
+      "sha256": "234f9738a0444d7c7d7c06e65f968510e195a4b1b4a070e8dc375e0ea4d264ce",
+      "width": 900,
+      "height": 600,
+      "format": "WEBP",
+      "role": "candidate_raster_not_3d",
+      "source_name": null
+    },
+    {
+      "path": "assets/candidates/environments/clinic_scene.webp",
+      "bytes": 83408,
+      "sha256": "ae9053998a522436ec4fe1bfd03c51bf1e7884e2d0f86e0ca2f4aaa091d1af3d",
+      "width": 1200,
+      "height": 771,
+      "format": "WEBP",
+      "role": "candidate_raster_not_3d",
+      "source_name": null
+    },
+    {
+      "path": "assets/candidates/environments/cooking_hero.webp",
+      "bytes": 171080,
+      "sha256": "6855a3e99e4211eebbc5b2d6351d25244b697c61d0db07bc2d82aa13f4334397",
+      "width": 1200,
+      "height": 900,
+      "format": "WEBP",
+      "role": "candidate_raster_not_3d",
+      "source_name": null
+    },
+    {
+      "path": "assets/candidates/environments/cooking_scene.webp",
+      "bytes": 123094,
+      "sha256": "7dc4f345f23d8a85487a2e9beee19661545e2010bd401fb19748e4e24c3658c6",
+      "width": 1200,
+      "height": 771,
+      "format": "WEBP",
+      "role": "candidate_raster_not_3d",
+      "source_name": null
+    },
+    {
+      "path": "assets/candidates/ingredients/ingredients_sheet.webp",
+      "bytes": 24854,
+      "sha256": "6cb189d7d26e9c911712af13d7aaf418b713d0f578ef723bfc964aa89baff848",
+      "width": 720,
+      "height": 270,
+      "format": "WEBP",
+      "role": "candidate_raster_not_3d",
+      "source_name": null
+    },
+    {
+      "path": "assets/art_direction/web/art_bible_poster.jpg",
+      "bytes": 294691,
+      "sha256": "866ec672975a3b5eaac9f5cf1778325b587d81ac28f6361f13424dcfda1b66b5",
+      "width": 1200,
+      "height": 800,
+      "format": "JPEG",
+      "role": "preview",
+      "source_name": "art_bible_poster.png"
+    },
+    {
+      "path": "assets/art_direction/web/realistic_ui_board.jpg",
+      "bytes": 307403,
+      "sha256": "a36a376a6e746124de09f4d0cf63b517a96b1c0b87d0782de3bb7e44af3f1093",
+      "width": 1200,
+      "height": 800,
+      "format": "JPEG",
+      "role": "preview",
+      "source_name": "realistic_ui_board.png"
+    }
+  ]
+}

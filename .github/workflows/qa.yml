@@ -1,0 +1,35 @@
+name: Clinic Kitchen R2 QA
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install verification tools
+        run: |
+          python -m pip install -r requirements-qa.txt
+          python -m playwright install --with-deps chromium
+      - name: Static and asset integrity
+        run: |
+          python tests/smoke_test.py
+          python tools/verify_assets.py
+      - name: Browser verification over HTTP
+        run: |
+          python -m http.server 8000 --bind 127.0.0.1 > /tmp/ck-http.log 2>&1 &
+          sleep 2
+          python tests/browser_qa.py --base-url http://127.0.0.1:8000/ --output qa/current
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ck-r2-browser-evidence
+          path: qa/current/
+          retention-days: 14

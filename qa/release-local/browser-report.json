@@ -1,0 +1,111 @@
+{
+  "transport": "inline local source (not HTTP)",
+  "browser": "144.0.7559.96",
+  "tests": [
+    {
+      "test": "1440: upper movement and lower cooking visible",
+      "status": "PASS"
+    },
+    {
+      "test": "1440: player inside upper viewport",
+      "status": "PASS"
+    },
+    {
+      "test": "1440: no horizontal overflow",
+      "status": "PASS"
+    },
+    {
+      "test": "768: upper movement and lower cooking visible",
+      "status": "PASS"
+    },
+    {
+      "test": "768: player inside upper viewport",
+      "status": "PASS"
+    },
+    {
+      "test": "768: no horizontal overflow",
+      "status": "PASS"
+    },
+    {
+      "test": "390: upper movement and lower cooking visible",
+      "status": "PASS"
+    },
+    {
+      "test": "390: player inside upper viewport",
+      "status": "PASS"
+    },
+    {
+      "test": "390: no horizontal overflow",
+      "status": "PASS"
+    },
+    {
+      "test": "keyboard moves character",
+      "status": "PASS"
+    },
+    {
+      "test": "arrows do not scroll page",
+      "status": "PASS"
+    },
+    {
+      "test": "cannot plate without tofu",
+      "status": "PASS"
+    },
+    {
+      "test": "R clears wok",
+      "status": "PASS"
+    },
+    {
+      "test": "R clears selection and prepared food",
+      "status": "PASS"
+    },
+    {
+      "test": "R extinguishes flame",
+      "status": "PASS"
+    },
+    {
+      "test": "cannot plate before three stirs",
+      "status": "PASS"
+    },
+    {
+      "test": "two stirs insufficient",
+      "status": "PASS"
+    },
+    {
+      "test": "cold wok cannot stir or plate",
+      "status": "PASS"
+    },
+    {
+      "test": "valid recipe can plate",
+      "status": "PASS"
+    },
+    {
+      "test": "new ingredients require stirring again",
+      "status": "PASS"
+    },
+    {
+      "test": "completed recipe locks cookware",
+      "status": "PASS"
+    },
+    {
+      "test": "second session can prepare food",
+      "status": "PASS"
+    },
+    {
+      "test": "no browser JavaScript errors",
+      "status": "PASS"
+    },
+    {
+      "test": "no failing browser requests",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "failed_requests": [],
+  "source_sha256": {
+    "index.html": "755a5848bc2d546ab5e4b75fbfe43cae06e0318735f01b54a16667f4a09caf1e",
+    "styles.css": "35a45cac4295b5348f329d19c275c3d93211cdfd46b09825ca1b6fa24f9d2883",
+    "r2-fixes.css": "cc5d6f0c9c7319d1fe8120bab72c837fe9b4685e7687c15ba4540344c330ebdf",
+    "src/main.js": "1d7bd37af93c3f60b5c21820033d88735ed8c2eaa365c79f6742b60091e2cd04"
+  },
+  "scope": "2D prototype behavior only. Not 3D art approval, not remote deployment proof."
+}
