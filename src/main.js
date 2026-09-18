@@ -187,8 +187,14 @@ function move(now) {
     window.update3DPlayerMovement(dx, -dy, dt, keys.has('shift') ? 1.6 : 1.0);
   }
 
+  updatePrompt();
+  requestAnimationFrame(move);
+}
+
+function updatePrompt() {
   const nearby = nearProp();
-  const target3d = window.scene3DState && window.scene3DState.interactiveTarget;
+  const target3d = (window.scene3DState && window.scene3DState.interactiveTarget) ||
+    (window.getNearbyTarget && window.scene3DState && window.getNearbyTarget(window.scene3DState.playerPos.x, window.scene3DState.playerPos.z));
   const targetName = target3d ? target3d.name : (nearby ? nearby.textContent.trim() : null);
 
   if (targetName) {
@@ -208,7 +214,6 @@ function move(now) {
   } else {
     $('prompt').textContent = 'WASD 移動｜靠近物件按 E';
   }
-  requestAnimationFrame(move);
 }
 
 function cookLog(text) {
@@ -491,6 +496,10 @@ window.teleportAndSync = function (x3d, z3d) {
   x = clamp(850 + x3d * 75, 40, 1760 - player.offsetWidth);
   y = clamp(470 + z3d * 70, 90, 620 - player.offsetHeight);
   updateCameraAndPlayer();
+  if (window.scene3DState && window.getNearbyTarget) {
+    window.scene3DState.interactiveTarget = window.getNearbyTarget(x3d, z3d);
+  }
+  updatePrompt();
 };
 
 window.getMissionStage = function () {

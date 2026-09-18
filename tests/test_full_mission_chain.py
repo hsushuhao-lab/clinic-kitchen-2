@@ -51,9 +51,8 @@ def test_full_mission(base_url='http://127.0.0.1:8000/', output_dir=None):
 
         # 2. Stage 1: Walk to Patient Chair & Consult
         page.evaluate('window.teleportAndSync(-7.3, -0.6)')
-        page.wait_for_timeout(100)
-        prompt_text = page.locator('#prompt').inner_text()
-        check('Prompt indicates consultation near patient', '病人' in prompt_text and 'E' in prompt_text)
+        expect(page.locator('#prompt')).to_contain_text('病人')
+        check('Prompt indicates consultation near patient', True)
 
         page.keyboard.press('e')
         page.wait_for_timeout(120)
@@ -68,9 +67,8 @@ def test_full_mission(base_url='http://127.0.0.1:8000/', output_dir=None):
 
         # 3. Stage 2: Walk to Doctor Desk & Order Prescription
         page.evaluate('window.teleportAndSync(-9.0, -1.0)')
-        page.wait_for_timeout(100)
-        prompt_text = page.locator('#prompt').inner_text()
-        check('Prompt indicates ordering prescription near desk', '料理處方' in prompt_text or '醫師桌' in prompt_text or '開立' in prompt_text)
+        expect(page.locator('#prompt')).to_contain_text('處方')
+        check('Prompt indicates ordering prescription near desk', True)
 
         page.keyboard.press('e')
         page.wait_for_timeout(120)
@@ -85,9 +83,8 @@ def test_full_mission(base_url='http://127.0.0.1:8000/', output_dir=None):
 
         # 4. Stage 3: Walk to Transition Fridge & Gather Ingredients
         page.evaluate('window.teleportAndSync(0.2, -1.6)')
-        page.wait_for_timeout(100)
-        prompt_text = page.locator('#prompt').inner_text()
-        check('Prompt indicates gathering ingredients near fridge', '冰箱' in prompt_text or '取材' in prompt_text)
+        expect(page.locator('#prompt')).to_contain_text('冰箱')
+        check('Prompt indicates gathering ingredients near fridge', True)
 
         page.keyboard.press('e')
         page.wait_for_timeout(120)
@@ -130,9 +127,8 @@ def test_full_mission(base_url='http://127.0.0.1:8000/', output_dir=None):
 
         # 8. Stage 7 & 8: Walk back to Clinic & First Bite Feedback
         page.evaluate('window.teleportAndSync(-7.3, -0.6)')
-        page.wait_for_timeout(100)
-        prompt_text = page.locator('#prompt').inner_text()
-        check('Prompt indicates serving to patient', '送餐' in prompt_text or '病人' in prompt_text or '品嚐' in prompt_text)
+        expect(page.locator('#prompt')).to_contain_text('送餐')
+        check('Prompt indicates serving to patient', True)
 
         page.keyboard.press('e')
         page.wait_for_timeout(150)

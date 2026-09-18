@@ -637,5 +637,6 @@ window.scene3DState = {
     };
   };
 
+  window.getNearbyTarget = getNearbyTarget;
   window.initScene3D = init3D;
 })();
