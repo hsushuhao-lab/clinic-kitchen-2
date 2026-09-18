@@ -13,3 +13,4 @@ assets/reference/private/
 private-history/
 archive/
 *.bundle
+web-dist/
