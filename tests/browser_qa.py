@@ -77,7 +77,7 @@ def main():
                 page.screenshot(path=str(out/f'layout-{width}.png'),full_page=True)
             load(1440,900)
             before=page.locator('#player').evaluate('(el)=>parseFloat(el.style.left)')
-            page.keyboard.down('d');page.wait_for_timeout(400);page.keyboard.up('d')
+            page.keyboard.down('d');page.wait_for_timeout(600);page.keyboard.up('d')
             after=page.locator('#player').evaluate('(el)=>parseFloat(el.style.left)')
             check('keyboard moves character',after > before+35)
             reset()

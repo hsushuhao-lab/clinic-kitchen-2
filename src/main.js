@@ -171,7 +171,7 @@ function updateCameraAndPlayer() {
 }
 
 function move(now) {
-  const dt = previousTime ? Math.min((now - previousTime) / 1000, 0.05) : 0;
+  const dt = previousTime ? Math.min((now - previousTime) / 1000, 0.1) : 0;
   previousTime = now;
   let dx = Number(keys.has('d') || keys.has('arrowright')) - Number(keys.has('a') || keys.has('arrowleft'));
   let dy = Number(keys.has('s') || keys.has('arrowdown')) - Number(keys.has('w') || keys.has('arrowup'));
