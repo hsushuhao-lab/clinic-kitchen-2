@@ -1,0 +1,32 @@
+name: Public game verification
+on:
+  push:
+    branches: [main]
+    paths:
+      - tests/test_public_deployment.py
+      - .github/workflows/public-deployment-check.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install Chromium verification tools
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium
+      - name: Walk the published mission using keyboard input
+        run: python tests/test_public_deployment.py
+      - name: Preserve public-site evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-game-evidence
+          path: qa/public-deployment/
+          retention-days: 14
