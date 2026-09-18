@@ -36,6 +36,12 @@ function canStand(nx, ny) {
       feet.y + feet.h <= r.y || feet.y >= r.y + r.h;
   });
 }
+function updateCameraAndPlayer() {
+  player.style.left = `${x}px`; player.style.top = `${y}px`;
+  const cx = clamp(x + player.offsetWidth / 2 - world.clientWidth / 2, 0, Math.max(0,1800 - world.clientWidth));
+  const cy = clamp(y + player.offsetHeight / 2 - world.clientHeight / 2, 0, Math.max(0,760 - world.clientHeight));
+  camera.style.transform = `translate(${-cx}px, ${-cy}px)`;
+}
 function move(now) {
   const dt = previousTime ? Math.min((now - previousTime) / 1000, 0.05) : 0;
   previousTime = now;
@@ -47,10 +53,7 @@ function move(now) {
   const ny = clamp(y + dy / length * speed * dt, 90, 620 - player.offsetHeight);
   if (canStand(nx, y)) x = nx;
   if (canStand(x, ny)) y = ny;
-  player.style.left = `${x}px`; player.style.top = `${y}px`;
-  const cx = clamp(x + player.offsetWidth / 2 - world.clientWidth / 2, 0, Math.max(0,1800 - world.clientWidth));
-  const cy = clamp(y + player.offsetHeight / 2 - world.clientHeight / 2, 0, Math.max(0,760 - world.clientHeight));
-  camera.style.transform = `translate(${-cx}px, ${-cy}px)`;
+  updateCameraAndPlayer();
   const nearby = nearProp();
   $('prompt').textContent = nearby ? `E — ${nearby.textContent.trim()}` : 'WASD 移動｜靠近物件按 E';
   requestAnimationFrame(move);
@@ -88,6 +91,7 @@ function resetAll() {
   selectedFood = null; prepped.clear(); inWok.clear(); heated = false; stirs = 0; plated = false;
   $('boardFood').textContent = '砧板空著'; $('recipeLog').innerHTML = '<li>等待開始</li>';
   $('log').textContent = '已重置：探索與料理狀態皆已清空'; updateCooking();
+  updateCameraAndPlayer();
 }
 foodButtons.forEach(button => button.addEventListener('click', () => {
   selectedFood = button.dataset.food;
