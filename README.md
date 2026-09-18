@@ -1,21 +1,18 @@
 # Clinic Kitchen 2.0
 
-## 線上試玩（目前發布版本）
+## 線上試玩（最新發布版本）
 
-**[開啟 Clinic Kitchen 2.0 線上遊戲](https://clinic-kitchen-2-0-rnbvw5.v2.appdeploy.ai/)**
+- **[GitHub Pages 最新線上遊戲（自動部署最新 main）](https://hsushuhao-lab.github.io/clinic-kitchen-2/)**
+- **[AppDeploy 託管版本](https://clinic-kitchen-2-0-rnbvw5.v2.appdeploy.ai/)**
 
-目前由 AppDeploy 託管，GitHub 保存原始碼；這不是 GitHub Pages 網址。
-倉庫已由擁有者改為 Public，main 為開發分支。
+倉庫已由擁有者改為 Public，main 為唯一開發與發布分支。
 
-- 線上遊戲固定使用已核對的原始碼 commit：`c80258df951dccc03602262165f74fd82f85130c`。
-- 畫面：上方即時 3D 診間／備料過渡區／後廚，下方食材、切配、炒鍋與盛盤。
-- 操作：WASD／方向鍵移動，Shift 快走，E 互動，R 重置。靠近工作站並等互動提示出現後再按 E。
-- 請以支援 WebGL 的桌面瀏覽器遊玩；手機目前只有版面與料理按鈕，未實作觸控移動。
-- 部署頁僅載入 9 個必要 runtime 檔案，每個檔案都以 SHA-384 驗證；不載入真人參考照、設定原稿或私人歷史資料。
-- **目前是 3D 功能原型，不是寫實美術成品。** 人物及場景是 placeholder；料理的任務／站位限制不完整，第一口滿意度固定 100%。
-- 新 main 提交不會自動改變此固定版本的 AppDeploy 網站；runtime 更新後須重新部署並驗證網址。
+- **畫面架構**：上方即時 3D 診間／備料過渡區／後廚連續空間，下方寫實砧板切配、炒鍋翻炒與盛盤出鍋。
+- **操作控制**：WASD／方向鍵移動（W 向深處、S 朝鏡頭、A 向左、D 向右），Shift 快走，E 互動，R 重置。四肢步行動畫與端托盤平舉姿態已同步。
+- **寫實料理**：豆腐 3 步切骰子丁、蔥切蔥花、蒜拍碎切蒜末、絞肉分切，豆瓣醬以湯匙舀取（非刀切）；炒鍋黑鐵材質、瓦斯爐火苗、金屬料理鏟翻炒推進（肉色焦香、紅油裹附、滾沸收汁），盛盤至青花瓷碗並配搭越光米飯托盤。
+- **工作站限制**：問診 → 處方單 → 取材 → 備料檯切配 → 炒鍋翻炒 → 盛盤出鍋 → 端餐送回診間 → 第一口品嚐回饋。未達工作站半徑不可隔空操作。
+- **安全發布邊界**：僅載入白名單 runtime 檔案與 GLB 模型，不包含私有參考照或歷史資料。
 
-部署服務已回報 ready，並已從 GitHub Actions 的 Chromium 確認公開 HTTPS 入口、GLB 環境載入、鍵盤移動、重置與問診。完整線上步行任務仍以 [Public game verification](actions/workflows/public-deployment-check.yml) 的最新結果為準，不能把部署完成或 localhost 測試当作全流程通過。
 
 ---
 

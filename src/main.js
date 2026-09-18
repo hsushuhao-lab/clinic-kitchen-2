@@ -391,6 +391,31 @@ function updateCooking() {
     $('wokSimmerImg').hidden = !(inWok.size >= 4 && stirs >= 3 && !plated);
   }
 
+  if ($('wokFoodLayer')) {
+    if (inWok.size === 0 || plated) {
+      $('wokFoodLayer').innerHTML = '';
+    } else {
+      let html = '';
+      if (inWok.has('pork')) {
+        const porkSrc = stirs >= 1 ? 'assets/cooking/pork_browned.png' : 'assets/ingredients/mapo_tofu/pork.png';
+        html += `<img class="wok-food-item wok-food-pork ${stirs >= 1 ? 'is-browned' : ''}" src="${porkSrc}" alt="絞肉"/>`;
+      }
+      if (inWok.has('garlic')) {
+        html += `<img class="wok-food-item wok-food-garlic" src="assets/cooking/garlic_mince.png" alt="蒜末"/>`;
+      }
+      if (inWok.has('douban')) {
+        html += `<img class="wok-food-item wok-food-douban ${stirs >= 2 ? 'is-red-oil' : ''}" src="assets/ingredients/mapo_tofu/douban.png" alt="豆瓣醬"/>`;
+      }
+      if (inWok.has('tofu')) {
+        html += `<img class="wok-food-item wok-food-tofu" src="assets/cooking/tofu_cubes.png" alt="豆腐丁"/>`;
+      }
+      if (inWok.has('scallion')) {
+        html += `<img class="wok-food-item wok-food-scallion" src="assets/cooking/scallion_rings.png" alt="蔥花"/>`;
+      }
+      $('wokFoodLayer').innerHTML = html;
+    }
+  }
+
   if ($('platedDishPreview')) {
     if (plated) {
       $('platedDishPreview').removeAttribute('hidden');
@@ -678,7 +703,11 @@ $('stirBtn').addEventListener('click', () => {
   stirs++;
   if ($('wokSpatula')) {
     $('wokSpatula').classList.add('is-stirring');
-    setTimeout(() => $('wokSpatula').classList.remove('is-stirring'), 350);
+    setTimeout(() => $('wokSpatula') && $('wokSpatula').classList.remove('is-stirring'), 350);
+  }
+  if ($('wokFoodLayer')) {
+    $('wokFoodLayer').classList.add('is-stirred');
+    setTimeout(() => $('wokFoodLayer') && $('wokFoodLayer').classList.remove('is-stirred'), 350);
   }
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     $('wokContents').animate([{ transform: 'translateX(-8px)' }, { transform: 'translateX(8px)' }, { transform: 'none' }], { duration: 250 });
