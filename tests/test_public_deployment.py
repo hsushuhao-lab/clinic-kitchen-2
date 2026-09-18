@@ -49,6 +49,11 @@ def main():
         def position():
             return page.evaluate('window.get3DStatus().playerPos')
 
+        def diagnostic(label):
+            data = page.evaluate("({status: window.get3DStatus(), stage: window.getMissionStage(), prompt: document.getElementById('prompt').textContent, dialogHidden: document.getElementById('dialogModal').hidden})")
+            print(label + ': ' + json.dumps(data, ensure_ascii=False), flush=True)
+            (OUT / 'last-state.json').write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
+
         def walk_axis(axis, target):
             current = position()[axis]
             if abs(current - target) < 0.09:
@@ -73,12 +78,20 @@ def main():
             walk_axis('x', x)
             walk_axis('z', z)
 
-        def interact(expected_stage):
+        def interact(expected_stage, prompt_text):
             page.locator('#world').focus()
-            page.keyboard.press('e')
-            expect(page.locator('#dialogModal')).to_be_visible()
-            page.locator('#dialogActionBtn').click()
-            page.wait_for_function('(n) => window.getMissionStage() === n', arg=expected_stage)
+            diagnostic('Before interaction')
+            try:
+                # Actions follow the displayed prompt, not a guessed frame boundary.
+                expect(page.locator('#prompt')).to_contain_text(prompt_text, timeout=10000)
+                page.keyboard.press('e')
+                expect(page.locator('#dialogModal')).to_be_visible()
+                page.locator('#dialogActionBtn').click()
+                page.wait_for_function('(n) => window.getMissionStage() === n', arg=expected_stage)
+            except Exception:
+                diagnostic('Interaction failure')
+                page.screenshot(path=str(OUT / 'interaction-failure.png'))
+                raise
 
         initial = position()
         walk_axis('x', -7.6)
@@ -90,13 +103,14 @@ def main():
         record('Empty wok cannot be plated')
 
         approach(-7.3, -0.65)
-        interact(1)
+        interact(1, '病人')
         record('Patient consultation advances to the order stage')
-        approach(-9.0, -0.65)
-        interact(2)
+        # Stand inside the desk interaction radius, away from overlapping patient prompts.
+        approach(-9.2, -1.0)
+        interact(2, '處方')
         record('Walking to the doctor desk opens and confirms the cooking order')
         approach(0.2, -1.4)
-        interact(3)
+        interact(3, '冰箱')
         record('Walking from clinic to the refrigerator completes gathering')
         approach(5.0, -1.4)
         for food in ('tofu', 'pork', 'douban', 'garlic'):
@@ -120,6 +134,7 @@ def main():
         page.screenshot(path=str(OUT / 'public-cooked.png'))
         approach(-7.3, -0.65)
         page.locator('#world').focus()
+        expect(page.locator('#prompt')).to_contain_text('送餐', timeout=10000)
         page.keyboard.press('e')
         expect(page.locator('#dialogModal')).to_be_visible()
         expect(page.locator('#dialogTitle')).to_contain_text('第一口')
