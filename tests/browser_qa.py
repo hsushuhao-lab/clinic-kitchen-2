@@ -28,9 +28,17 @@ def main():
         html = re.sub(r'<script src="([^"?]+)[^"]*"></script>',
                       lambda m: '<script>' + (ROOT / m[1]).read_text(encoding='utf-8') + '</script>', html)
     with sync_playwright() as pw:
-        exe = shutil.which('chromium')
-        gl_args = ['--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader', '--enable-webgl', '--in-process-gpu']
-        browser = pw.chromium.launch(headless=True, args=gl_args, **({'executable_path': exe} if exe else {}))
+        gl_args = [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--enable-unsafe-swiftshader',
+            '--use-gl=angle',
+            '--use-angle=swiftshader',
+            '--enable-webgl',
+            '--in-process-gpu'
+        ]
+        browser = pw.chromium.launch(headless=True, args=gl_args)
         page = browser.new_page(viewport={'width':1440, 'height':900})
         page.on('pageerror', lambda e: errors.append(str(e)))
         page.on('requestfailed', lambda r: failures.append(r.url))

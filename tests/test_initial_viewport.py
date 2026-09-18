@@ -3,7 +3,7 @@ from playwright.sync_api import sync_playwright
 
 def test_initial_viewport():
     with sync_playwright() as p:
-        gl_args = ['--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader', '--enable-webgl', '--in-process-gpu']
+        gl_args = ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader', '--enable-webgl', '--in-process-gpu']
         browser = p.chromium.launch(args=gl_args)
         for width, height in [(1440, 900), (768, 1024), (390, 844)]:
             page = browser.new_page(viewport={'width': width, 'height': height})

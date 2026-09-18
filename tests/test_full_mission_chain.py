@@ -28,15 +28,17 @@ def test_full_mission(base_url='http://127.0.0.1:8000/', output_dir=None):
         print(f"  [PASS] {name}")
 
     with sync_playwright() as pw:
-        exe = shutil.which('chromium')
         gl_args = [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
             '--enable-unsafe-swiftshader',
             '--use-gl=angle',
             '--use-angle=swiftshader',
             '--enable-webgl',
             '--in-process-gpu'
         ]
-        browser = pw.chromium.launch(headless=True, args=gl_args, **({'executable_path': exe} if exe else {}))
+        browser = pw.chromium.launch(headless=True, args=gl_args)
         page = browser.new_page(viewport={'width': 1440, 'height': 900})
         page.goto(base_url, wait_until='networkidle')
         page.wait_for_timeout(200)
