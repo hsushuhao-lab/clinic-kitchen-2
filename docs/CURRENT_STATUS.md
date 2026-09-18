@@ -1,30 +1,29 @@
 # 實際狀態：Clinic Kitchen 2.0 (3D Scene & 8-Stage Mission Completed)
 
-## 已有（Gate 1 ~ Gate 3 已完成）
-- **即時 3D 引擎與連續場景**：內建 Three.js WebGL 渲染管線 (`src/three.min.js`, `src/scene3d.js`)，診間 (X: -12~-3) → 備料過渡區 (X: -3~+3) → 後廚 (X: +3~+13) 物理連續可探索空間，具備 PBR 材質、冷白／過渡／暖色三段光照、動態炒鍋火光、AABB 家具碰撞體與第三人稱跟隨視角。
-- **真實 3D 角色與環境 GLB 模型**：
-  1. `assets/models/environment/clinic_kitchen_scene.glb` (196,980 bytes, 雜湊通過)
-  2. `assets/models/characters/dr_speed_placeholder.glb` (45,244 bytes, 雜湊通過)
-  3. `assets/models/characters/patient_office_placeholder.glb` (15,652 bytes, 雜湊通過)
-  - 均納入 `assets/manifest.json` 與 `tools/verify_assets.py` 嚴格校驗。
-- **角色規格與 3D Turnaround 多視角圖**：
-  - Dr. Speed 成人寫實比例 (1.78m)、短黑髮、黑框眼鏡、醫師白袍、內搭襯衫與胸牌，產出 5 視角展示板及規格 JSON (`assets/characters/dr_speed/dr_speed_turnaround_sheet.png`)。
-  - 上班族病患成人寫實比例 (1.72m)、深藍商務西裝、藍領帶、坐姿就診，產出 5 視角展示板及規格 JSON (`assets/characters/patient_office/patient_office_turnaround_sheet.png`)。
-- **統一 8 階段任務狀態機**：
-  1. `STAGE_CONSULT`：診間病人椅靠近問診對話彈窗
-  2. `STAGE_ORDER`：醫師桌／料理處方機開單出單
-  3. `STAGE_GATHER`：過渡區低溫冷藏冰箱取出食材
-  4. `STAGE_PREP`：備料檯切配豆腐、絞肉、豆瓣醬、蒜
-  5. `STAGE_COOK`：炒鍋爐台開火、下鍋並翻炒 3 次
-  6. `STAGE_PLATE`：盛盤出鍋裝入青花瓷碗，主角切換托盤端餐姿態
-  7. `STAGE_SERVE`：端托盤返回診間病人椅送餐
-  8. `STAGE_FIRST_BITE`：病患第一口品嚐回饋、舒壓滿意度 100% 評分、虛構舒壓料理聲明
-- **全自動化 QA 測試鏈**：
-  - `tests/smoke_test.py` (36 DOM IDs, 語法校驗 PASS)
-  - `tools/verify_assets.py` (20 圖檔, 7 原稿, 3 GLB 模型 PASS)
+## 已有（Gate 1 ~ Gate 3 已完成，本輪真實操作與寫實料理升級完成）
+- **正確 3D 視角移動控制與肢體動畫**：
+  - W／↑ 朝畫面深處（-Z）前進，人物背向鏡頭；S／↓ 朝鏡頭（+Z）前進，人物面向鏡頭；A／← 向左（-X）；D／→ 向右（+X）。
+  - 人物具備四肢 Pivot 動畫節點（`LeftArm`, `RightArm`, `LeftLeg`, `RightLeg`），步行時四肢擺動，端托盤時雙臂前抬平舉。
+  - 專屬方向回歸測試 `tests/test_movement_direction.py` 100% PASS。
+- **寫實料理素材與精細烹飪模擬（依四張審定美術原稿提取獨立素材）**：
+  - 8 項高解析寫實食材資產：嫩豆腐、豬絞肉、川味豆瓣醬、鮮大蒜、大紅袍花椒、青蔥段、老薑、乾辣椒。
+  - 下方操作台提供實物砧板、主廚料理刀、豆瓣醬專用料理湯匙、黑鐵炒鍋、金屬料理鏟、盛盤托盤與越光米飯。
+  - 寫實漸進切配：嫩豆腐點擊下刀由整塊 → 對半剖開 → 條狀 → 骰子丁（3 步驟切塊）；青蔥切蔥花；大蒜拍碎切蒜末；豬絞肉分切絞碎；豆瓣醬以湯匙舀取（非刀切）。
+  - 寫實炒鍋烹飪：瓦斯爐開火火苗特效、食材循序下鍋、金屬料理鏟翻炒 3 次（爆香肉末 → 炒出紅油裹附 → 豆腐煨煮入味收汁滾沸特效）。
+  - 盛盤出鍋：將麻婆豆腐俐落舀入青花瓷碗，配搭越光米飯與筷匙放置於木質托盤上，主角切換雙臂端盤姿態。
+- **嚴格的工作站與任務狀態限制**：
+  - 必須依照 問診 → 開立處方單 → 冰箱取材 → 備料檯切配 → 炒鍋翻炒 → 盛盤出鍋 → 送餐給病患 → 第一口回饋 推進。
+  - 未完成前置任務不可備料；遠離備料檯（X: 3.2~6.8）不可隔空切配；遠離炒鍋（X: 7.2~11.0）不可隔空開火烹飪或盛盤。
+  - 按 R 鍵重置時徹底清空探索與料理狀態。
+- **全自動化 QA 測試鏈與真機無瞬移驗收**：
+  - `tests/smoke_test.py` (60 DOM IDs, 語法校驗 PASS)
+  - `tools/verify_assets.py` (44 圖檔, 7 原稿, 3 GLB 模型 PASS)
+  - `tools/build_web_release.py` (34 檔案, 2,309,116 bytes 嚴格白名單發布 PASS)
   - `tests/test_initial_viewport.py` (1440, 768, 390 視口 PASS)
-  - `tests/browser_qa.py` (24/24 瀏覽器烹飪面板測試 PASS)
-  - `tests/test_full_mission_chain.py` (37/37 全流程 8 階段 Playwright 測試 PASS)
+  - `tests/browser_qa.py` (24/24 烹飪面板與版面測試 PASS)
+  - `tests/test_full_mission_chain.py` (37/37 全流程 8 階段測試 PASS)
+  - `tests/test_movement_direction.py` (深度軸向與面朝同步 PASS)
+  - `tests/test_real_gameplay_acceptance.py` (純真實鍵盤滑鼠輸入、無瞬移無內部狀態竄改、10 步驟全部 PASS，並於 `qa/acceptance/` 留存 7 張完整截圖證據與報告)
 
 ## 設定聲明
 - 麻婆豆腐為虛構遊戲舒壓料理設定，提供感官撫慰與心理放鬆，非臨床醫療處方，不具戒菸或戒斷醫療療效。

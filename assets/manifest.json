@@ -212,8 +212,8 @@
     },
     {
       "path": "assets/models/characters/dr_speed_placeholder.glb",
-      "bytes": 45244,
-      "sha256": "ec50723355b40a20acd1749635cb34621a1ca399f543c640f178e03fb4694829",
+      "bytes": 45564,
+      "sha256": "ff3753bdb29093b85f776b5fc122ed6d50e23400f70c71f2a980e2a96f0f7e80",
       "format": "GLB",
       "role": "production_3d_character_placeholder",
       "source_name": "tools/build_models.py"
@@ -225,6 +225,246 @@
       "format": "GLB",
       "role": "production_3d_patient_placeholder",
       "source_name": "tools/build_models.py"
+    },
+    {
+      "path": "assets/cooking/board_empty.png",
+      "bytes": 29050,
+      "sha256": "871a6b50570bff0b6d4ea79361b64c3c6f2a6a25037cb212e23a132c7ad1e836",
+      "width": 205,
+      "height": 83,
+      "format": "PNG",
+      "role": "gameplay_cooking_prop",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/cooking/chef_knife.png",
+      "bytes": 13961,
+      "sha256": "03b1e031c0edd3d101c016c6e019f60ae68dd56d79681afb3937a90337cfa93e",
+      "width": 160,
+      "height": 50,
+      "format": "PNG",
+      "role": "gameplay_cooking_prop",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/cooking/cutting_board_full.png",
+      "bytes": 172792,
+      "sha256": "129ef33914aa0bfd62655cc545941c950904ee9fdc34eeb6f6afe8750578dc35",
+      "width": 330,
+      "height": 295,
+      "format": "PNG",
+      "role": "gameplay_cooking_prop",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/cooking/dish_plated.png",
+      "bytes": 122619,
+      "sha256": "4260c801b91cd06ba3196a2faca145c0dbd7c5a8a1dcbff41c54ce391d5399e9",
+      "width": 250,
+      "height": 265,
+      "format": "PNG",
+      "role": "gameplay_cooking_prop",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/cooking/douban_spoon.png",
+      "bytes": 21833,
+      "sha256": "255835fa536253493a682da0dddba0af411f6cd2d35eb60498adbb5129c6af7f",
+      "width": 85,
+      "height": 140,
+      "format": "PNG",
+      "role": "gameplay_cooking_prop",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/cooking/garlic_mince.png",
+      "bytes": 12484,
+      "sha256": "b6f520cce8e4f4ea08292601e96b026099913322d9d73569248508e3f94e570d",
+      "width": 77,
+      "height": 75,
+      "format": "PNG",
+      "role": "gameplay_cooking_prop",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/cooking/garlic_scallion_minced.png",
+      "bytes": 44227,
+      "sha256": "c3a7d52810a32652f1fd9878c4857cabd29ad6e0b144fd9c59668a6f3010a68b",
+      "width": 160,
+      "height": 160,
+      "format": "PNG",
+      "role": "gameplay_cooking_prop",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/cooking/metal_spatula.png",
+      "bytes": 16614,
+      "sha256": "88349a0b890371bf54eda1fd1897a54bc0ba0bb2ba3550a8c92790d3f12adc91",
+      "width": 73,
+      "height": 140,
+      "format": "PNG",
+      "role": "gameplay_cooking_prop",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/cooking/pork_browned.png",
+      "bytes": 28899,
+      "sha256": "2e410ca678a39194daae2140e7432c36fc8a121d6344fd2c81244b37602b8ace",
+      "width": 128,
+      "height": 128,
+      "format": "PNG",
+      "role": "gameplay_cooking_prop",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/cooking/rice_bowl.png",
+      "bytes": 47375,
+      "sha256": "c82355993409192ac907907a0e19afd38d56e72d9722933230cf06b539b40f70",
+      "width": 165,
+      "height": 150,
+      "format": "PNG",
+      "role": "gameplay_cooking_prop",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/cooking/scallion_rings.png",
+      "bytes": 14527,
+      "sha256": "a6a6b58cb379f4e85b81de98fefb94ddec628ee170b424c264bbc3a83b7854bd",
+      "width": 95,
+      "height": 75,
+      "format": "PNG",
+      "role": "gameplay_cooking_prop",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/cooking/tofu_cubes.png",
+      "bytes": 62819,
+      "sha256": "403a0f563094440f56d1fa3e4941c16f8d485b64a9e22c7c10e766d2f6f04713",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "role": "gameplay_cooking_prop",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/cooking/tofu_halves.png",
+      "bytes": 25373,
+      "sha256": "7aaea53e700fb597f3e0bb8179fb17d3c643c8eeceac5837816f29fdc0a58327",
+      "width": 128,
+      "height": 128,
+      "format": "PNG",
+      "role": "gameplay_cooking_prop",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/cooking/tofu_strips.png",
+      "bytes": 25197,
+      "sha256": "63899b5952f0b19235a055cd3e76ef8c9973e19944c57d7d1beaf7a9736c8802",
+      "width": 128,
+      "height": 128,
+      "format": "PNG",
+      "role": "gameplay_cooking_prop",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/cooking/wok_empty.png",
+      "bytes": 59304,
+      "sha256": "bde10717e830fbc1f9f2144ae1449e6c8a8b9a62b473a9c805295a93b35d05ed",
+      "width": 260,
+      "height": 135,
+      "format": "PNG",
+      "role": "gameplay_cooking_prop",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/cooking/wok_simmering.png",
+      "bytes": 247295,
+      "sha256": "a3bdf790f386e535bb798246731bd657eb919de1b26005b8598fd9cec2317323",
+      "width": 450,
+      "height": 300,
+      "format": "PNG",
+      "role": "gameplay_cooking_prop",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/ingredients/mapo_tofu/chili.png",
+      "bytes": 30429,
+      "sha256": "faaad6b953f9550f096352ac36f9e128a2a619a88b451714f3ce865d20d3eeac",
+      "width": 128,
+      "height": 128,
+      "format": "PNG",
+      "role": "gameplay_culinary_asset",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/ingredients/mapo_tofu/douban.png",
+      "bytes": 31451,
+      "sha256": "1699a1933ac2e7e212d373bd24571ad7e82b45c5fe6b2779bca99c5b8e8b4ba5",
+      "width": 128,
+      "height": 128,
+      "format": "PNG",
+      "role": "gameplay_culinary_asset",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/ingredients/mapo_tofu/garlic.png",
+      "bytes": 27031,
+      "sha256": "af3fe9eaf3692b93150d911f73eb84eaffb3f69ab07bce7665430efa51d9d4f3",
+      "width": 128,
+      "height": 128,
+      "format": "PNG",
+      "role": "gameplay_culinary_asset",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/ingredients/mapo_tofu/ginger.png",
+      "bytes": 27047,
+      "sha256": "62f7bacb37174b6c118cdf5e9f2dd295ec2598c3477ad6f5fbf714749810a06d",
+      "width": 128,
+      "height": 128,
+      "format": "PNG",
+      "role": "gameplay_culinary_asset",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/ingredients/mapo_tofu/pepper.png",
+      "bytes": 29205,
+      "sha256": "94ff71eac8662d450c2ef330aaebc5275686555567354c77e7c04f92922a753b",
+      "width": 128,
+      "height": 128,
+      "format": "PNG",
+      "role": "gameplay_culinary_asset",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/ingredients/mapo_tofu/pork.png",
+      "bytes": 33795,
+      "sha256": "530950cfc27ac639d4f3ca520f63e731ddd40bb67483f83e5e6a4e7b18798e29",
+      "width": 128,
+      "height": 128,
+      "format": "PNG",
+      "role": "gameplay_culinary_asset",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/ingredients/mapo_tofu/scallion.png",
+      "bytes": 32487,
+      "sha256": "bf0038e84a1ef4eb37ac13a2eef27f38c45b551020aae781eed65f91ebcc8c0d",
+      "width": 128,
+      "height": 128,
+      "format": "PNG",
+      "role": "gameplay_culinary_asset",
+      "source_name": "tools/generate_culinary_assets.py"
+    },
+    {
+      "path": "assets/ingredients/mapo_tofu/tofu.png",
+      "bytes": 26722,
+      "sha256": "5d67be9400fc22b2043b500a807bcb79cb58b7bf680b18f9ee0b6d35ba189a39",
+      "width": 128,
+      "height": 128,
+      "format": "PNG",
+      "role": "gameplay_culinary_asset",
+      "source_name": "tools/generate_culinary_assets.py"
     }
   ]
 }

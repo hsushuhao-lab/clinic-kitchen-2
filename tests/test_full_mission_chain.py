@@ -102,7 +102,9 @@ def test_full_mission(base_url='http://127.0.0.1:8000/', output_dir=None):
         page.wait_for_timeout(100)
         for food in ['tofu', 'pork', 'douban', 'garlic']:
             page.locator(f'[data-food="{food}"]').click()
-            page.locator('#cutBtn').click()
+            cuts = 3 if food == 'tofu' else 1
+            for _ in range(cuts):
+                page.locator('#cutBtn').click()
 
         check('Required ingredients prepped', page.locator('[data-food="tofu"].is-prepped').count() == 1)
         check('Stage advanced to STAGE_COOK (4)', page.evaluate('window.getMissionStage()') == 4)

@@ -62,6 +62,7 @@ function setStage(stage) {
   if (window.setCarryingTray) window.setCarryingTray(stage === STAGES.SERVE);
   if (window.setPatientDishVisible) window.setPatientDishVisible(stage >= STAGES.FIRST_BITE);
   updateMissionUI();
+  updateCooking();
 }
 
 function updateMissionUI() {
@@ -184,10 +185,11 @@ function move(now) {
   updateCameraAndPlayer();
 
   if (window.update3DPlayerMovement && !dialogOpen) {
-    window.update3DPlayerMovement(dx, -dy, dt, keys.has('shift') ? 1.6 : 1.0);
+    window.update3DPlayerMovement(dx, dy, dt, keys.has('shift') ? 1.6 : 1.0);
   }
 
   updatePrompt();
+  updateCooking();
   requestAnimationFrame(move);
 }
 
@@ -225,22 +227,178 @@ function cookLog(text) {
   list.scrollTop = list.scrollHeight;
 }
 
+function isNearPrepStation() {
+  if (!window.scene3DState) return false;
+  const pos = window.scene3DState.playerPos;
+  return (pos.x >= 3.2 && pos.x <= 6.8 && pos.z <= -0.8 && pos.z >= -3.2);
+}
+
+function isNearWokStation() {
+  if (!window.scene3DState) return false;
+  const pos = window.scene3DState.playerPos;
+  return (pos.x >= 7.2 && pos.x <= 11.0 && pos.z <= -0.8 && pos.z >= -3.2);
+}
+
+const cutStages = { tofu: 0, scallion: 0, garlic: 0, pork: 0, douban: 0, pepper: 0 };
+
+function getBoardFoodImage(food, stage) {
+  if (food === 'tofu') {
+    if (stage === 0) return 'assets/ingredients/mapo_tofu/tofu.png';
+    if (stage === 1) return 'assets/cooking/tofu_halves.png';
+    if (stage === 2) return 'assets/cooking/tofu_strips.png';
+    return 'assets/cooking/tofu_cubes.png';
+  }
+  if (food === 'scallion') {
+    return stage === 0 ? 'assets/ingredients/mapo_tofu/scallion.png' : 'assets/cooking/scallion_rings.png';
+  }
+  if (food === 'garlic') {
+    return stage === 0 ? 'assets/ingredients/mapo_tofu/garlic.png' : 'assets/cooking/garlic_mince.png';
+  }
+  if (food === 'pork') {
+    return 'assets/ingredients/mapo_tofu/pork.png';
+  }
+  if (food === 'douban') {
+    return 'assets/ingredients/mapo_tofu/douban.png';
+  }
+  if (food === 'pepper') {
+    return 'assets/ingredients/mapo_tofu/pepper.png';
+  }
+  return '';
+}
+
 function updateCooking() {
   const ready = required.every(id => inWok.has(id));
+  const atPrep = isNearPrepStation();
+  const atWok = isNearWokStation();
+
+  // Station proximity badges
+  if ($('prepStationBadge')) {
+    $('prepStationBadge').textContent = atPrep ? '已在備料檯 (可切配)' : '未在備料檯 (需靠近)';
+    $('prepStationBadge').classList.toggle('is-ready', atPrep);
+  }
+  if ($('wokStationBadge')) {
+    $('wokStationBadge').textContent = atWok ? '已在炒鍋台 (可操作)' : '未在炒鍋台 (需靠近)';
+    $('wokStationBadge').classList.toggle('is-ready', atWok);
+  }
+
+  // Mission stage prerequisite lock overlay
+  if ($('stationLockOverlay')) {
+    if (currentStage < STAGES.PREP) {
+      $('stationLockOverlay').removeAttribute('hidden');
+      if (currentStage === STAGES.CONSULT) {
+        $('stationLockMsg').textContent = '【任務尚未開始】請先在上方診間走向病人椅按 E 進行問診！';
+      } else if (currentStage === STAGES.ORDER) {
+        $('stationLockMsg').textContent = '【處方尚未開立】請先前往醫師桌按 E 開立料理處方單！';
+      } else if (currentStage === STAGES.GATHER) {
+        $('stationLockMsg').textContent = '【食材尚未取出】請先前往過渡區冰箱按 E 取出新鮮食材！';
+      }
+    } else {
+      $('stationLockOverlay').setAttribute('hidden', '');
+    }
+  }
+
+  // Ingredient Tray Buttons
   foodButtons.forEach(button => {
     const id = button.dataset.food;
     button.classList.toggle('is-selected', selectedFood === id);
     button.classList.toggle('is-prepped', prepped.has(id) || inWok.has(id));
-    button.disabled = plated || inWok.has(id);
+    button.disabled = (currentStage < STAGES.PREP) || plated || inWok.has(id);
   });
-  $('cutBtn').disabled = plated || !selectedFood || prepped.has(selectedFood) || inWok.has(selectedFood);
-  $('heatBtn').disabled = plated;
+
+  // Checklist updates
+  ['tofu', 'pork', 'douban', 'garlic', 'scallion'].forEach(id => {
+    const el = $(`check-${id}`);
+    if (el) {
+      const isDone = prepped.has(id) || inWok.has(id);
+      el.classList.toggle('is-done', isDone);
+      el.textContent = (isDone ? '✓ ' : '○ ') + el.textContent.slice(2);
+    }
+  });
+
+  // Cutting Board Controls & Visuals
+  const canCutFood = selectedFood && !prepped.has(selectedFood) && !inWok.has(selectedFood);
+  $('cutBtn').disabled = (currentStage < STAGES.PREP) || plated || !canCutFood;
+
+  if (selectedFood) {
+    const isDouban = selectedFood === 'douban';
+    if ($('boardSpoon') && $('boardKnife')) {
+      if (isDouban) {
+        $('boardSpoon').removeAttribute('hidden');
+        $('boardKnife').setAttribute('hidden', '');
+        $('cutBtn').textContent = prepped.has('douban') ? '豆瓣已舀取' : '舀取一匙';
+      } else {
+        $('boardKnife').removeAttribute('hidden');
+        $('boardSpoon').setAttribute('hidden', '');
+        if (selectedFood === 'tofu') {
+          const tNames = ['下刀對半切 (0/3)', '切成條狀 (1/3)', '切骰子丁 (2/3)', '切丁完成'];
+          $('cutBtn').textContent = prepped.has('tofu') ? '豆腐切配完成' : tNames[cutStages.tofu] || '下刀切塊';
+        } else if (selectedFood === 'scallion') {
+          $('cutBtn').textContent = prepped.has('scallion') ? '蔥花已備妥' : '下刀切蔥花';
+        } else if (selectedFood === 'garlic') {
+          $('cutBtn').textContent = prepped.has('garlic') ? '蒜末已備妥' : '拍碎切蒜末';
+        } else if (selectedFood === 'pork') {
+          $('cutBtn').textContent = prepped.has('pork') ? '絞肉已分切' : '分切絞碎';
+        } else {
+          $('cutBtn').textContent = '切配';
+        }
+      }
+    }
+
+    if ($('boardFoodImg')) {
+      const imgSrc = getBoardFoodImage(selectedFood, cutStages[selectedFood] || 0);
+      if (imgSrc) {
+        $('boardFoodImg').src = imgSrc;
+        $('boardFoodImg').removeAttribute('hidden');
+      }
+    }
+    $('boardFood').textContent = `${foodNames[selectedFood]} ${prepped.has(selectedFood) ? '已備妥' : '已放上砧板'}`;
+    if ($('cutProgressText')) {
+      $('cutProgressText').textContent = prepped.has(selectedFood) ? `${foodNames[selectedFood]}備料完成` : `點擊按鈕切配 ${foodNames[selectedFood]}`;
+    }
+  } else {
+    if ($('boardFoodImg')) $('boardFoodImg').setAttribute('hidden', '');
+    $('boardFood').textContent = '砧板空著';
+    if ($('cutProgressText')) $('cutProgressText').textContent = '點選上方食材放上砧板切配';
+    $('cutBtn').textContent = '切配';
+  }
+
+  // Wok Controls & Visuals
+  $('heatBtn').disabled = (currentStage < STAGES.COOK) || plated;
   $('heatBtn').textContent = heated ? '關火' : '開火';
-  $('addBtn').disabled = plated || !heated || prepped.size === 0;
-  $('stirBtn').disabled = plated || !heated || inWok.size === 0;
-  $('plateBtn').disabled = plated || !heated || !ready || stirs < 3;
+  $('addBtn').disabled = (currentStage < STAGES.COOK) || plated || !heated || prepped.size === 0;
+  $('stirBtn').disabled = (currentStage < STAGES.COOK) || plated || !heated || inWok.size === 0;
+  $('plateBtn').disabled = (currentStage < STAGES.COOK) || plated || !heated || !ready || stirs < 3;
   $('flame').classList.toggle('is-on', heated);
   document.querySelector('.wok-visual').classList.toggle('is-cooking', heated && inWok.size > 0);
+
+  if ($('wokStatusText')) {
+    if (currentStage < STAGES.COOK) {
+      $('wokStatusText').textContent = '尚未進入炒鍋階段';
+    } else if (!atWok) {
+      $('wokStatusText').textContent = '提示：請先靠近後廚炒鍋台 (X: ~9.0)';
+    } else if (!heated) {
+      $('wokStatusText').textContent = '點擊「開火」啟動瓦斯爐火加熱黑鐵炒鍋';
+    } else if (inWok.size === 0) {
+      $('wokStatusText').textContent = '鍋已燒熱，點擊「下鍋」倒入備妥食材';
+    } else if (stirs < 3) {
+      $('wokStatusText').textContent = `以金屬鍋鏟翻炒推勻 (${stirs} / 3 次)`;
+    } else {
+      $('wokStatusText').textContent = '麻婆豆腐色澤紅亮、香味撲鼻！點擊「盛盤」';
+    }
+  }
+
+  if ($('wokSimmerImg')) {
+    $('wokSimmerImg').hidden = !(inWok.size >= 4 && stirs >= 3 && !plated);
+  }
+
+  if ($('platedDishPreview')) {
+    if (plated) {
+      $('platedDishPreview').removeAttribute('hidden');
+    } else {
+      $('platedDishPreview').setAttribute('hidden', '');
+    }
+  }
+
   $('wokContents').textContent = plated ? '麻婆豆腐完成' : inWok.size ? [...inWok].map(id => foodNames[id]).join('＋') : '空鍋';
 
   if (currentStage >= STAGES.COOK && !plated) {
@@ -259,7 +417,11 @@ function updateCooking() {
 function resetAll() {
   x = 250; y = 470; previousTime = 0; keys.clear(); visited.clear();
   selectedFood = null; prepped.clear(); inWok.clear(); heated = false; stirs = 0; plated = false;
+  for (const k in cutStages) cutStages[k] = 0;
   $('boardFood').textContent = '砧板空著';
+  if ($('boardFoodImg')) $('boardFoodImg').setAttribute('hidden', '');
+  if ($('wokSimmerImg')) $('wokSimmerImg').setAttribute('hidden', '');
+  if ($('platedDishPreview')) $('platedDishPreview').setAttribute('hidden', '');
   $('recipeLog').innerHTML = '<li>等待開始</li>';
   $('log').textContent = '已重置：探索與料理狀態皆已清空';
   if (dialogModal && !dialogModal.hasAttribute('hidden')) dialogModal.setAttribute('hidden', '');
@@ -299,7 +461,7 @@ function handleInteraction(name) {
     } else if (currentStage === STAGES.SERVE) {
       showDialog({
         badge: 'PATIENT FEEDBACK',
-        title: '【第一口品嚐回饋】病患反應與滿意度評分',
+        title: '【第一口品嚐回饋】病患反應與評分',
         content: `
           <p><strong>上班族病患雙手接過熱氣騰騰的青花瓷碗，用湯匙舀起第一口麻婆豆腐送入口中：</strong></p>
           <p>「熱氣瞬間在嘴裡散開！花椒的清香微麻、豆瓣醬的醬香醇厚，加上細緻滑嫩的豆腐，微辣但完全不嗆，整個人從胸口到胃裡都暖了起來……剛才緊繃的肩膀一下子全放鬆了！」</p>
@@ -323,7 +485,7 @@ function handleInteraction(name) {
     if (currentStage === STAGES.ORDER) {
       showDialog({
         badge: 'RX PRINTER — 料理處方單',
-        title: '【電子病歷系統 / 料理單出單】',
+        title: '【電子病歷系統 / 料理處方單出單】',
         content: `
           <p><strong>處方代碼：</strong>#CK2-MAPO-001</p>
           <p><strong>料理品項：</strong>經典舒壓家常麻婆豆腐 (Fictional Stress-Relief Meal)</p>
@@ -371,7 +533,7 @@ function handleInteraction(name) {
   if (name.includes('備料') || name.includes('Counter')) {
     if (currentStage === STAGES.PREP) {
       cookLog('抵達備料檯：請在下方工作檯點選食材並點擊「切配」');
-      $('log').textContent = '抵達備料檯：請切配豆腐、絞肉、豆瓣醬、蒜';
+      $('log').textContent = '抵達備料檯：請切配豆腐、絞肉、豆瓣醬、蒜、蔥';
       return;
     }
   }
@@ -387,61 +549,165 @@ function handleInteraction(name) {
 }
 
 foodButtons.forEach(button => button.addEventListener('click', () => {
+  if (currentStage < STAGES.PREP) {
+    $('log').textContent = '前置任務未完成：請先完成問診、開單與取材！';
+    return;
+  }
   selectedFood = button.dataset.food;
-  $('boardFood').textContent = `${foodNames[selectedFood]} ${prepped.has(selectedFood) ? '已備妥' : '已放上砧板'}`;
   updateCooking();
 }));
 
 $('cutBtn').addEventListener('click', () => {
   if ($('cutBtn').disabled) return;
-  prepped.add(selectedFood);
-  $('boardFood').textContent = `${foodNames[selectedFood]} 已備妥`;
-  cookLog(`備料完成：${foodNames[selectedFood]}`);
+  if (!isNearPrepStation()) {
+    $('log').textContent = '未到備料檯：Dr. Speed 必須走近備料檯 (X: ~5.0) 才能切配！';
+    cookLog('提示：請先靠近後廚備料檯才能切配');
+    return;
+  }
+
+  if (selectedFood === 'douban') {
+    // Spoon scoop action (舀取)
+    if ($('boardSpoon')) {
+      $('boardSpoon').classList.add('is-scooping');
+      setTimeout(() => $('boardSpoon').classList.remove('is-scooping'), 300);
+    }
+    cutStages.douban = 1;
+    prepped.add('douban');
+    cookLog('川味豆瓣醬：用湯匙舀取醇厚紅油豆瓣醬！');
+  } else if (selectedFood === 'tofu') {
+    // Knife chopping action (下刀切塊)
+    if ($('boardKnife')) {
+      $('boardKnife').classList.add('is-chopping');
+      if ($('chopEffect')) $('chopEffect').classList.add('is-active');
+      setTimeout(() => {
+        $('boardKnife').classList.remove('is-chopping');
+        if ($('chopEffect')) $('chopEffect').classList.remove('is-active');
+      }, 200);
+    }
+    cutStages.tofu = (cutStages.tofu || 0) + 1;
+    if (cutStages.tofu >= 3) {
+      prepped.add('tofu');
+      cookLog('嫩豆腐：對半剖開、切成條狀，再均勻切成骰子塊！');
+    } else if (cutStages.tofu === 1) {
+      cookLog('嫩豆腐：刀鋒下切，對半剖開');
+    } else if (cutStages.tofu === 2) {
+      cookLog('嫩豆腐：整齊切成長方條狀');
+    }
+  } else if (selectedFood === 'scallion') {
+    if ($('boardKnife')) {
+      $('boardKnife').classList.add('is-chopping');
+      if ($('chopEffect')) $('chopEffect').classList.add('is-active');
+      setTimeout(() => {
+        $('boardKnife').classList.remove('is-chopping');
+        if ($('chopEffect')) $('chopEffect').classList.remove('is-active');
+      }, 200);
+    }
+    cutStages.scallion = 1;
+    prepped.add('scallion');
+    cookLog('鮮青蔥：切除蔥白根部，切成細碎翠綠蔥花！');
+  } else if (selectedFood === 'garlic') {
+    if ($('boardKnife')) {
+      $('boardKnife').classList.add('is-chopping');
+      if ($('chopEffect')) $('chopEffect').classList.add('is-active');
+      setTimeout(() => {
+        $('boardKnife').classList.remove('is-chopping');
+        if ($('chopEffect')) $('chopEffect').classList.remove('is-active');
+      }, 200);
+    }
+    cutStages.garlic = 1;
+    prepped.add('garlic');
+    cookLog('鮮蒜瓣：刀面拍扁破壁，細剁成香濃蒜末！');
+  } else if (selectedFood === 'pork') {
+    if ($('boardKnife')) {
+      $('boardKnife').classList.add('is-chopping');
+      if ($('chopEffect')) $('chopEffect').classList.add('is-active');
+      setTimeout(() => {
+        $('boardKnife').classList.remove('is-chopping');
+        if ($('chopEffect')) $('chopEffect').classList.remove('is-active');
+      }, 200);
+    }
+    cutStages.pork = 1;
+    prepped.add('pork');
+    cookLog('上等豬絞肉：以刀背輕剁鬆散，均勻分切成肉末粒！');
+  } else {
+    prepped.add(selectedFood);
+    cookLog(`備料完成：${foodNames[selectedFood]}`);
+  }
+
   if (required.every(id => prepped.has(id) || inWok.has(id)) && currentStage <= STAGES.PREP) {
     setStage(STAGES.COOK);
-    cookLog('必要食材備齊：請移步炒鍋爐台開火下鍋');
+    cookLog('麻婆豆腐核心食材全數備妥！請走向炒鍋爐台開火下鍋');
   }
   updateCooking();
 });
 
 $('heatBtn').addEventListener('click', () => {
+  if (!isNearWokStation()) {
+    $('log').textContent = '未到炒鍋爐台：Dr. Speed 必須走近炒鍋爐台 (X: ~9.0) 才能操作！';
+    cookLog('提示：請先靠近後廚炒鍋爐台才能開火');
+    return;
+  }
   heated = !heated;
-  cookLog(heated ? '炒鍋升溫' : '關火');
+  cookLog(heated ? '瓦斯爐點火：藍色烈焰環繞鍋底，黑鐵炒鍋迅速升溫！' : '關閉爐火');
   updateCooking();
 });
 
 $('addBtn').addEventListener('click', () => {
   if ($('addBtn').disabled) return;
-  cookLog(`下鍋：${[...prepped].map(id => foodNames[id]).join('、')}`);
+  if (!isNearWokStation()) {
+    $('log').textContent = '未到炒鍋爐台：請先走近炒鍋爐台才能下鍋！';
+    return;
+  }
+  cookLog(`食材依序下鍋：${[...prepped].map(id => foodNames[id]).join('、')} 入鍋爆香！`);
   prepped.forEach(id => inWok.add(id));
   prepped.clear();
   selectedFood = null;
   stirs = 0;
   $('boardFood').textContent = '砧板空著';
+  if ($('boardFoodImg')) $('boardFoodImg').setAttribute('hidden', '');
   if (currentStage < STAGES.COOK) setStage(STAGES.COOK);
   updateCooking();
 });
 
 $('stirBtn').addEventListener('click', () => {
   if ($('stirBtn').disabled) return;
+  if (!isNearWokStation()) {
+    $('log').textContent = '未到炒鍋爐台：請先走近炒鍋爐台才能翻炒！';
+    return;
+  }
   stirs++;
-  cookLog(`翻炒 ${stirs} 次`);
+  if ($('wokSpatula')) {
+    $('wokSpatula').classList.add('is-stirring');
+    setTimeout(() => $('wokSpatula').classList.remove('is-stirring'), 350);
+  }
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     $('wokContents').animate([{ transform: 'translateX(-8px)' }, { transform: 'translateX(8px)' }, { transform: 'none' }], { duration: 250 });
   }
-  if (stirs >= 3 && required.every(id => inWok.has(id)) && currentStage <= STAGES.COOK) {
-    setStage(STAGES.PLATE);
-    cookLog('熟度均勻、香氣四溢！可以盛盤');
+
+  if (stirs === 1) {
+    cookLog('翻炒第 1 次：金屬鍋鏟推動豬絞肉均勻受熱，肉粒變色微焦散發肉香！');
+  } else if (stirs === 2) {
+    cookLog('翻炒第 2 次：豆瓣醬爆出紅油與熱氣，紅亮油光完整包覆肉末與蒜香！');
+  } else if (stirs >= 3) {
+    cookLog('翻炒第 3 次：豆腐輕柔推勻吸飽濃汁，鍋氣升騰，麻辣香醇熟成！');
+    if (required.every(id => inWok.has(id)) && currentStage <= STAGES.COOK) {
+      setStage(STAGES.PLATE);
+      cookLog('火候達到極致、醬汁濃郁裹附！已可以盛盤出鍋');
+    }
   }
   updateCooking();
 });
 
 $('plateBtn').addEventListener('click', () => {
   if ($('plateBtn').disabled) return;
+  if (!isNearWokStation()) {
+    $('log').textContent = '未到炒鍋爐台：請先走近炒鍋爐台盛盤！';
+    return;
+  }
   plated = true;
   heated = false;
   setStage(STAGES.SERVE);
-  cookLog('麻婆豆腐已出鍋盛盤！請端回診間送呈病人');
+  cookLog('以鍋鏟將麻婆豆腐俐落舀入青花瓷碗！托盤放上越光米飯與筷匙，請端回診間');
   updateCooking();
 });
 
@@ -500,7 +766,19 @@ window.teleportAndSync = function (x3d, z3d) {
     window.scene3DState.interactiveTarget = window.getNearbyTarget(x3d, z3d);
   }
   updatePrompt();
+  updateCooking();
 };
+
+const origSceneSetMissionStage = window.setMissionStage;
+window.setMissionStage = function (stage) {
+  currentStage = stage;
+  if (origSceneSetMissionStage) origSceneSetMissionStage(stage);
+  if (window.setCarryingTray) window.setCarryingTray(stage === STAGES.SERVE);
+  if (window.setPatientDishVisible) window.setPatientDishVisible(stage >= STAGES.FIRST_BITE);
+  updateMissionUI();
+  updateCooking();
+};
+window.setGameStage = window.setMissionStage;
 
 window.getMissionStage = function () {
   return currentStage;

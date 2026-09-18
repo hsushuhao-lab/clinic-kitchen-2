@@ -57,9 +57,16 @@ def main():
             assert test, name
             results.append({'test': name, 'status':'PASS'})
         def prepare(ids):
+            page.evaluate('window.setMissionStage && window.setMissionStage(3)')
+            page.evaluate('window.teleportAndSync && window.teleportAndSync(5.0, -1.5)')
             for food in ids:
                 page.locator(f'[data-food="{food}"]').click()
-                page.locator('#cutBtn').click()
+                cuts = 3 if food == 'tofu' else 1
+                for _ in range(cuts):
+                    page.locator('#cutBtn').click()
+        def wok_station():
+            page.evaluate('window.setMissionStage && window.setMissionStage(4)')
+            page.evaluate('window.teleportAndSync && window.teleportAndSync(9.0, -1.4)')
         def reset(): page.keyboard.press('r'); page.wait_for_timeout(80)
         try:
             for width,height in [(1440,900),(768,1024),(390,844)]:
@@ -85,6 +92,7 @@ def main():
             check('arrows do not scroll page',page.evaluate('scrollY') == 0)
             reset()
             prepare(['pork','douban','garlic','pepper'])
+            wok_station()
             page.locator('#heatBtn').click();page.locator('#addBtn').click()
             for _ in range(3): page.locator('#stirBtn').click()
             check('cannot plate without tofu',page.locator('#plateBtn').is_disabled())
@@ -93,6 +101,7 @@ def main():
             check('R clears selection and prepared food',page.locator('.is-selected,.is-prepped').count() == 0)
             check('R extinguishes flame',page.locator('#flame.is-on').count() == 0)
             prepare(['tofu','pork','douban','garlic'])
+            wok_station()
             page.locator('#heatBtn').click();page.locator('#addBtn').click()
             check('cannot plate before three stirs',page.locator('#plateBtn').is_disabled())
             page.locator('#stirBtn').click();page.locator('#stirBtn').click()
@@ -101,7 +110,9 @@ def main():
             check('cold wok cannot stir or plate',page.locator('#stirBtn').is_disabled() and page.locator('#plateBtn').is_disabled())
             page.locator('#heatBtn').click();page.locator('#stirBtn').click()
             check('valid recipe can plate',page.locator('#plateBtn').is_enabled())
-            prepare(['scallion']);page.locator('#addBtn').click()
+            prepare(['scallion'])
+            wok_station()
+            page.locator('#addBtn').click()
             check('new ingredients require stirring again',page.locator('#plateBtn').is_disabled())
             for _ in range(3):page.locator('#stirBtn').click()
             page.locator('#plateBtn').click()

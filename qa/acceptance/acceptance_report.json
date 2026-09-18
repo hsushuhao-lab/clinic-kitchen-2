@@ -1,0 +1,25 @@
+{
+  "suite": "End-to-End Real Keyboard & Mouse Acceptance Test",
+  "status": "ALL_PASS",
+  "steps": [
+    "1. Real keyboard WASD moves in correct depth axis (-Z deeper, +Z camera) and synchronizes facing",
+    "2. Station & Task gating strictly blocks lower workbench before prerequisites",
+    "3. Walked to Patient Chair and completed consultation dialog",
+    "4. Walked to Doctor Desk and confirmed Mapo Tofu cooking order",
+    "5. Walked through transition zone to Fridge and gathered cold ingredients",
+    "6. Cutting board demonstrated realistic knife chops (tofu cubes, scallions, garlic) and spoon scoop for douban",
+    "7. Wok ignited flame, added ingredients, and metal spatula stirred 3x into bubbling simmer",
+    "8. Plated into blue-pattern porcelain bowl on tray with steamed rice, chopsticks and 3D carrying stance",
+    "9. Delivered tray to patient table; patient enjoyed first bite with 100% satisfaction and disclaimer",
+    "10. Reset restored all mission and culinary state cleanly"
+  ],
+  "screenshots": [
+    "01_direction_depth.png",
+    "02_station_gating_locked.png",
+    "03_cutting_board_tofu_scallion.png",
+    "04_wok_spatula_simmer.png",
+    "05_dish_plating_tray.png",
+    "06_dr_speed_carrying_tray.png",
+    "07_patient_first_bite.png"
+  ]
+}

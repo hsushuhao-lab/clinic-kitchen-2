@@ -29,9 +29,13 @@ jobs:
           python tests/test_initial_viewport.py
           python tests/browser_qa.py --base-url http://127.0.0.1:8000/ --output qa/current
           python tests/test_full_mission_chain.py
+          python tests/test_movement_direction.py
+          python tests/test_real_gameplay_acceptance.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ck-r2-browser-evidence
-          path: qa/current/
+          path: |
+            qa/current/
+            qa/acceptance/
           retention-days: 14

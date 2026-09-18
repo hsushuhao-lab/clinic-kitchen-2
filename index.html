@@ -57,11 +57,122 @@
   </main>
 
   <section id="cookingDeck" class="cooking-deck" aria-label="備料與煮菜操作區" tabindex="0">
-    <div class="cook-head"><div><span>LOWER WORKBENCH</span><h2>備料・煮菜</h2></div><strong id="cookObjective">階段 1/8：前往診間病人椅進行問診</strong></div>
+    <div class="cook-head">
+      <div><span>LOWER WORKBENCH</span><h2>備料・煮菜</h2></div>
+      <strong id="cookObjective">階段 1/8：前往診間病人椅進行問診</strong>
+    </div>
+
+    <!-- Station gate overlay message if player is away from required station -->
+    <div id="stationLockOverlay" class="station-lock-overlay" hidden>
+      <div id="stationLockMsg" class="station-lock-msg">【前置任務未完成】請先完成診間問診 (1)、開單 (2) 與冰箱取材 (3)！</div>
+    </div>
+
     <div class="cook-columns">
-      <div class="prep-bench"><h3>備料 PREP</h3><div class="ingredient-tray"><button data-food="tofu"><i class="food-art tofu-art"></i><span>豆腐</span></button><button data-food="pork"><i class="food-art pork-art"></i><span>絞肉</span></button><button data-food="douban"><i class="food-art douban-art"></i><span>豆瓣醬</span></button><button data-food="garlic"><i class="food-art garlic-art"></i><span>蒜</span></button><button data-food="pepper"><i class="food-art pepper-art"></i><span>花椒</span></button><button data-food="scallion"><i class="food-art scallion-art"></i><span>青蔥</span></button></div><div class="board"><div id="boardFood">砧板空著</div><button id="cutBtn" disabled>切配</button></div></div>
-      <div class="wok-bench"><h3>炒鍋 WOK</h3><div class="wok-visual"><div class="steam steam-a"></div><div class="steam steam-b"></div><div id="flame" class="flame"><span></span><span></span><span></span></div><div class="wok-rim"></div><div id="wokContents">空鍋</div></div><div class="wok-actions"><button id="heatBtn">開火</button><button id="addBtn" disabled>下鍋</button><button id="stirBtn" disabled>翻炒</button><button id="plateBtn" disabled>盛盤</button></div></div>
-      <div class="cook-log"><h3>料理紀錄</h3><ol id="recipeLog"><li>等待開始</li></ol></div>
+      <!-- 1. PREP BENCH -->
+      <div class="prep-bench">
+        <div class="bench-title-row">
+          <h3>備料 PREP</h3>
+          <span id="prepStationBadge" class="station-badge">未在備料檯 (需靠近)</span>
+        </div>
+
+        <div class="ingredient-tray" aria-label="食材清單">
+          <button data-food="tofu" title="嫩豆腐">
+            <img class="food-art" src="assets/ingredients/mapo_tofu/tofu.png" alt="豆腐"/>
+            <span>豆腐</span>
+          </button>
+          <button data-food="pork" title="上等豬絞肉">
+            <img class="food-art" src="assets/ingredients/mapo_tofu/pork.png" alt="絞肉"/>
+            <span>絞肉</span>
+          </button>
+          <button data-food="douban" title="川味豆瓣醬">
+            <img class="food-art" src="assets/ingredients/mapo_tofu/douban.png" alt="豆瓣醬"/>
+            <span>豆瓣醬</span>
+          </button>
+          <button data-food="garlic" title="鮮蒜瓣">
+            <img class="food-art" src="assets/ingredients/mapo_tofu/garlic.png" alt="蒜"/>
+            <span>蒜瓣</span>
+          </button>
+          <button data-food="scallion" title="鮮青蔥">
+            <img class="food-art" src="assets/ingredients/mapo_tofu/scallion.png" alt="青蔥"/>
+            <span>青蔥</span>
+          </button>
+          <button data-food="pepper" title="大紅袍花椒">
+            <img class="food-art" src="assets/ingredients/mapo_tofu/pepper.png" alt="花椒"/>
+            <span>花椒</span>
+          </button>
+        </div>
+
+        <!-- Cutting Board Stage -->
+        <div class="board-stage-container">
+          <div class="board" id="boardStage">
+            <img id="boardBaseImg" class="board-base-img" src="assets/cooking/board_empty.png" alt="木質砧板"/>
+            <div id="boardFoodDisplay" class="board-food-display">
+              <img id="boardFoodImg" class="board-food-img" src="" alt="食材" hidden/>
+            </div>
+            <img id="boardKnife" class="board-knife-img" src="assets/cooking/chef_knife.png" alt="主廚刀"/>
+            <img id="boardSpoon" class="board-spoon-img" src="assets/cooking/douban_spoon.png" alt="舀醬湯匙" hidden/>
+            <div id="chopEffect" class="chop-effect"></div>
+            <div id="boardFood">砧板空著</div>
+          </div>
+          <div class="board-controls">
+            <button id="cutBtn" disabled>切配</button>
+            <div id="cutProgressText" class="cut-progress-text">點選食材放上砧板切配</div>
+          </div>
+        </div>
+
+        <!-- Prep Checklist -->
+        <div class="prep-checklist">
+          <span id="check-tofu" class="check-item">○ 豆腐切丁</span>
+          <span id="check-pork" class="check-item">○ 絞肉分切</span>
+          <span id="check-douban" class="check-item">○ 豆瓣舀取</span>
+          <span id="check-garlic" class="check-item">○ 蒜瓣切末</span>
+          <span id="check-scallion" class="check-item">○ 青蔥切花</span>
+        </div>
+      </div>
+
+      <!-- 2. WOK BENCH -->
+      <div class="wok-bench">
+        <div class="bench-title-row">
+          <h3>炒鍋 WOK</h3>
+          <span id="wokStationBadge" class="station-badge">未在爐台 (需靠近)</span>
+        </div>
+
+        <div class="wok-stage-container">
+          <div class="wok-visual" id="wokStage">
+            <div class="steam steam-a"></div>
+            <div class="steam steam-b"></div>
+            <div class="steam steam-c"></div>
+            <div id="flame" class="flame"><span></span><span></span><span></span></div>
+            <img id="wokBaseImg" class="wok-base-img" src="assets/cooking/wok_empty.png" alt="黑鐵炒鍋"/>
+            <img id="wokSimmerImg" class="wok-simmer-img" src="assets/cooking/wok_simmering.png" alt="沸騰麻婆豆腐" hidden/>
+            <div id="wokFoodLayer" class="wok-food-layer"></div>
+            <img id="wokSpatula" class="wok-spatula-img" src="assets/cooking/metal_spatula.png" alt="金屬鍋鏟"/>
+            <div id="wokContents">空鍋</div>
+          </div>
+          <div class="wok-actions">
+            <button id="heatBtn">開火</button>
+            <button id="addBtn" disabled>下鍋</button>
+            <button id="stirBtn" disabled>翻炒</button>
+            <button id="plateBtn" disabled>盛盤</button>
+          </div>
+          <div id="wokStatusText" class="wok-status-text">靠近爐台開火熱鍋</div>
+        </div>
+
+        <!-- Plated Dish Preview on Tray -->
+        <div id="platedDishPreview" class="plated-dish-preview" hidden>
+          <img src="assets/cooking/dish_plated.png" alt="麻婆豆腐青花瓷碗佐白飯" class="plated-img"/>
+          <div class="plated-info">
+            <strong>青花瓷碗麻婆豆腐 × 越光米飯</strong>
+            <span>已盛入托盤，請端回診間病人椅</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. COOK LOG -->
+      <div class="cook-log">
+        <h3>料理紀錄</h3>
+        <ol id="recipeLog"><li>等待開始</li></ol>
+      </div>
     </div>
   </section>
 

@@ -303,26 +303,40 @@ EXPORT_SCRIPT = """
     // Coat lower skirts (falling to knee height Y = 0.72m)
     const coatLower = box(0.44, 0.35, 0.28, mats.whiteCoat, 0, 0.72, 0);
 
-    // Arms (left & right)
-    const leftArm = cyl(0.055, 0.05, 0.55, 8, mats.whiteCoat, -0.26, 1.15, 0);
-    const rightArm = cyl(0.055, 0.05, 0.55, 8, mats.whiteCoat, 0.26, 1.15, 0);
-    const leftHand = cyl(0.045, 0.04, 0.12, 8, mats.skin, -0.26, 0.82, 0);
-    const rightHand = cyl(0.045, 0.04, 0.12, 8, mats.skin, 0.26, 0.82, 0);
+    // Limbs with shoulder and hip pivots for kinematic animation
+    const leftArmGroup = new THREE.Group();
+    leftArmGroup.name = 'LeftArm';
+    leftArmGroup.position.set(-0.26, 1.40, 0);
+    const leftArm = cyl(0.055, 0.05, 0.55, 8, mats.whiteCoat, 0, -0.27, 0);
+    const leftHand = cyl(0.045, 0.04, 0.12, 8, mats.skin, 0, -0.58, 0);
+    leftArmGroup.add(leftArm, leftHand);
 
-    // Legs & Pants (Y = 0.45m, height 0.65m)
-    const leftLeg = cyl(0.07, 0.06, 0.65, 10, mats.trousers, -0.11, 0.42, 0);
-    const rightLeg = cyl(0.07, 0.06, 0.65, 10, mats.trousers, 0.11, 0.42, 0);
+    const rightArmGroup = new THREE.Group();
+    rightArmGroup.name = 'RightArm';
+    rightArmGroup.position.set(0.26, 1.40, 0);
+    const rightArm = cyl(0.055, 0.05, 0.55, 8, mats.whiteCoat, 0, -0.27, 0);
+    const rightHand = cyl(0.045, 0.04, 0.12, 8, mats.skin, 0, -0.58, 0);
+    rightArmGroup.add(rightArm, rightHand);
 
-    // Leather Shoes (Y = 0.05m)
-    const leftShoe = box(0.12, 0.08, 0.22, mats.leather, -0.11, 0.04, 0.04);
-    const rightShoe = box(0.12, 0.08, 0.22, mats.leather, 0.11, 0.04, 0.04);
+    const leftLegGroup = new THREE.Group();
+    leftLegGroup.name = 'LeftLeg';
+    leftLegGroup.position.set(-0.11, 0.72, 0);
+    const leftLeg = cyl(0.07, 0.06, 0.65, 10, mats.trousers, 0, -0.32, 0);
+    const leftShoe = box(0.12, 0.08, 0.22, mats.leather, 0, -0.68, 0.04);
+    leftLegGroup.add(leftLeg, leftShoe);
+
+    const rightLegGroup = new THREE.Group();
+    rightLegGroup.name = 'RightLeg';
+    rightLegGroup.position.set(0.11, 0.72, 0);
+    const rightLeg = cyl(0.07, 0.06, 0.65, 10, mats.trousers, 0, -0.32, 0);
+    const rightShoe = box(0.12, 0.08, 0.22, mats.leather, 0, -0.68, 0.04);
+    rightLegGroup.add(rightLeg, rightShoe);
 
     // Stethoscope around neck
     const steth = cyl(0.15, 0.15, 0.03, 12, mats.darkSteel, 0, 1.45, 0.05);
 
     drSpeed.add(head, hair, glasses, neck, coatTorso, innerShirt, idBadge, coatLower,
-                leftArm, rightArm, leftHand, rightHand,
-                leftLeg, rightLeg, leftShoe, rightShoe, steth);
+                leftArmGroup, rightArmGroup, leftLegGroup, rightLegGroup, steth);
 
     // ==========================================
     // 3. SEATED OFFICE WORKER PATIENT (焦慮上班族)
@@ -355,10 +369,24 @@ EXPORT_SCRIPT = """
 
 def main():
     print("Exporting 3D models using Playwright...")
+    import http.server
+    import socketserver
+    import threading
+    import time
+    port = 8124
+    class Handler(http.server.SimpleHTTPRequestHandler):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, directory=str(ROOT), **kwargs)
+        def log_message(self, format, *args):
+            pass
+    server = socketserver.TCPServer(('127.0.0.1', port), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    time.sleep(0.3)
+
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page()
-        page.goto('http://127.0.0.1:8000/')
+        page.goto(f'http://127.0.0.1:{port}/')
         data = page.evaluate(EXPORT_SCRIPT)
         browser.close()
 

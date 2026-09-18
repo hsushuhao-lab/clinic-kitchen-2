@@ -132,28 +132,58 @@ window.scene3DState = {
     const THREE = window.THREE;
     const trayGroup = new THREE.Group();
     trayGroup.name = 'DeliveryTray';
-    const tray = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.02, 0.32), mats.stainless);
+
+    // Stainless/wooden service tray
+    const tray = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.02, 0.35), mats.stainless);
     tray.castShadow = true;
     trayGroup.add(tray);
-    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.08, 0.08, 14), mats.whiteCoat);
-    bowl.position.set(0, 0.05, 0);
-    bowl.castShadow = true;
-    trayGroup.add(bowl);
-    const tofuMat = new THREE.MeshStandardMaterial({ color: 0xa83218, roughness: 0.5, metalness: 0.1 });
-    const tofuSurface = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.10, 0.03, 12), tofuMat);
-    tofuSurface.position.set(0, 0.08, 0);
-    trayGroup.add(tofuSurface);
-    const whiteTofuMat = new THREE.MeshStandardMaterial({ color: 0xfffae8, roughness: 0.3 });
+
+    // Mapo Tofu blue-pattern ceramic bowl
+    const blueCeramicMat = new THREE.MeshStandardMaterial({ color: 0x245580, roughness: 0.2 });
+    const bowlOuter = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.08, 0.08, 16), mats.whiteCoat);
+    bowlOuter.position.set(-0.11, 0.05, 0);
+    bowlOuter.castShadow = true;
+    const blueRim = new THREE.Mesh(new THREE.TorusGeometry(0.118, 0.006, 8, 16), blueCeramicMat);
+    blueRim.rotation.x = Math.PI / 2;
+    blueRim.position.set(-0.11, 0.09, 0);
+    trayGroup.add(bowlOuter, blueRim);
+
+    // Simmering red chili oil surface & tofu cubes
+    const tofuSauceMat = new THREE.MeshStandardMaterial({ color: 0xbf2c16, roughness: 0.3, metalness: 0.1 });
+    const sauceSurface = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.10, 0.025, 14), tofuSauceMat);
+    sauceSurface.position.set(-0.11, 0.08, 0);
+    trayGroup.add(sauceSurface);
+
+    const whiteTofuMat = new THREE.MeshStandardMaterial({ color: 0xfffae8, roughness: 0.25 });
     const greenMat = new THREE.MeshStandardMaterial({ color: 0x3d8c40, roughness: 0.6 });
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       const cube = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.035, 0.035), whiteTofuMat);
-      cube.position.set(((i % 3) - 1) * 0.038, 0.10, (Math.floor(i / 3) - 0.5) * 0.04);
+      cube.position.set(-0.11 + ((i % 3) - 1) * 0.035, 0.095, (Math.floor(i / 3) - 0.5) * 0.035);
       trayGroup.add(cube);
     }
     const flake = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.01, 0.03), greenMat);
-    flake.position.set(0.01, 0.11, 0.02);
+    flake.position.set(-0.10, 0.105, 0.02);
     trayGroup.add(flake);
-    trayGroup.position.set(0, 0.92, 0.34);
+
+    // Steamed White Rice Bowl
+    const riceBowl = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.06, 0.07, 14), mats.whiteCoat);
+    riceBowl.position.set(0.12, 0.045, -0.04);
+    riceBowl.castShadow = true;
+    const riceDome = new THREE.Mesh(new THREE.SphereGeometry(0.085, 12, 10, 0, Math.PI * 2, 0, Math.PI / 2), mats.whiteCoat);
+    riceDome.position.set(0.12, 0.07, -0.04);
+    trayGroup.add(riceBowl, riceDome);
+
+    // Chopsticks
+    const chopstickMat = new THREE.MeshStandardMaterial({ color: 0x5a2d0c, roughness: 0.5 });
+    const c1 = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.003, 0.26, 6), chopstickMat);
+    c1.rotation.x = Math.PI / 2;
+    c1.position.set(0.08, 0.02, 0.10);
+    const c2 = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.003, 0.26, 6), chopstickMat);
+    c2.rotation.x = Math.PI / 2;
+    c2.position.set(0.10, 0.02, 0.10);
+    trayGroup.add(c1, c2);
+
+    trayGroup.position.set(0, 0.96, 0.40);
     return trayGroup;
   }
 
@@ -161,20 +191,39 @@ window.scene3DState = {
     const THREE = window.THREE;
     const group = new THREE.Group();
     group.name = 'PatientServedDish';
-    const sideTable = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.55, 0.45), mats.darkSteel);
+    const sideTable = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.55, 0.50), mats.darkSteel);
     sideTable.position.set(-6.6, 0.275, -1.4);
     sideTable.castShadow = true;
     group.add(sideTable);
 
-    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.08, 0.08, 14), mats.whiteCoat);
-    bowl.position.set(-6.6, 0.59, -1.4);
-    bowl.castShadow = true;
-    group.add(bowl);
+    // Tray on side table
+    const tableTray = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.02, 0.35), mats.stainless);
+    tableTray.position.set(-6.6, 0.56, -1.4);
+    group.add(tableTray);
 
-    const tofuMat = new THREE.MeshStandardMaterial({ color: 0xa83218, roughness: 0.5, metalness: 0.1 });
-    const tofuSurface = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.10, 0.03, 12), tofuMat);
-    tofuSurface.position.set(-6.6, 0.62, -1.4);
-    group.add(tofuSurface);
+    // Mapo Tofu Bowl
+    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.08, 0.08, 16), mats.whiteCoat);
+    bowl.position.set(-6.71, 0.61, -1.4);
+    bowl.castShadow = true;
+    const sauceSurface = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.10, 0.025, 14), new THREE.MeshStandardMaterial({ color: 0xbf2c16, roughness: 0.3 }));
+    sauceSurface.position.set(-6.71, 0.64, -1.4);
+    group.add(bowl, sauceSurface);
+
+    // White Tofu cubes on dish
+    const whiteTofuMat = new THREE.MeshStandardMaterial({ color: 0xfffae8, roughness: 0.25 });
+    for (let i = 0; i < 6; i++) {
+      const cube = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.035, 0.035), whiteTofuMat);
+      cube.position.set(-6.71 + ((i % 3) - 1) * 0.035, 0.655, -1.4 + (Math.floor(i / 3) - 0.5) * 0.035);
+      group.add(cube);
+    }
+
+    // Rice bowl on side table
+    const riceBowl = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.06, 0.07, 14), mats.whiteCoat);
+    riceBowl.position.set(-6.48, 0.605, -1.44);
+    const riceDome = new THREE.Mesh(new THREE.SphereGeometry(0.085, 12, 10, 0, Math.PI * 2, 0, Math.PI / 2), mats.whiteCoat);
+    riceDome.position.set(-6.48, 0.63, -1.44);
+    group.add(riceBowl, riceDome);
+
     return group;
   }
 
@@ -303,24 +352,45 @@ window.scene3DState = {
     const skirt = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.35, 0.28), mats.whiteCoat);
     skirt.position.set(0, 0.72, 0);
 
-    // Limbs
-    leftArmMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.05, 0.55, 8), mats.whiteCoat);
-    leftArmMesh.position.set(-0.26, 1.15, 0);
-    rightArmMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.05, 0.55, 8), mats.whiteCoat);
-    rightArmMesh.position.set(0.26, 1.15, 0);
+    // Limbs with shoulder and hip pivots
+    leftArmMesh = new THREE.Group();
+    leftArmMesh.name = 'LeftArm';
+    leftArmMesh.position.set(-0.26, 1.40, 0);
+    const leftArm = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.05, 0.55, 8), mats.whiteCoat);
+    leftArm.position.set(0, -0.27, 0);
+    const leftHand = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.04, 0.12, 8), mats.skin);
+    leftHand.position.set(0, -0.58, 0);
+    leftArmMesh.add(leftArm, leftHand);
 
-    leftLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.06, 0.65, 10), mats.trousers);
-    leftLegMesh.position.set(-0.11, 0.42, 0);
-    rightLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.06, 0.65, 10), mats.trousers);
-    rightLegMesh.position.set(0.11, 0.42, 0);
+    rightArmMesh = new THREE.Group();
+    rightArmMesh.name = 'RightArm';
+    rightArmMesh.position.set(0.26, 1.40, 0);
+    const rightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.05, 0.55, 8), mats.whiteCoat);
+    rightArm.position.set(0, -0.27, 0);
+    const rightHand = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.04, 0.12, 8), mats.skin);
+    rightHand.position.set(0, -0.58, 0);
+    rightArmMesh.add(rightArm, rightHand);
 
+    leftLegMesh = new THREE.Group();
+    leftLegMesh.name = 'LeftLeg';
+    leftLegMesh.position.set(-0.11, 0.72, 0);
+    const leftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.06, 0.65, 10), mats.trousers);
+    leftLeg.position.set(0, -0.32, 0);
     const leftShoe = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 0.22), mats.leather);
-    leftShoe.position.set(-0.11, 0.04, 0.04);
+    leftShoe.position.set(0, -0.68, 0.04);
+    leftLegMesh.add(leftLeg, leftShoe);
+
+    rightLegMesh = new THREE.Group();
+    rightLegMesh.name = 'RightLeg';
+    rightLegMesh.position.set(0.11, 0.72, 0);
+    const rightLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.06, 0.65, 10), mats.trousers);
+    rightLeg.position.set(0, -0.32, 0);
     const rightShoe = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 0.22), mats.leather);
-    rightShoe.position.set(0.11, 0.04, 0.04);
+    rightShoe.position.set(0, -0.68, 0.04);
+    rightLegMesh.add(rightLeg, rightShoe);
 
     group.add(head, hair, glasses, neck, torso, inner, badge, skirt,
-              leftArmMesh, rightArmMesh, leftLegMesh, rightLegMesh, leftShoe, rightShoe);
+              leftArmMesh, rightArmMesh, leftLegMesh, rightLegMesh);
     return group;
   }
 
@@ -454,6 +524,12 @@ window.scene3DState = {
     loader.load('assets/models/characters/dr_speed_placeholder.glb', function (gltf) {
       playerGroup = gltf.scene;
       playerGroup.position.set(window.scene3DState.playerPos.x, 0, window.scene3DState.playerPos.z);
+      playerGroup.traverse(child => {
+        if (child.name === 'LeftArm') leftArmMesh = child;
+        if (child.name === 'RightArm') rightArmMesh = child;
+        if (child.name === 'LeftLeg') leftLegMesh = child;
+        if (child.name === 'RightLeg') rightLegMesh = child;
+      });
       playerGroup.add(trayMesh);
       scene.add(playerGroup);
       glbLoadedCount++;
@@ -522,14 +598,24 @@ window.scene3DState = {
       const armAngle = -Math.sin(walkCycle) * 0.35;
       if (leftLegMesh) leftLegMesh.rotation.x = legAngle;
       if (rightLegMesh) rightLegMesh.rotation.x = -legAngle;
-      if (leftArmMesh) leftArmMesh.rotation.x = armAngle;
-      if (rightArmMesh) rightArmMesh.rotation.x = -armAngle;
+      if (state.carryingTray) {
+        if (leftArmMesh) { leftArmMesh.rotation.x = -Math.PI / 3; leftArmMesh.rotation.z = 0.15; }
+        if (rightArmMesh) { rightArmMesh.rotation.x = -Math.PI / 3; rightArmMesh.rotation.z = -0.15; }
+      } else {
+        if (leftArmMesh) { leftArmMesh.rotation.x = armAngle; leftArmMesh.rotation.z = 0; }
+        if (rightArmMesh) { rightArmMesh.rotation.x = -armAngle; rightArmMesh.rotation.z = 0; }
+      }
     } else {
       walkCycle = 0;
       if (leftLegMesh) leftLegMesh.rotation.x = 0;
       if (rightLegMesh) rightLegMesh.rotation.x = 0;
-      if (leftArmMesh) leftArmMesh.rotation.x = 0;
-      if (rightArmMesh) rightArmMesh.rotation.x = 0;
+      if (state.carryingTray) {
+        if (leftArmMesh) { leftArmMesh.rotation.x = -Math.PI / 3; leftArmMesh.rotation.z = 0.15; }
+        if (rightArmMesh) { rightArmMesh.rotation.x = -Math.PI / 3; rightArmMesh.rotation.z = -0.15; }
+      } else {
+        if (leftArmMesh) { leftArmMesh.rotation.x = 0; leftArmMesh.rotation.z = 0; }
+        if (rightArmMesh) { rightArmMesh.rotation.x = 0; rightArmMesh.rotation.z = 0; }
+      }
     }
 
     // Update Player Group in 3D

@@ -59,3 +59,73 @@ button:focus-visible,summary:focus-visible,#world:focus-visible{outline:2px soli
 .dialog-btn.primary:hover{background:#3b8bb8}
 .dialog-btn.secondary{background:#202c33;color:#b9c8ce;border:1px solid #384b54}
 .dialog-btn.secondary:hover{background:#283840;color:#fff}
+
+/* Realistic Workbench & Station Proximity UI */
+.bench-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.station-badge{font-size:.68rem;padding:2px 8px;border-radius:4px;background:#2b221f;color:#e88b74;border:1px solid #7c3a2b;transition:all .2s}
+.station-badge.is-ready{background:#1a3328;color:#7ae2a4;border-color:#2a704e}
+
+.station-lock-overlay{margin-bottom:8px;padding:8px 12px;background:rgba(180,40,30,.2);border:1px solid #c94432;border-radius:6px;color:#ffc4bc;font-size:.78rem;font-weight:700}
+.station-lock-overlay[hidden]{display:none !important}
+
+/* Realistic Ingredients */
+.ingredient-tray button{position:relative;background:#182329;border:1px solid #2e4450;border-radius:8px;padding:4px;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:74px;cursor:pointer;transition:all .15s}
+.ingredient-tray button:hover{background:#22333b;border-color:#528096}
+.ingredient-tray button.is-selected{background:#264354;border-color:#f2c57c;box-shadow:0 0 8px rgba(242,197,124,.3)}
+.ingredient-tray button.is-prepped{border-color:#48c774;opacity:.85}
+.ingredient-tray button.is-prepped::after{content:'✓';position:absolute;top:4px;right:6px;color:#48c774;font-weight:bold;font-size:.8rem}
+.food-art{display:block;width:44px;height:44px;object-fit:contain;border-radius:4px}
+.ingredient-tray button span{font-size:.75rem;color:#d3e1e6}
+
+/* Cutting Board Stage */
+.board-stage-container{margin-top:8px;background:#141e24;border:1px solid #283a45;border-radius:8px;padding:8px}
+.board{position:relative;width:100%;height:130px;background:#201711;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.board-base-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.9}
+.board-food-display{position:relative;z-index:3;display:flex;align-items:center;justify-content:center}
+.board-food-img{width:90px;height:90px;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,.6));transition:all .15s}
+.board-knife-img{position:absolute;right:18px;top:10px;width:115px;height:auto;z-index:5;transform:rotate(-15deg);transform-origin:top right;filter:drop-shadow(0 6px 12px rgba(0,0,0,.7));transition:transform .12s cubic-bezier(.17,.89,.32,1.28);pointer-events:none}
+.board-knife-img.is-chopping{transform:rotate(12deg) translateY(24px) scale(.96)}
+.board-spoon-img{position:absolute;right:24px;top:12px;width:95px;height:auto;z-index:5;transform:rotate(-10deg);transform-origin:bottom right;filter:drop-shadow(0 6px 10px rgba(0,0,0,.7));transition:transform .15s ease-in-out;pointer-events:none}
+.board-spoon-img.is-scooping{transform:rotate(20deg) translateY(18px)}
+.chop-effect{position:absolute;inset:0;background:radial-gradient(circle at 45% 55%,rgba(255,255,255,.4),transparent 40%);opacity:0;pointer-events:none;z-index:6;transition:opacity .08s}
+.chop-effect.is-active{opacity:1}
+#boardFood{position:absolute;bottom:6px;left:10px;z-index:4;font-size:.7rem;color:#faeed7;background:rgba(12,18,22,.75);padding:2px 6px;border-radius:4px}
+.board-controls{display:flex;align-items:center;gap:10px;margin-top:6px}
+#cutBtn{padding:6px 16px;background:#325d75;color:#fff;border:1px solid #4a82a0;border-radius:6px;font-size:.78rem;font-weight:700;cursor:pointer}
+#cutBtn:disabled{background:#1d2930;color:#5a707a;border-color:#2a3b45;cursor:not-allowed}
+.cut-progress-text{font-size:.72rem;color:#96aeb8}
+
+.prep-checklist{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid #20313a}
+.check-item{font-size:.7rem;color:#70848e;background:#10171b;padding:2px 6px;border-radius:3px}
+.check-item.is-done{color:#54df8c;background:#13261c}
+
+/* Wok Stage */
+.wok-stage-container{margin-top:4px}
+.wok-visual{position:relative;width:100%;height:130px;background:#151d22;border-radius:8px;overflow:hidden;border:1px solid #293d48}
+.wok-base-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:2}
+.wok-simmer-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:3;animation:simmerPulse 1.8s infinite ease-in-out}
+@keyframes simmerPulse{0%,100%{filter:brightness(1) contrast(1.02)}50%{filter:brightness(1.1) contrast(1.08)}}
+.wok-spatula-img{position:absolute;right:22px;bottom:16px;width:90px;height:auto;z-index:5;transform:rotate(-25deg);transform-origin:top right;filter:drop-shadow(0 6px 10px rgba(0,0,0,.8));transition:transform .2s ease-in-out;pointer-events:none}
+.wok-spatula-img.is-stirring{transform:rotate(15deg) translate(-28px,-14px)}
+.flame{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);z-index:1;display:none}
+.flame.is-on{display:flex;gap:4px}
+.flame span{width:16px;height:24px;border-radius:50% 50% 20% 20%;background:radial-gradient(ellipse at bottom,#88ccff,#2266ff 60%,transparent);animation:flameWave .2s infinite alternate}
+@keyframes flameWave{from{height:20px}to{height:28px}}
+.steam-c{position:absolute;left:55%;bottom:35px;width:18px;height:24px;background:rgba(255,255,255,.2);border-radius:50%;filter:blur(8px);opacity:0}
+.wok-visual.is-cooking .steam-c{animation:steam 2.2s infinite ease-out;animation-delay:1.2s}
+#wokContents{position:absolute;bottom:6px;left:10px;z-index:4;font-size:.7rem;color:#fce4d6;background:rgba(12,18,22,.8);padding:2px 6px;border-radius:4px}
+.wok-actions{display:flex;gap:6px;margin-top:8px}
+.wok-actions button{flex:1;padding:6px 0;border-radius:6px;font-size:.78rem;font-weight:700;cursor:pointer;background:#2a4555;color:#fff;border:1px solid #3c657a}
+.wok-actions button:disabled{background:#1b252c;color:#556a75;border-color:#24353f;cursor:not-allowed}
+#plateBtn:not(:disabled){background:#8a2e1d;border-color:#d4513b;color:#ffe6e0;animation:glowPulse 1s infinite alternate}
+@keyframes glowPulse{from{box-shadow:0 0 4px #d4513b}to{box-shadow:0 0 12px #ff694b}}
+.wok-status-text{font-size:.72rem;color:#96aeb8;margin-top:4px}
+
+/* Plated Dish Preview */
+.plated-dish-preview{display:flex;align-items:center;gap:12px;margin-top:8px;padding:8px 12px;background:#192730;border:1px solid #3b5f73;border-radius:8px}
+.plated-dish-preview[hidden]{display:none !important}
+.plated-img{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid #f2c57c}
+.plated-info{display:flex;flex-direction:column;gap:2px}
+.plated-info strong{font-size:.8rem;color:#fce6b3}
+.plated-info span{font-size:.7rem;color:#a2b9c4}
+

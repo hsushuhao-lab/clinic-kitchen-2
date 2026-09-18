@@ -9,6 +9,8 @@ on:
       - '*.css'
       - 'src/**'
       - 'assets/models/**'
+      - 'assets/cooking/**'
+      - 'assets/ingredients/**'
   workflow_dispatch:
 permissions:
   contents: read

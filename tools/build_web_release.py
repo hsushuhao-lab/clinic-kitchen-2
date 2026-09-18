@@ -15,13 +15,25 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'web-dist'
-FILES = (
+
+CORE_FILES = (
     'index.html', 'styles.css', 'r2-fixes.css',
     'src/three.min.js', 'src/scene3d.js', 'src/main.js',
     'assets/models/environment/clinic_kitchen_scene.glb',
     'assets/models/characters/dr_speed_placeholder.glb',
     'assets/models/characters/patient_office_placeholder.glb',
 )
+
+CULINARY_ASSETS = tuple(sorted([
+    p.relative_to(ROOT).as_posix()
+    for p in (ROOT / 'assets/ingredients/mapo_tofu').glob('*.png')
+] + [
+    p.relative_to(ROOT).as_posix()
+    for p in (ROOT / 'assets/cooking').glob('*.png')
+]))
+
+FILES = CORE_FILES + CULINARY_ASSETS
+
 
 class References(HTMLParser):
     def __init__(self):
