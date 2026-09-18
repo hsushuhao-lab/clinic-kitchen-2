@@ -1,0 +1,70 @@
+name: Runtime-only web release audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/build_web_release.py'
+      - '.github/workflows/web-release-audit.yml'
+      - 'index.html'
+      - '*.css'
+      - 'src/**'
+      - 'assets/models/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install verification tools
+        run: |
+          python -m pip install -r requirements-qa.txt
+          python -m playwright install --with-deps chromium
+      - name: Validate source and create strictly allowlisted release
+        run: |
+          python tests/smoke_test.py
+          python tools/verify_assets.py
+          python tools/build_web_release.py
+      - name: Test runtime-only HTTP root, not private repository root
+        run: |
+          python -m http.server 8000 --bind 127.0.0.1 --directory web-dist > /tmp/ck-release-http.log 2>&1 &
+          sleep 2
+          python tests/test_initial_viewport.py
+          python tests/browser_qa.py --base-url http://127.0.0.1:8000/ --output qa/current
+          python tests/test_full_mission_chain.py
+          python - <<'PY'
+          from urllib.request import urlopen
+          from urllib.error import HTTPError
+          for path in ['.git/config', '.env', 'README.md', 'docs/AGENT_PROMPT.md', 'assets/manifest.json', 'assets/art_direction/approved/doctor_concepts.png']:
+              try:
+                  urlopen('http://127.0.0.1:8000/' + path)
+              except HTTPError as e:
+                  assert e.code == 404, (path, e.code)
+              else:
+                  raise AssertionError('Private/non-runtime path was served: ' + path)
+          print('Release privacy smoke: PASS (six non-runtime paths return 404)')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: clinic-kitchen-web-runtime
+          path: web-dist/
+          retention-days: 14
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: clinic-kitchen-release-audit
+          path: qa/current/
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          name: clinic-kitchen-verification-scripts
+          path: tests/
+          retention-days: 14
