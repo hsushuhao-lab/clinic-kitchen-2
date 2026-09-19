@@ -27,6 +27,35 @@ const required = ['tofu', 'pork', 'douban', 'garlic'];
 const prepped = new Set(), inWok = new Set();
 let x = 250, y = 470, previousTime = 0;
 let selectedFood = null, heated = false, stirs = 0, plated = false;
+let isPlating = false;
+let platingTimeout = null;
+let simmerTimer = 0;
+const REQUIRED_SIMMER_TIME = 4.0;
+
+let cookedDish = {
+  hasScallion: false,
+  hasPepper: false,
+  hasTofu: false,
+  hasPork: false,
+  hasDouban: false,
+  hasGarlic: false,
+  spicyLevel: '正常',
+  ricePortion: '未盛飯',
+  stirs: 0,
+  simmerProgress: 0,
+  isSimmered: false,
+  isBurnt: false
+};
+window.cookedDish = cookedDish;
+
+Object.defineProperty(window, 'plated', {
+  get: () => plated,
+  set: (v) => { plated = v; }
+});
+Object.defineProperty(window, 'isPlating', {
+  get: () => isPlating,
+  set: (v) => { isPlating = v; }
+});
 
 const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
 
@@ -49,6 +78,11 @@ let currentOrder = {
   scallion: true, // true (要青蔥), false (去青蔥)
   rice: '正常飯' // '正常飯', '半碗飯'
 };
+
+Object.defineProperty(window, 'currentOrder', {
+  get: () => currentOrder,
+  set: (v) => { currentOrder = v; }
+});
 
 function syncOrderTicketUI() {
   const tSpicy = $('ticketSpicy');
@@ -214,6 +248,20 @@ function move(now) {
     window.update3DPlayerMovement(dx, dy, dt, keys.has('shift') ? 1.6 : 1.0);
   }
 
+  // Simmer timer progression during active cooking
+  if (currentStage === STAGES.COOK && heated && stirs >= 3 && required.every(id => inWok.has(id))) {
+    simmerTimer += dt;
+    cookedDish.simmerProgress = Math.min(100, Math.round((simmerTimer / REQUIRED_SIMMER_TIME) * 100));
+    if (simmerTimer >= REQUIRED_SIMMER_TIME && !cookedDish.isSimmered) {
+      cookedDish.isSimmered = true;
+      setStage(STAGES.PLATE);
+      cookLog('炒鍋：燜煮完成、紅油均勻收汁濃郁！請準備盛盤 (亦可先至電子鍋盛飯)');
+    }
+    if (simmerTimer > 15.0 && !cookedDish.isBurnt) {
+      cookedDish.isBurnt = true;
+    }
+  }
+
   updatePrompt();
   updateCooking();
   requestAnimationFrame(move);
@@ -266,10 +314,17 @@ function isNearWokStation() {
 }
 
 const cutStages = { tofu: 0, scallion: 0, garlic: 0, pork: 0, douban: 0, pepper: 0 };
+let lastRenderedBoardFood = undefined;
+let lastRenderedBoardStage = undefined;
 
 function renderBoardFoodPieces(food, stage) {
   const container = $('boardFoodPieces');
   if (!container) return;
+  if (food === lastRenderedBoardFood && stage === lastRenderedBoardStage) {
+    return;
+  }
+  lastRenderedBoardFood = food;
+  lastRenderedBoardStage = stage;
   if (!food) {
     container.innerHTML = '';
     return;
@@ -438,11 +493,50 @@ function updateCooking() {
   // Wok Controls & Visuals
   $('heatBtn').disabled = (currentStage < STAGES.COOK) || plated;
   $('heatBtn').textContent = heated ? '關火' : '開火';
-  $('addBtn').disabled = (currentStage < STAGES.COOK) || plated || !heated || prepped.size === 0;
-  $('stirBtn').disabled = (currentStage < STAGES.COOK) || plated || !heated || inWok.size === 0;
-  $('plateBtn').disabled = (currentStage < STAGES.COOK) || plated || !heated || !ready || stirs < 3;
+
+  const nextToAdd = (selectedFood && prepped.has(selectedFood))
+    ? selectedFood
+    : ['pork', 'garlic', 'douban', 'tofu', 'scallion', 'pepper'].find(id => prepped.has(id));
+
+  $('addBtn').disabled = (currentStage < STAGES.COOK) || plated || isPlating || !heated || prepped.size === 0;
+  if (nextToAdd) {
+    $('addBtn').textContent = (selectedFood && prepped.has(selectedFood)) ? `下料：${foodNames[selectedFood]}` : `下鍋：${foodNames[nextToAdd]}`;
+  } else {
+    $('addBtn').textContent = '下鍋';
+  }
+
+  $('stirBtn').disabled = (currentStage < STAGES.COOK) || plated || isPlating || !heated || inWok.size === 0;
+
+  const canPlate = ready && stirs >= 3 && ((currentStage === STAGES.PLATE) || (cookedDish.isSimmered || simmerTimer >= REQUIRED_SIMMER_TIME));
+  $('plateBtn').disabled = (currentStage < STAGES.COOK) || plated || isPlating || !heated || !canPlate;
+  $('plateBtn').textContent = isPlating ? '盛盤中...' : '盛盤';
   $('flame').classList.toggle('is-on', heated);
   document.querySelector('.wok-visual').classList.toggle('is-cooking', heated && inWok.size > 0);
+
+  // Rice Cooker Widget State
+  if ($('riceHalfBtn') && $('riceFullBtn')) {
+    const riceDisabled = (currentStage < STAGES.COOK) || plated || isPlating;
+    $('riceHalfBtn').disabled = riceDisabled;
+    $('riceFullBtn').disabled = riceDisabled;
+  }
+  if ($('riceStatusBadge')) {
+    const rPortion = cookedDish.ricePortion;
+    $('riceStatusBadge').textContent = rPortion === '未盛飯' ? '未盛飯' : `已盛【${rPortion}】✓`;
+    $('riceStatusBadge').classList.toggle('is-ready', rPortion !== '未盛飯');
+  }
+
+  // Simmer Progress Bar Widget
+  if ($('simmerProgressContainer')) {
+    const isSimmeringActive = currentStage >= STAGES.COOK && inWok.size >= 4 && stirs >= 3 && !plated;
+    $('simmerProgressContainer').hidden = !isSimmeringActive;
+    if (isSimmeringActive) {
+      const pct = Math.min(100, Math.round((simmerTimer / REQUIRED_SIMMER_TIME) * 100));
+      if ($('simmerProgressBarFill')) $('simmerProgressBarFill').style.width = `${pct}%`;
+      if ($('simmerProgressText')) {
+        $('simmerProgressText').textContent = cookedDish.isSimmered ? '收汁完成 (可盛盤)' : `${simmerTimer.toFixed(1)} / ${REQUIRED_SIMMER_TIME} 秒`;
+      }
+    }
+  }
 
   if ($('wokStatusText')) {
     if (currentStage < STAGES.COOK) {
@@ -455,8 +549,12 @@ function updateCooking() {
       $('wokStatusText').textContent = '鍋已燒熱，點擊「下鍋」倒入備妥食材';
     } else if (stirs < 3) {
       $('wokStatusText').textContent = `以金屬鍋鏟翻炒推勻 (${stirs} / 3 次)`;
+    } else if (!cookedDish.isSimmered && simmerTimer < REQUIRED_SIMMER_TIME) {
+      $('wokStatusText').textContent = `維持火候【燜煮收汁中】(${simmerTimer.toFixed(1)} / ${REQUIRED_SIMMER_TIME} 秒)... 期間可至電子鍋盛飯！`;
+    } else if (cookedDish.isBurnt) {
+      $('wokStatusText').textContent = '警告：火候過大、微帶焦香！請速關火並盛盤。';
     } else {
-      $('wokStatusText').textContent = '麻婆豆腐色澤紅亮、香味撲鼻！點擊「盛盤」';
+      $('wokStatusText').textContent = '麻婆豆腐色澤紅亮、紅油收汁完成！點擊「盛盤」';
     }
   }
 
@@ -479,64 +577,129 @@ function updateCooking() {
   if (currentStage >= STAGES.COOK && !plated) {
     $('cookObjective').textContent = !inWok.size ? '備妥豆腐、絞肉、豆瓣醬、蒜，再開火下鍋' :
       !ready ? `尚缺：${required.filter(id => !inWok.has(id)).map(id => foodNames[id]).join('、')}` :
-      !heated ? '重新開火才能翻炒' : stirs < 3 ? `翻炒 ${stirs} / 3 次` : '可以盛盤';
+      !heated ? '重新開火才能翻炒與燜煮' : stirs < 3 ? `翻炒推勻 ${stirs} / 3 次` :
+      (!cookedDish.isSimmered && simmerTimer < REQUIRED_SIMMER_TIME) ? `燜煮收汁中 (${simmerTimer.toFixed(1)} / ${REQUIRED_SIMMER_TIME} 秒，可並行至電子鍋盛飯)` : '燜煮完成！可以進行盛盤';
   } else if (plated && currentStage === STAGES.SERVE) {
     $('cookObjective').textContent = '階段 7/8：麻婆豆腐盛盤完成！端起托盤送回診間給病人';
   } else if (currentStage === STAGES.FIRST_BITE) {
-    $('cookObjective').textContent = '階段 8/8：病患品嚐完成｜滿意度 100% 達成！按 R 可重新開始';
+    $('cookObjective').textContent = '階段 8/8：病患品嚐完成｜按 R 可重新開始新一輪諮詢';
   } else {
     updateMissionUI();
   }
 }
-
-let lastWokFoodKey = '';
 
 function syncWokFoodDOM() {
   const container = $('wokFoodLayer');
   if (!container) return;
   if (inWok.size === 0 || plated) {
     if (container.hasChildNodes()) container.innerHTML = '';
-    lastWokFoodKey = '';
     return;
   }
 
-  const wokKey = `${[...inWok].sort().join(',')}|stirs:${stirs >= 2 ? 2 : (stirs >= 1 ? 1 : 0)}|plated:${plated}`;
-  if (wokKey === lastWokFoodKey) {
-    return; // Keep existing nodes to preserve running CSS animations & transitions
-  }
-  lastWokFoodKey = wokKey;
-
-  let html = '';
+  // 1. Red oil glow
+  let glowEl = container.querySelector('.wok-red-oil-glow');
   if (inWok.has('douban')) {
-    html += '<div class="wok-red-oil-glow"></div>';
+    if (!glowEl) {
+      glowEl = document.createElement('div');
+      glowEl.className = 'wok-red-oil-glow';
+      container.appendChild(glowEl);
+    }
+  } else if (glowEl) {
+    glowEl.remove();
   }
+
+  // 2. Pork element - persistent DOM node across stirs
+  let porkEl = container.querySelector('.wok-food-pork');
   if (inWok.has('pork')) {
     const porkSrc = stirs >= 1 ? 'assets/cooking/pork_browned.png' : 'assets/ingredients/mapo_tofu/pork.png';
-    html += `<img class="wok-food-item wok-food-pork ${stirs >= 1 ? 'is-browned' : ''}" src="${porkSrc}" alt="絞肉"/>`;
+    if (!porkEl) {
+      porkEl = document.createElement('img');
+      porkEl.className = `wok-food-item wok-food-pork ${stirs >= 1 ? 'is-browned' : ''}`;
+      porkEl.src = porkSrc;
+      porkEl.alt = '絞肉';
+      container.appendChild(porkEl);
+    } else {
+      if (!porkEl.src.endsWith(porkSrc)) porkEl.src = porkSrc;
+      porkEl.classList.toggle('is-browned', stirs >= 1);
+    }
+  } else if (porkEl) {
+    porkEl.remove();
   }
+
+  // 3. Garlic element
+  let garlicEl = container.querySelector('.wok-food-garlic');
   if (inWok.has('garlic')) {
-    html += `<img class="wok-food-item wok-food-garlic" src="assets/cooking/garlic_mince.png" alt="蒜末"/>`;
+    if (!garlicEl) {
+      garlicEl = document.createElement('img');
+      garlicEl.className = 'wok-food-item wok-food-garlic';
+      garlicEl.src = 'assets/cooking/garlic_mince.png';
+      garlicEl.alt = '蒜末';
+      container.appendChild(garlicEl);
+    }
+  } else if (garlicEl) {
+    garlicEl.remove();
   }
+
+  // 4. Douban paste
+  let doubanEl = container.querySelector('.wok-food-douban-paste');
   if (inWok.has('douban')) {
-    // Pure red-oil sauce paste layer without jar container
-    html += `<div class="wok-food-item wok-food-douban-paste ${stirs >= 2 ? 'is-red-oil' : ''}" title="發酵紅油豆瓣醬"></div>`;
+    if (!doubanEl) {
+      doubanEl = document.createElement('div');
+      doubanEl.className = `wok-food-item wok-food-douban-paste ${stirs >= 2 ? 'is-red-oil' : ''}`;
+      doubanEl.title = '發酵紅油豆瓣醬';
+      container.appendChild(doubanEl);
+    } else {
+      doubanEl.classList.toggle('is-red-oil', stirs >= 2);
+    }
+  } else if (doubanEl) {
+    doubanEl.remove();
   }
+
+  // 5. Tofu element
+  let tofuEl = container.querySelector('.wok-food-tofu');
   if (inWok.has('tofu')) {
-    html += `<img class="wok-food-item wok-food-tofu" src="assets/cooking/tofu_cubes.png" alt="豆腐丁"/>`;
+    if (!tofuEl) {
+      tofuEl = document.createElement('img');
+      tofuEl.className = 'wok-food-item wok-food-tofu';
+      tofuEl.src = 'assets/cooking/tofu_cubes.png';
+      tofuEl.alt = '豆腐丁';
+      container.appendChild(tofuEl);
+    }
+  } else if (tofuEl) {
+    tofuEl.remove();
   }
+
+  // 6. Scallion element
+  let scallionEl = container.querySelector('.wok-food-scallion');
   if (inWok.has('scallion')) {
-    html += `<img class="wok-food-item wok-food-scallion" src="assets/cooking/scallion_rings.png" alt="蔥花"/>`;
+    if (!scallionEl) {
+      scallionEl = document.createElement('img');
+      scallionEl.className = 'wok-food-item wok-food-scallion';
+      scallionEl.src = 'assets/cooking/scallion_rings.png';
+      scallionEl.alt = '蔥花';
+      container.appendChild(scallionEl);
+    }
+  } else if (scallionEl) {
+    scallionEl.remove();
   }
+
+  // 7. Simmer bubbles
+  let bubblesEl = container.querySelector('.simmer-bubbles');
   if (stirs >= 2 && inWok.size >= 4) {
-    html += `
-      <div class="simmer-bubbles">
+    if (!bubblesEl) {
+      bubblesEl = document.createElement('div');
+      bubblesEl.className = 'simmer-bubbles';
+      bubblesEl.innerHTML = `
         <span class="simmer-bubble" style="left:34%;bottom:26px;animation-delay:0s"></span>
         <span class="simmer-bubble" style="left:52%;bottom:38px;animation-delay:0.35s"></span>
         <span class="simmer-bubble" style="left:42%;bottom:22px;animation-delay:0.7s"></span>
         <span class="simmer-bubble" style="left:60%;bottom:32px;animation-delay:1.05s"></span>
-      </div>`;
+      `;
+      container.appendChild(bubblesEl);
+    }
+  } else if (bubblesEl) {
+    bubblesEl.remove();
   }
-  container.innerHTML = html;
 }
 
 function resetAll() {
@@ -545,10 +708,33 @@ function resetAll() {
     platingTimeout = null;
   }
   isPlating = false;
+  window.isPlating = false;
+  plated = false;
+  window.plated = false;
+  simmerTimer = 0;
+  lastRenderedBoardFood = undefined;
+  lastRenderedBoardStage = undefined;
+
+  cookedDish = {
+    hasScallion: false,
+    hasPepper: false,
+    hasTofu: false,
+    hasPork: false,
+    hasDouban: false,
+    hasGarlic: false,
+    spicyLevel: '正常',
+    ricePortion: '未盛飯',
+    stirs: 0,
+    simmerProgress: 0,
+    isSimmered: false,
+    isBurnt: false
+  };
+  window.cookedDish = cookedDish;
+
   x = 250; y = 470; previousTime = 0; keys.clear(); visited.clear();
-  selectedFood = null; prepped.clear(); inWok.clear(); heated = false; stirs = 0; plated = false;
-  lastWokFoodKey = '';
+  selectedFood = null; prepped.clear(); inWok.clear(); heated = false; stirs = 0;
   currentOrder = { spicy: '正常', scallion: true, rice: '正常飯' };
+  window.currentOrder = currentOrder;
   syncOrderTicketUI();
   for (const k in cutStages) cutStages[k] = 0;
   $('boardFood').textContent = '砧板空著';
@@ -559,6 +745,11 @@ function resetAll() {
   if ($('wokSimmerImg')) $('wokSimmerImg').setAttribute('hidden', '');
   if ($('wokFoodLayer')) $('wokFoodLayer').innerHTML = '';
   if ($('platedDishPreview')) $('platedDishPreview').setAttribute('hidden', '');
+  if ($('simmerProgressContainer')) $('simmerProgressContainer').hidden = true;
+  if ($('riceStatusBadge')) {
+    $('riceStatusBadge').textContent = '未盛飯';
+    $('riceStatusBadge').classList.remove('is-ready');
+  }
   $('recipeLog').innerHTML = '<li>等待開始</li>';
   $('log').textContent = '已重置：探索與料理狀態皆已清空';
   if (dialogModal && !dialogModal.hasAttribute('hidden')) dialogModal.setAttribute('hidden', '');
@@ -646,15 +837,78 @@ function handleInteraction(name) {
       if (window.setCarryingTray) window.setCarryingTray(false);
       if (window.setPatientDishVisible) window.setPatientDishVisible(true);
 
-      // Tailored culinary feedback reflecting player choices
-      let spicyRemark = '正宗川味香氣四溢，麻辣適中、豆腐滑嫩極了！';
-      if (currentOrder.spicy === '微辣') spicyRemark = '微辣溫潤微麻、暖胃而不刺激，正好撫慰了疲憊的腸胃！';
-      if (currentOrder.spicy === '重辣') spicyRemark = '重辣熱辣過癮、發汗舒暢，整個人的壓力和疲憊感全都散開了！';
+      const actualDish = window.cookedDish || cookedDish;
+      const actualHasScallion = inWok.has('scallion') || !!actualDish.hasScallion;
+      const actualHasPepper = inWok.has('pepper') || !!actualDish.hasPepper;
+      const actualHasDouban = inWok.has('douban') || !!actualDish.hasDouban;
 
-      let scallionRemark = currentOrder.scallion ? '翠綠青蔥點綴提香，清爽解膩！' : '太貼心了，完全按照要求沒有放蔥花，口感純粹濃郁！';
-      let riceRemark = currentOrder.rice === '半碗飯' ? '搭配減醣半碗越光米飯，份量恰到好處無負擔！' : '熱騰騰越光米飯吸飽紅油肉汁，極致療癒下飯！';
+      let actualSpicy = '微辣';
+      if (actualHasPepper && actualHasDouban) actualSpicy = '重辣';
+      else if (actualHasDouban) actualSpicy = '正常';
 
-      const dynamicScore = (required.every(id => inWok.has(id)) && stirs >= 3) ? 100 : 90;
+      let score = 100;
+      let notes = [];
+
+      // 1. Scallion Evaluation
+      let scallionRemark = '';
+      if (!currentOrder.scallion && actualHasScallion) {
+        scallionRemark = '「哎呀……我明明在問診時說了不要蔥，碗裡還是放了青蔥花！這點跟我的客製處方不符啊……」';
+        score -= 15;
+        notes.push('青蔥偏好不符 (-15%)');
+      } else if (!currentOrder.scallion && !actualHasScallion) {
+        scallionRemark = '「太貼心了，完全按照我的要求沒有放蔥花，口感純粹濃郁，細節滿分！」';
+      } else if (currentOrder.scallion && actualHasScallion) {
+        scallionRemark = '「翠綠青蔥點綴提香，清爽解膩，色香味俱全！」';
+      } else {
+        scallionRemark = '「處方單上有勾選青蔥，但盤裡似乎少了翠綠蔥花提鮮，稍顯單調。」';
+        score -= 10;
+        notes.push('缺少青蔥 (-10%)');
+      }
+
+      // 2. Spicy Evaluation
+      let spicyRemark = '';
+      if (actualSpicy === currentOrder.spicy) {
+        if (currentOrder.spicy === '微辣') spicyRemark = '微辣溫潤微麻、暖胃而不刺激，正好撫慰了疲憊的腸胃！';
+        else if (currentOrder.spicy === '重辣') spicyRemark = '重辣熱辣過癮、發汗舒暢，整個人的壓力和疲憊感全都散開了！';
+        else spicyRemark = '正宗川味香氣四溢，麻辣適中、豆腐滑嫩極了！';
+      } else {
+        spicyRemark = `「辣度【${actualSpicy}】與預期處方【${currentOrder.spicy}】稍有出入，但川香調味依舊下飯！」`;
+        score -= 10;
+        notes.push('辣度不符 (-10%)');
+      }
+
+      // 3. Rice Evaluation
+      let riceRemark = '';
+      const actualRice = actualDish.ricePortion;
+      if (actualRice === currentOrder.rice) {
+        riceRemark = currentOrder.rice === '半碗飯' ? '搭配減醣半碗越光米飯，份量恰到好處無負擔！' : '熱騰騰越光米飯吸飽紅油肉汁，極致療癒下飯！';
+      } else if (actualRice === '未盛飯') {
+        riceRemark = '「托盤上好像忘了裝白飯？麻婆豆腐若是少了越光米飯搭配，就少了一味啊！」';
+        score -= 15;
+        notes.push('未盛白飯 (-15%)');
+      } else {
+        riceRemark = `「白飯份量是【${actualRice}】，和當初勾選的【${currentOrder.rice}】不太一樣，不過米粒依舊香Q！」`;
+        score -= 5;
+        notes.push('白飯份量出入 (-5%)');
+      }
+
+      // 4. Simmer & Cook Doneness Evaluation
+      let donenessRemark = '';
+      if (actualDish.isBurnt) {
+        donenessRemark = '「鍋氣稍重了點，底層有一絲微焦苦味，火候若再收斂些就完美了。」';
+        score -= 20;
+        notes.push('微焦過火 (-20%)');
+      } else if (!actualDish.isSimmered && currentStage < STAGES.PLATE) {
+        donenessRemark = '「豆腐內部尚未充分入味，燜煮時間若能再長一些會更加入味。」';
+        score -= 15;
+        notes.push('燜煮不足 (-15%)');
+      } else {
+        donenessRemark = '「豆腐滑嫩入味、紅油收汁濃稠均勻，火候拿捏得恰到好處！」';
+      }
+
+      const finalScore = Math.max(50, Math.min(100, score));
+      let scoreDetail = `${finalScore}%（${finalScore === 100 ? '完美客製舒壓神作' : (finalScore >= 80 ? '風味優良、符合主訴' : '完成料理、客製稍有出入')}）`;
+      if (notes.length) scoreDetail += ` [${notes.join('、')}]`;
 
       showDialog({
         badge: 'PATIENT DINING & FEEDBACK',
@@ -665,22 +919,69 @@ function handleInteraction(name) {
             <div class="patient-eating-text">
               <strong>上班族病患雙手端起托盤，用湯匙舀起第一口熱氣騰騰的麻婆豆腐：</strong>
               <p>「熱氣瞬間在嘴裡散開！${spicyRemark} ${scallionRemark} ${riceRemark}」</p>
-              <p>「剛才緊繃僵硬的肩膀一下子全放鬆了，整個人胸腹暖暖的，真的太療癒了！」</p>
+              <p>「${donenessRemark} 剛才緊繃僵硬的肩膀一下子全放鬆了，整個人胸腹暖暖的，太療癒了！」</p>
             </div>
           </div>
-          <p><strong>Dr. Speed：</strong>「熱食入腹、感官得到撫慰，心情自然舒暢。今晚請放下工作，好好享受美味與充分休息！」</p>
+          <p><strong>Dr. Speed：</strong>「熱食入腹、身心撫慰。今晚請放下工作，好好享受美味與充分休息！」</p>
         `,
         showScore: true,
-        scoreText: `病患滿意度：${dynamicScore}%（極致舒壓、色香味俱全）`,
+        scoreText: `病患滿意度：${scoreDetail}`,
         confirmText: '完成諮詢 (Enter / E)',
         onConfirm: () => {
           setStage(STAGES.FIRST_BITE);
-          cookLog(`任務完成：病患品嚐第一口麻婆豆腐，滿意度 ${dynamicScore}%！`);
-          $('log').textContent = `任務達成：麻婆豆腐第一口回饋 ${dynamicScore}%！按 R 可重新開始新一輪`;
+          cookLog(`任務完成：病患品嚐第一口麻婆豆腐，滿意度 ${scoreDetail}！`);
+          $('log').textContent = `任務達成：麻婆豆腐第一口回饋 ${scoreDetail}！按 R 可重新開始新一輪`;
         }
       });
       return;
     }
+  }
+
+  // Rice Cooker Stand Interaction (X = 11.5)
+  if (name.includes('電子鍋') || name.includes('RiceCooker') || name.includes('飯鍋')) {
+    const currentRice = cookedDish.ricePortion;
+    showDialog({
+      badge: 'RICE STATION — 越光米飯',
+      title: '【電子鍋 / 盛裝越光米飯】',
+      content: `
+        <p>打開香氣四溢、蒸氣裊裊的高壓電子鍋，裡面是粒粒分明飽滿的越光米飯。</p>
+        <p>目前托盤配飯狀態：<strong>【${currentRice}】</strong>（病患問診處方需求：<strong>【${currentOrder.rice}】</strong>）</p>
+        <div class="preference-grid">
+          <div class="pref-row">
+            <span class="pref-label">請選擇盛飯份量：</span>
+            <div class="pref-buttons" id="riceDialogButtons">
+              <button type="button" class="pref-btn ${currentRice === '半碗飯' ? 'is-selected' : ''}" id="dlgRiceHalf">盛半碗飯 (減醣輕量)</button>
+              <button type="button" class="pref-btn ${currentRice === '正常飯' ? 'is-selected' : ''}" id="dlgRiceFull">盛一滿碗 (傳統大份量)</button>
+            </div>
+          </div>
+        </div>
+      `,
+      confirmText: '完成盛飯並返回 (Enter / E)',
+      onConfirm: () => {
+        cookLog(`電子鍋：托盤已備妥【${cookedDish.ricePortion}】！`);
+        updateCooking();
+      }
+    });
+
+    const btnHalf = $('dlgRiceHalf');
+    const btnFull = $('dlgRiceFull');
+    if (btnHalf && btnFull) {
+      btnHalf.onclick = () => {
+        cookedDish.ricePortion = '半碗飯';
+        btnHalf.classList.add('is-selected');
+        btnFull.classList.remove('is-selected');
+        cookLog('電子鍋：盛入【減醣半碗越光米飯】');
+        updateCooking();
+      };
+      btnFull.onclick = () => {
+        cookedDish.ricePortion = '正常飯';
+        btnFull.classList.add('is-selected');
+        btnHalf.classList.remove('is-selected');
+        cookLog('電子鍋：盛入【熱騰騰滿碗越光米飯】');
+        updateCooking();
+      };
+    }
+    return;
   }
 
   // 2. Doctor Desk / Order Printer Interaction (Order Prescription)
@@ -869,26 +1170,40 @@ $('addBtn').addEventListener('click', () => {
     return;
   }
 
-  // Authentic sequential cascade addition:
-  // Phase 1: Pork & Garlic sizzle and brown
-  // Phase 2: Doubanjiang release red oil
-  // Phase 3: Slide in tofu cubes gently
-  // Phase 4: Sichuan pepper & Scallions, simmer bubbling
-  ['pork', 'garlic', 'douban', 'tofu', 'scallion', 'pepper'].forEach(id => {
-    if (prepped.has(id)) {
-      inWok.add(id);
-    }
-  });
+  // Discrete batch single-item addition:
+  let toAdd = (selectedFood && prepped.has(selectedFood))
+    ? selectedFood
+    : ['pork', 'garlic', 'douban', 'tofu', 'scallion', 'pepper'].find(id => prepped.has(id));
 
-  cookLog('炒鍋：循序下料——肉末蒜碎爆香、豆瓣爆出紅油、滑入嫩豆腐、撒蔥花收汁！');
-  $('log').textContent = '食材已下鍋：肉香蒜香溢出、紅油均勻裹附！請翻炒推勻';
-  prepped.clear();
-  selectedFood = null;
+  if (!toAdd) return;
+
+  inWok.add(toAdd);
+  prepped.delete(toAdd);
+  if (selectedFood === toAdd) selectedFood = null;
+
+  // Track actual cooked dish components
+  if (toAdd === 'scallion') cookedDish.hasScallion = true;
+  if (toAdd === 'tofu') cookedDish.hasTofu = true;
+  if (toAdd === 'pork') cookedDish.hasPork = true;
+  if (toAdd === 'douban') cookedDish.hasDouban = true;
+  if (toAdd === 'garlic') cookedDish.hasGarlic = true;
+  if (toAdd === 'pepper') cookedDish.hasPepper = true;
+
+  cookLog(`炒鍋：下入【${foodNames[toAdd]}】！`);
+  $('log').textContent = `食材下鍋：【${foodNames[toAdd]}】已滑入熱鍋！${prepped.size > 0 ? `(尚有 ${prepped.size} 樣備料)` : '備料已全數下鍋'}`;
+
+  if (!selectedFood) {
+    $('boardFood').textContent = '砧板空著';
+    if ($('boardFoodImg')) $('boardFoodImg').setAttribute('hidden', '');
+    if ($('boardFoodPieces')) $('boardFoodPieces').innerHTML = '';
+  }
+
+  // Adding fresh ingredients requires stirring and cooking again
   stirs = 0;
-  $('boardFood').textContent = '砧板空著';
-  if ($('boardFoodImg')) $('boardFoodImg').setAttribute('hidden', '');
-  if ($('boardFoodPieces')) $('boardFoodPieces').innerHTML = '';
-  if (currentStage < STAGES.COOK) setStage(STAGES.COOK);
+  simmerTimer = 0;
+  cookedDish.stirs = 0;
+  cookedDish.isSimmered = false;
+  if (currentStage >= STAGES.COOK && currentStage < STAGES.SERVE) setStage(STAGES.COOK);
   updateCooking();
 });
 
@@ -899,6 +1214,7 @@ $('stirBtn').addEventListener('click', () => {
     return;
   }
   stirs++;
+  cookedDish.stirs = stirs;
 
   // Spatula sweeping animation
   if ($('wokSpatula')) {
@@ -925,17 +1241,31 @@ $('stirBtn').addEventListener('click', () => {
   } else if (stirs === 2) {
     cookLog('翻炒第 2 次：豆瓣醬爆出紅油與熱氣，紅亮油光完整包覆肉末與蒜香！');
   } else if (stirs >= 3) {
-    cookLog('翻炒第 3 次：豆腐輕柔推折吸飽濃汁，鍋氣升騰，麻辣香醇熟成！');
-    if (required.every(id => inWok.has(id)) && currentStage <= STAGES.COOK) {
-      setStage(STAGES.PLATE);
-      cookLog('火候達到極致、醬汁濃郁裹附！已可以盛盤出鍋');
+    cookLog('翻炒第 3 次：翻炒推勻！請維持適度火候進入【燜煮收汁】階段（4秒）');
+    if (required.every(id => inWok.has(id))) {
+      cookLog('炒鍋：食材已勻，開始文火燜煮讓豆腐吸附紅油湯汁！');
     }
   }
   updateCooking();
 });
 
-let isPlating = false;
-let platingTimeout = null;
+// Rice Cooker lower workbench buttons
+if ($('riceHalfBtn')) {
+  $('riceHalfBtn').addEventListener('click', () => {
+    cookedDish.ricePortion = '半碗飯';
+    cookLog('電子鍋：盛入【減醣半碗越光米飯】至服務托盤！');
+    $('log').textContent = '電子鍋：已盛裝半碗越光米飯！';
+    updateCooking();
+  });
+}
+if ($('riceFullBtn')) {
+  $('riceFullBtn').addEventListener('click', () => {
+    cookedDish.ricePortion = '正常飯';
+    cookLog('電子鍋：盛入【熱騰騰滿碗越光米飯】至服務托盤！');
+    $('log').textContent = '電子鍋：已盛裝一滿碗越光米飯！';
+    updateCooking();
+  });
+}
 
 $('plateBtn').addEventListener('click', () => {
   if ($('plateBtn').disabled || isPlating) return;
@@ -945,27 +1275,42 @@ $('plateBtn').addEventListener('click', () => {
   }
 
   isPlating = true;
+  window.isPlating = true;
+  window.plated = false;
+  window.setCarryingTray(false);
   $('plateBtn').disabled = true;
 
   // Plating transfer animation
   const wok = $('wokStage');
   if (wok) wok.classList.add('wok-plating-active');
   if ($('wokSpatula')) $('wokSpatula').classList.add('is-stirring');
+  const preview = $('platedDishPreview');
+  if (preview) {
+    preview.classList.add('is-transferring');
+    preview.removeAttribute('hidden');
+  }
 
+  $('wokStatusText').textContent = '盛盤中：熱氣蒸騰，豆腐紅油滑入青花瓷碗裝入托盤...';
+  cookLog('盛盤中：熱氣蒸騰，豆腐紅油滑入青花瓷碗...');
+
+  if (platingTimeout) clearTimeout(platingTimeout);
   platingTimeout = setTimeout(() => {
     if (wok) wok.classList.remove('wok-plating-active');
     if ($('wokSpatula')) $('wokSpatula').classList.remove('is-stirring');
+    if (preview) preview.classList.remove('is-transferring');
     isPlating = false;
+    window.isPlating = false;
     platingTimeout = null;
-  }, 450);
 
-  plated = true;
-  heated = false;
-  setStage(STAGES.SERVE);
-  if (window.setCarryingTray) window.setCarryingTray(true);
-  cookLog('以鍋鏟將麻婆豆腐俐落舀入青花瓷碗！托盤放上越光米飯與筷匙，請端回診間');
-  $('log').textContent = '麻婆豆腐已盛盤！請端著托盤走回前診間給病人 (X: ~ -7.3)';
-  updateCooking();
+    plated = true;
+    window.plated = true;
+    heated = false;
+    setStage(STAGES.SERVE);
+    if (window.setCarryingTray) window.setCarryingTray(true);
+    cookLog('以鍋鏟將麻婆豆腐俐落舀入青花瓷碗！托盤放上越光米飯與筷匙，請端回診間');
+    $('log').textContent = '麻婆豆腐已盛盤！請端著托盤走回前診間給病人 (X: ~ -7.3)';
+    updateCooking();
+  }, 450);
 });
 
 const movementKeys = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'shift']);

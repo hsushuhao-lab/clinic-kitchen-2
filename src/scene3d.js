@@ -92,6 +92,7 @@ window.scene3DState = {
       { name: '料理處方機', prompt: 'E — 開立並列印料理單', x: 2.0, z: -2.4, dist: 1.5 },
       { name: '備料檯', prompt: 'E — 備料檯 (切豆腐、蒜、蔥)', x: 5.0, z: -2.2, dist: 1.6 },
       { name: '炒鍋爐台', prompt: 'E — 炒鍋爐台 (開火 / 翻炒)', x: 9.0, z: -2.2, dist: 1.6 },
+      { name: '電子鍋', prompt: 'E — 電子鍋 (盛裝白飯：半碗 / 整碗)', x: 11.5, z: -2.2, dist: 1.6 },
       { name: '盛盤檯', prompt: 'E — 盛盤 (麻婆豆腐上菜)', x: 8.5, z: 1.9, dist: 1.6 }
     ];
     for (const t of targets) {
@@ -464,6 +465,7 @@ window.scene3DState = {
     // Scene
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0f171b);
+    window.scene3DScene = scene;
     clock = new THREE.Clock();
 
     // Camera: Third-person elevated perspective with clear room visibility
@@ -573,13 +575,16 @@ window.scene3DState = {
 
     loader.load('assets/models/characters/patient_office_placeholder.glb', function (gltf) {
       patientGroup = gltf.scene;
+      patientGroup.name = 'Character_PatientOffice_Placeholder';
       patientGroup.position.set(-7.3, 0, -1.4);
       patientGroup.rotation.y = Math.PI;
+      window.scene3DPatientGroup = patientGroup;
       scene.add(patientGroup);
       glbLoadedCount++;
     }, undefined, function () {
       console.warn('GLB patient load fallback to procedural 3D meshes');
       patientGroup = buildProceduralPatient(materials);
+      window.scene3DPatientGroup = patientGroup;
       scene.add(patientGroup);
     });
 
@@ -772,6 +777,7 @@ window.scene3DState = {
   };
 
   window.get3DStatus = function () {
+    const pGroup = window.scene3DPatientGroup;
     return {
       initialized: window.scene3DState.initialized,
       usingGlb: window.scene3DState.usingGlb,
@@ -781,7 +787,9 @@ window.scene3DState = {
       obstacleCount: obstacles.length,
       missionStage: window.scene3DState.missionStage,
       carryingTray: window.scene3DState.carryingTray,
-      patientDishVisible: window.scene3DState.patientDishVisible
+      patientDishVisible: window.scene3DState.patientDishVisible,
+      hasPatientRightArm: !!(pGroup && pGroup.getObjectByName('PatientRightArm')),
+      hasPatientHead: !!(pGroup && pGroup.getObjectByName('PatientHead'))
     };
   };
 

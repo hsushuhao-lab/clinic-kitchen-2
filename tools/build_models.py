@@ -118,8 +118,7 @@ EXPORT_SCRIPT = """
     envScene.add(box(0.1, 3.6, 7.0, mats.clinicWall, -12.55, 1.8, 0));
     envScene.add(box(0.1, 3.6, 7.0, mats.stainless, 13.05, 1.8, 0));
 
-    // Ceiling beam / soffit spanning the whole room
-    envScene.add(box(25.6, 0.3, 0.4, mats.darkSteel, 0.25, 3.45, 0));
+    // (Overhead beam removed to keep isometric camera line of sight completely unobstructed)
 
     // --- CLINIC ZONE PROPS (X = -11.5 to -3) ---
     // Doctor's Desk (X = -9.0, Z = -2.0)
@@ -344,16 +343,41 @@ EXPORT_SCRIPT = """
     const patient = new THREE.Group();
     patient.name = 'Character_PatientOffice_Placeholder';
 
-    // Seated posture (pelvis at Y = 0.46m)
-    const patHead = cyl(0.095, 0.085, 0.21, 12, mats.skin, 0, 1.25, 0);
-    const patHair = box(0.2, 0.08, 0.2, mats.hair, 0, 1.33, 0);
+    // Head pivot group (neck at Y = 1.15)
+    const patientHeadGroup = new THREE.Group();
+    patientHeadGroup.name = 'PatientHead';
+    patientHeadGroup.position.set(0, 1.15, 0);
+    const patHead = cyl(0.095, 0.085, 0.21, 12, mats.skin, 0, 0.10, 0);
+    const patHair = box(0.2, 0.08, 0.2, mats.hair, 0, 0.18, 0);
+    patientHeadGroup.add(patHead, patHair);
+
+    // Torso, tie, and legs in seated posture
     const patTorso = box(0.38, 0.45, 0.25, mats.suitBlue, 0, 0.88, 0);
     const patTie = box(0.06, 0.25, 0.01, mats.screenBlue, 0, 0.95, 0.13);
     const patThighs = box(0.36, 0.15, 0.45, mats.trousers, 0, 0.52, 0.18);
     const patCalves = box(0.36, 0.45, 0.14, mats.trousers, 0, 0.25, 0.38);
     const patShoes = box(0.36, 0.07, 0.2, mats.leather, 0, 0.04, 0.42);
 
-    patient.add(patHead, patHair, patTorso, patTie, patThighs, patCalves, patShoes);
+    // Right Arm Pivot Group (shoulder at X = 0.24, Y = 1.05, Z = 0.05)
+    const patientRightArmGroup = new THREE.Group();
+    patientRightArmGroup.name = 'PatientRightArm';
+    patientRightArmGroup.position.set(0.24, 1.05, 0.05);
+    const patRightArm = cyl(0.05, 0.045, 0.42, 8, mats.suitBlue, 0, -0.21, 0);
+    const patRightHand = cyl(0.04, 0.035, 0.1, 8, mats.skin, 0, -0.44, 0);
+    const patChopstick = cyl(0.004, 0.003, 0.22, 6, mats.deskWood, 0, -0.45, 0.06);
+    patChopstick.rotation.x = Math.PI / 3;
+    patientRightArmGroup.add(patRightArm, patRightHand, patChopstick);
+
+    // Left Arm Pivot Group (resting on thigh)
+    const patientLeftArmGroup = new THREE.Group();
+    patientLeftArmGroup.name = 'PatientLeftArm';
+    patientLeftArmGroup.position.set(-0.24, 1.05, 0.05);
+    const patLeftArm = cyl(0.05, 0.045, 0.42, 8, mats.suitBlue, 0, -0.21, 0);
+    const patLeftHand = cyl(0.04, 0.035, 0.1, 8, mats.skin, 0, -0.44, 0);
+    patientLeftArmGroup.add(patLeftArm, patLeftHand);
+
+    patient.add(patientHeadGroup, patTorso, patTie, patThighs, patCalves, patShoes,
+                patientRightArmGroup, patientLeftArmGroup);
 
     // Export all 3 models to binary GLB
     const glbEnv = await exportToGlb(envScene, 'clinic_kitchen_scene.glb');

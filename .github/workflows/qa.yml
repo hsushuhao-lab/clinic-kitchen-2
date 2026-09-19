@@ -30,6 +30,11 @@ jobs:
           python tests/browser_qa.py --base-url http://127.0.0.1:8000/ --output qa/current
           python tests/test_full_mission_chain.py
           python tests/test_movement_direction.py
+          python tests/test_patient_glb_nodes.py
+          python tests/test_wok_dom_persistence.py
+          python tests/test_plating_state_machine.py
+          python tests/test_batch_addition_and_parallel_cooking.py
+          python tests/test_culinary_order_and_execution.py
           python tests/test_real_gameplay_acceptance.py
       - uses: actions/upload-artifact@v4
         if: always()

@@ -228,4 +228,27 @@ button:focus-visible,summary:focus-visible,#world:focus-visible{outline:2px soli
 .wok-food-douban-paste{position:absolute;width:48px;height:38px;left:42%;bottom:34px;border-radius:50%;background:radial-gradient(ellipse at center,#ba2511 0%,#871809 68%,transparent 98%);filter:drop-shadow(0 2px 5px rgba(200,30,10,.85));z-index:2}
 .wok-food-douban-paste.is-red-oil{filter:brightness(1.18) drop-shadow(0 0 10px #ff3b10);transform:scale(1.15);transition:transform .4s ease,filter .4s ease}
 
+/* Simmer / Reduction Progress Bar */
+.simmer-progress-container{margin:8px 0 4px;background:#142129;border:1px solid #2d4554;border-radius:6px;padding:6px 10px}
+.simmer-progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.simmer-progress-label{font-size:.76rem;font-weight:700;color:#ff9800}
+.simmer-progress-text{font-size:.74rem;color:#b2c5ce;font-family:monospace}
+.simmer-progress-bar{height:7px;background:#243642;border-radius:4px;overflow:hidden;border:1px solid #3b5363}
+.simmer-progress-fill{height:100%;background:linear-gradient(90deg,#ff5722,#ff9800,#ffeb3b);border-radius:3px;transition:width .2s ease;box-shadow:0 0 6px rgba(255,152,0,.6)}
+
+/* Rice Cooker Parallel Cooking Widget */
+.rice-cooker-widget{margin-top:10px;background:#182832;border:1px solid #364e5e;border-radius:8px;padding:8px 12px;display:flex;flex-direction:column;gap:6px}
+.rice-widget-header{display:flex;align-items:center;gap:6px}
+.rice-icon{font-size:1.1rem}
+.rice-title{font-size:.82rem;font-weight:700;color:#dbe7ed}
+.rice-status-badge{margin-left:auto;font-size:.72rem;background:#243a47;color:#9bc4d6;padding:2px 7px;border-radius:4px;border:1px solid #3d5b6e}
+.rice-status-badge.is-ready{background:#1b4a3b;color:#6ee7b7;border-color:#10b981}
+.rice-widget-actions{display:flex;gap:6px}
+.rice-btn{flex:1;background:#253c4b;color:#d5e4ec;border:1px solid #3f5d71;border-radius:5px;padding:5px 8px;font-size:.76rem;cursor:pointer;font-weight:600;transition:all .15s}
+.rice-btn:hover{background:#325063;color:#fff;border-color:#5a849f}
+.rice-btn:active{transform:scale(.97)}
+
+/* Plating Transfer Animation Sub-State */
+.plated-dish-preview.is-transferring{opacity:.4;transform:scale(.92);filter:blur(1px);transition:all .4s ease}
+
 

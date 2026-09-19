@@ -1,10 +1,12 @@
-"""Exercise real browser input; --inline renders local source without networking."""
 import argparse
 from pathlib import Path
 import hashlib
 import json
 import re
 import shutil
+import http.server
+import threading
+import urllib.request
 from playwright.sync_api import sync_playwright, expect
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,6 +19,24 @@ def main():
     args = parser.parse_args()
     if not args.inline and not args.base_url:
         parser.error('Use --base-url http://... or --inline for offline rendering.')
+
+    if args.base_url:
+        need_server = False
+        try:
+            with urllib.request.urlopen(args.base_url, timeout=0.5):
+                pass
+        except Exception:
+            need_server = True
+        if need_server:
+            class H(http.server.SimpleHTTPRequestHandler):
+                def __init__(self, *a, **kw):
+                    super().__init__(*a, directory=str(ROOT), **kw)
+                def log_message(self, *a): pass
+            httpd = http.server.ThreadingHTTPServer(('127.0.0.1', 0), H)
+            port = httpd.server_address[1]
+            threading.Thread(target=httpd.serve_forever, daemon=True).start()
+            args.base_url = f'http://127.0.0.1:{port}/'
+
     out = Path(args.output); out.mkdir(parents=True, exist_ok=True)
     results = []
     errors = []
@@ -93,7 +113,10 @@ def main():
             reset()
             prepare(['pork','douban','garlic','pepper'])
             wok_station()
-            page.locator('#heatBtn').click();page.locator('#addBtn').click()
+            page.locator('#heatBtn').click()
+            while page.evaluate("prepped.size > 0"):
+                page.locator('#addBtn').click()
+                page.wait_for_timeout(40)
             for _ in range(3): page.locator('#stirBtn').click()
             check('cannot plate without tofu',page.locator('#plateBtn').is_disabled())
             reset()
@@ -102,20 +125,26 @@ def main():
             check('R extinguishes flame',page.locator('#flame.is-on').count() == 0)
             prepare(['tofu','pork','douban','garlic'])
             wok_station()
-            page.locator('#heatBtn').click();page.locator('#addBtn').click()
+            page.locator('#heatBtn').click()
+            while page.evaluate("prepped.size > 0"):
+                page.locator('#addBtn').click()
+                page.wait_for_timeout(40)
             check('cannot plate before three stirs',page.locator('#plateBtn').is_disabled())
             page.locator('#stirBtn').click();page.locator('#stirBtn').click()
             check('two stirs insufficient',page.locator('#plateBtn').is_disabled())
             page.locator('#heatBtn').click()
             check('cold wok cannot stir or plate',page.locator('#stirBtn').is_disabled() and page.locator('#plateBtn').is_disabled())
             page.locator('#heatBtn').click();page.locator('#stirBtn').click()
+            page.wait_for_function("window.getMissionStage() === 5 || (window.cookedDish && window.cookedDish.isSimmered)", timeout=8000)
             check('valid recipe can plate',page.locator('#plateBtn').is_enabled())
             prepare(['scallion'])
             wok_station()
             page.locator('#addBtn').click()
             check('new ingredients require stirring again',page.locator('#plateBtn').is_disabled())
             for _ in range(3):page.locator('#stirBtn').click()
+            page.wait_for_function("window.getMissionStage() === 5 || (window.cookedDish && window.cookedDish.isSimmered)", timeout=8000)
             page.locator('#plateBtn').click()
+            page.wait_for_function("window.plated === true", timeout=3000)
             expect(page.locator('#wokContents')).to_have_text('麻婆豆腐完成')
             check('completed recipe locks cookware',page.locator('#addBtn').is_disabled() and page.locator('#stirBtn').is_disabled())
             page.screenshot(path=str(out/'cooked-desktop.png'))

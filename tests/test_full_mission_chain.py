@@ -13,11 +13,33 @@ import argparse
 from pathlib import Path
 import json
 import shutil
+import http.server
+import threading
+import urllib.request
 from playwright.sync_api import sync_playwright, expect
 
 ROOT = Path(__file__).resolve().parents[1]
 
 def test_full_mission(base_url='http://127.0.0.1:8000/', output_dir=None):
+    # Auto-spawn local server if port 8000 is not running
+    need_server = False
+    try:
+        with urllib.request.urlopen(base_url, timeout=0.5):
+            pass
+    except Exception:
+        need_server = True
+
+    if need_server:
+        class H(http.server.SimpleHTTPRequestHandler):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, directory=str(ROOT), **kwargs)
+            def log_message(self, *a): pass
+
+        httpd = http.server.ThreadingHTTPServer(('127.0.0.1', 0), H)
+        port = httpd.server_address[1]
+        threading.Thread(target=httpd.serve_forever, daemon=True).start()
+        base_url = f'http://127.0.0.1:{port}/'
+
     out = Path(output_dir or (ROOT / 'qa/current'))
     out.mkdir(parents=True, exist_ok=True)
     results = []
@@ -100,7 +122,7 @@ def test_full_mission(base_url='http://127.0.0.1:8000/', output_dir=None):
         # 5. Stage 4: Walk to Prep Counter & Cut Ingredients
         page.evaluate('window.teleportAndSync(5.0, -1.5)')
         page.wait_for_timeout(100)
-        for food in ['tofu', 'pork', 'douban', 'garlic']:
+        for food in ['tofu', 'pork', 'douban', 'garlic', 'scallion']:
             page.locator(f'[data-food="{food}"]').click()
             cuts = 3 if food == 'tofu' else 1
             for _ in range(cuts):
@@ -113,16 +135,26 @@ def test_full_mission(base_url='http://127.0.0.1:8000/', output_dir=None):
         page.evaluate('window.teleportAndSync(9.0, -1.4)')
         page.wait_for_timeout(100)
         page.locator('#heatBtn').click()
-        page.locator('#addBtn').click()
+        # Discrete batch addition
+        while page.evaluate("prepped.size > 0"):
+            page.locator('#addBtn').click()
+            page.wait_for_timeout(50)
         for _ in range(3):
             page.locator('#stirBtn').click()
+            page.wait_for_timeout(100)
+
+        # Parallel rice cooker interaction: scoop full bowl
+        page.locator('#riceFullBtn').click()
+
+        # Wait for simmer to complete
+        page.wait_for_function("window.getMissionStage() === 5 || (window.cookedDish && window.cookedDish.isSimmered)", timeout=8000)
 
         check('Stage advanced to STAGE_PLATE (5)', page.evaluate('window.getMissionStage()') == 5)
         check('Plate button enabled', page.locator('#plateBtn').is_enabled())
 
         # 7. Stage 6: Plate Dish & Carry Tray
         page.locator('#plateBtn').click()
-        page.wait_for_timeout(100)
+        page.wait_for_function("window.plated === true", timeout=3000)
         check('Dish plated into ceramic bowl', page.locator('#wokContents').inner_text() == '麻婆豆腐完成')
         check('Stage advanced to STAGE_SERVE (6)', page.evaluate('window.getMissionStage()') == 6)
         check('Dr. Speed is carrying tray in 3D', page.evaluate('window.get3DStatus().carryingTray') is True)

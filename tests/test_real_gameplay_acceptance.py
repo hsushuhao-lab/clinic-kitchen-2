@@ -221,23 +221,37 @@ def main():
         page.locator('#heatBtn').click()
         expect(page.locator('#flame')).to_have_class(re.compile(r'is-on'))
 
-        # Add prepped ingredients into wok
-        page.locator('#addBtn').click()
+        # Add prepped ingredients into wok via discrete batch addition
+        while page.evaluate("prepped.size > 0"):
+            page.locator('#addBtn').click()
+            page.wait_for_timeout(80)
 
         # Stir 3 times with metal spatula
         for _ in range(3):
             page.locator('#stirBtn').click()
             page.wait_for_timeout(200)
 
+        # Parallel cooking: interact with rice cooker to scoop full rice bowl
+        page.locator('#riceFullBtn').click()
+        page.wait_for_timeout(100)
+
+        # Maintain heat to simmer and reduce sauce to perfection (4.0s)
+        page.wait_for_function("window.getMissionStage() === 5 || (window.cookedDish && window.cookedDish.isSimmered)", timeout=8000)
+
         assert page.evaluate("window.getMissionStage()") == 5 # STAGE_PLATE
         expect(page.locator('#plateBtn')).to_be_enabled()
         page.screenshot(path=str(OUT / '04_wok_spatula_simmer.png'))
-        log_step("7. Wok ignited flame, added ingredients, and metal spatula stirred 3x into bubbling simmer")
+        log_step("7. Wok ignited flame, discrete ingredients added, stirred 3x into simmer while scooping rice")
 
         # -------------------------------------------------------------
         # STEP 8: Plating Mapo Tofu into Porcelain Bowl & Tray
         # -------------------------------------------------------------
         page.locator('#plateBtn').click()
+        # Verify plating transfer sub-state is active
+        assert page.evaluate("window.isPlating") is True
+        # Wait for transfer animation to complete (450ms)
+        page.wait_for_function("window.plated === true", timeout=3000)
+
         assert page.evaluate("window.getMissionStage()") == 6 # STAGE_SERVE
         assert page.evaluate("window.get3DStatus().carryingTray") is True
         expect(page.locator('#platedDishPreview')).to_be_visible()

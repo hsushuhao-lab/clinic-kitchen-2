@@ -204,8 +204,8 @@
     },
     {
       "path": "assets/models/environment/clinic_kitchen_scene.glb",
-      "bytes": 196980,
-      "sha256": "3c314407648c015e0a30a0ae2a519969503e4ec7a84b99c1693eaf7be986c552",
+      "bytes": 195180,
+      "sha256": "51c696ea38cf577ad7c9586c0810ab3ded062f2a79c8a0369f852ee23b8c60b5",
       "format": "GLB",
       "role": "production_3d_environment",
       "source_name": "tools/build_models.py"
@@ -220,8 +220,8 @@
     },
     {
       "path": "assets/models/characters/patient_office_placeholder.glb",
-      "bytes": 15652,
-      "sha256": "1e45acb3317854e85e65f1b9925fadb3de41b3498ed7e9f6be1296c486260820",
+      "bytes": 30080,
+      "sha256": "8f616e78062c76a820a37d1b2f3bd2f8e8dce0c427390849720c739ecfd26ae5",
       "format": "GLB",
       "role": "production_3d_patient_placeholder",
       "source_name": "tools/build_models.py"

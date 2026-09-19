@@ -162,7 +162,29 @@
             <button id="stirBtn" disabled>翻炒</button>
             <button id="plateBtn" disabled>盛盤</button>
           </div>
+          <div id="simmerProgressContainer" class="simmer-progress-container" hidden>
+            <div class="simmer-progress-header">
+              <span class="simmer-progress-label">🔥 燜煮收汁中</span>
+              <span id="simmerProgressText" class="simmer-progress-text">0 / 4 秒</span>
+            </div>
+            <div class="simmer-progress-bar">
+              <div id="simmerProgressBarFill" class="simmer-progress-fill" style="width: 0%"></div>
+            </div>
+          </div>
           <div id="wokStatusText" class="wok-status-text">靠近爐台開火熱鍋</div>
+        </div>
+
+        <!-- Rice Cooker Parallel Interaction Widget -->
+        <div class="rice-cooker-widget" id="riceCookerWidget">
+          <div class="rice-widget-header">
+            <span class="rice-icon">🍚</span>
+            <span class="rice-title">電子鍋 (配餐越光米)</span>
+            <span id="riceStatusBadge" class="rice-status-badge">未盛飯</span>
+          </div>
+          <div class="rice-widget-actions">
+            <button type="button" id="riceHalfBtn" class="rice-btn" title="盛半碗飯 (減醣輕量)">盛半碗飯</button>
+            <button type="button" id="riceFullBtn" class="rice-btn" title="盛滿碗飯 (大份量)">盛滿碗飯</button>
+          </div>
         </div>
 
         <!-- Plated Dish Preview on Tray -->
