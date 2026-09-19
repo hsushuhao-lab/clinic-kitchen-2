@@ -658,6 +658,17 @@ window.scene3DState = {
       patientDishMesh.visible = !!state.patientDishVisible;
     }
 
+    // Patient dining savoring animation
+    if (patientGroup) {
+      if (state.patientDishVisible) {
+        patientGroup.rotation.x = Math.sin(Date.now() * 0.005) * 0.06;
+        patientGroup.position.y = Math.abs(Math.sin(Date.now() * 0.005)) * 0.015;
+      } else {
+        patientGroup.rotation.x = 0;
+        patientGroup.position.y = 0;
+      }
+    }
+
     renderer.render(scene, camera);
   }
 
