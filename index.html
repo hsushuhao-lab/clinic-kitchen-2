@@ -1,235 +1,254 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Clinic Kitchen 2.0 — R2 Verified Prototype</title>
-<link rel="icon" href="data:,"/>
-<link rel="stylesheet" href="styles.css?v=r2-20260918"/>
-<link rel="stylesheet" href="r2-fixes.css?v=r2-20260918"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>Craving Kitchen — 平面診間與料理</title>
+<link href="data:," rel="icon"/>
+<link href="styles.css?v=flat-20260919" rel="stylesheet"/>
+<link href="r2-fixes.css?v=flat-20260919" rel="stylesheet"/>
+<link href="clinic-shift.css?v=flat-20260919" rel="stylesheet"/>
 </head>
 <body>
 <div id="app">
-  <header class="hud">
-    <div><strong>CLINIC KITCHEN 2.0</strong><span>即時 3D 診間—過渡—後廚｜Three.js WebGL</span></div>
-    <div class="controls">WASD / Arrow：移動　Shift：快走　E：互動　R：重置</div>
-  </header>
-  <main id="world" tabindex="0" aria-label="Clinic Kitchen walkthrough">
-    <div id="camera">
-      <section class="room clinic">
-        <h2>診間 CLINIC</h2>
-        <div class="desk prop"><span class="monitor">CLINIC EMR</span><span>醫師桌</span></div>
-        <div class="patient-chair prop"><span class="chair-back"></span><span>病人椅</span></div>
-        <div class="printer prop">印表機</div>
-        <div class="sink prop">洗手台</div>
-      </section>
-      <section class="room prep">
-        <h2>過渡／備料 PREP</h2>
-        <div class="fridge prop">冰箱</div>
-        <div class="trolley prop">不鏽鋼推車</div>
-        <div class="order-printer prop">料理處方機</div>
-      </section>
-      <section class="room kitchen">
-        <h2>後廚 KITCHEN</h2>
-        <div class="counter prop">備料檯</div>
-        <div class="spice prop">香料架</div>
-        <div class="wok prop"><span class="wok-pan"></span><span>炒鍋爐台</span></div>
-        <div class="rice prop">飯鍋</div>
-      </section>
-      <div id="player" class="player" aria-label="值班醫師"><div class="doctor-model"><div class="hair"></div><div class="face"><span class="glasses"></span></div><div class="coat"><span class="shirt"></span><span class="badge">DR</span></div><div class="legs"></div></div></div>
-    </div>
-    <div id="prompt" class="prompt">走到物件旁按 E 互動</div>
-  <details class="mission" open>
-    <summary>任務進度與探索紀錄</summary>
-    <div id="missionStage" class="mission-stage">目前階段：<strong>1. 診間問診</strong></div>
-    <ol id="missionSteps">
-      <li id="step-0" class="is-active">1. 走到病人椅按 E 問診</li>
-      <li id="step-1">2. 走到醫師桌或處方機開單</li>
-      <li id="step-2">3. 走到冰箱取出料理食材</li>
-      <li id="step-3">4. 備料檯切配豆腐與辛香料</li>
-      <li id="step-4">5. 炒鍋開火下鍋並翻炒 3 次</li>
-      <li id="step-5">6. 盛盤麻婆豆腐裝入瓷碗</li>
-      <li id="step-6">7. 端餐回診間送餐給病人</li>
-      <li id="step-7">8. 病人品嚐第一口與評分</li>
-    </ol>
-    <div id="log">尚未互動</div>
-  </details>
-  </main>
+<header class="hud shift-hud">
+<div class="shift-brand"><strong>Craving Kitchen<span>!</span></strong><small>同一間診間，一碗麻婆豆腐。</small></div>
+<button class="doctor-picker shift-control" id="doctorPickerBtn" title="更換值班醫師；接單後鎖定至本單結束" type="button">
+<img alt="值班醫師參考立繪" id="selectedDoctorPortrait" src="assets/ui/doctor-speed.webp"/>
+<span><strong id="selectedDoctorName">DR. SPEED</strong><small id="selectedDoctorTitle">快刀醫師</small></span><span aria-hidden="true">▾</span>
+</button>
+<div class="shift-stats"><span>分數 <b id="shiftPoints">0</b></span><span>出餐 <b id="shiftServed">0</b></span><span>連勝 <b id="shiftStreak">0</b></span></div>
+<div class="shift-header-actions"><button class="shift-control" id="pauseBtn" type="button">暫停 P</button><button class="shift-control" id="restartRoundBtn" type="button">重來 R</button></div>
+</header>
+<main aria-label="平面診間、取材區與後廚" id="world" tabindex="0">
+<aside aria-label="病人狀態" class="patient-hud" data-craving-band="medium" id="patientHUD">
+<img alt="上班族病人參考立繪" class="patient-portrait" src="assets/ui/patient-office.webp"/>
+<div class="patient-status"><div class="patient-heading"><strong>上班族病人</strong><span id="patientMood">有些坐不住</span></div>
+<label class="meter-row">CRAVING <b id="cravingText">40%</b><progress aria-label="Craving 遊戲渴求值" id="cravingMeter" max="100" value="40"></progress></label>
+<label class="meter-row focus-row">FOCUS <b id="focusText">24%</b><progress aria-label="Focus 遊戲專注值" id="focusMeter" max="100" value="24"></progress></label>
+<div class="patient-foot"><span id="roundStatus">確認料理單後計時</span><span id="shiftTime">0 秒</span></div>
+</div>
+</aside>
+<div class="control-hint">W ↑ S ↓ A ← D →　或點工作站走過去；E 互動</div>
+<div id="camera">
+<section class="room clinic">
+<h2>診間 CLINIC</h2>
+<div class="desk prop"><span class="monitor">CLINIC EMR</span><span>醫師桌</span></div>
+<div class="patient-chair prop"><span class="chair-back"></span><span>病人椅</span></div>
+<div class="printer prop">印表機</div>
+<div class="sink prop">洗手台</div>
+</section>
+<section class="room prep">
+<h2>過渡／備料 PREP</h2>
+<div class="fridge prop">冰箱</div>
+<div class="trolley prop">不鏽鋼推車</div>
+<div class="order-printer prop">料理處方機</div>
+</section>
+<section class="room kitchen">
+<h2>後廚 KITCHEN</h2>
+<div class="counter prop">備料檯</div>
+<div class="spice prop">香料架</div>
+<div class="wok prop"><span class="wok-pan"></span><span>炒鍋爐台</span></div>
+<div class="rice prop">飯鍋</div>
+</section>
+<div aria-label="值班醫師" class="player" id="player"><div class="doctor-model"><div class="hair"></div><div class="face"><span class="glasses"></span></div><div class="coat"><span class="shirt"></span><span class="badge">DR</span></div><div class="legs"></div></div></div>
+</div>
+<div class="prompt" id="prompt">走到物件旁按 E 互動</div>
+<details class="mission">
+<summary>任務進度與探索紀錄</summary>
+<div class="mission-stage" id="missionStage">目前階段：<strong>1. 診間問診</strong></div>
+<ol id="missionSteps">
+<li class="is-active" id="step-0">1. 走到病人椅按 E 問診</li>
+<li id="step-1">2. 走到醫師桌或處方機開單</li>
+<li id="step-2">3. 走到冰箱取出料理食材</li>
+<li id="step-3">4. 備料檯切配豆腐與辛香料</li>
+<li id="step-4">5. 分批下料、翻炒並等待燜煮</li>
+<li id="step-5">6. 燜煮完成後盛盤裝入瓷碗</li>
+<li id="step-6">7. 端餐回診間送餐給病人</li>
+<li id="step-7">8. 病人品嚐第一口與評分</li>
+</ol>
+<div id="log">尚未互動</div>
+<strong hidden="" id="cookObjective">階段 1/8：前往診間病人椅進行問診</strong></details>
+</main>
+<section aria-label="備料與煮菜操作區" class="cooking-deck" id="cookingDeck" tabindex="0">
 
-  <section id="cookingDeck" class="cooking-deck" aria-label="備料與煮菜操作區" tabindex="0">
-    <div class="cook-head">
-      <div><span>LOWER WORKBENCH</span><h2>備料・煮菜</h2></div>
-      <div id="orderTicket" class="order-ticket" hidden>
-        <span class="ticket-tag">處方訂單</span>
-        <span id="ticketSpicy" class="ticket-badge">微辣</span>
-        <span id="ticketScallion" class="ticket-badge">要青蔥</span>
-        <span id="ticketRice" class="ticket-badge">正常飯</span>
-      </div>
-      <strong id="cookObjective">階段 1/8：前往診間病人椅進行問診</strong>
-    </div>
 
-    <!-- Station gate overlay message if player is away from required station -->
-    <div id="stationLockOverlay" class="station-lock-overlay" hidden>
-      <div id="stationLockMsg" class="station-lock-msg">【前置任務未完成】請先完成診間問診 (1)、開單 (2) 與冰箱取材 (3)！</div>
-    </div>
-
-    <div class="cook-columns">
-      <!-- 1. PREP BENCH -->
-      <div class="prep-bench">
-        <div class="bench-title-row">
-          <h3>備料 PREP</h3>
-          <span id="prepStationBadge" class="station-badge">未在備料檯 (需靠近)</span>
-        </div>
-
-        <div class="ingredient-tray" aria-label="食材清單">
-          <button data-food="tofu" title="嫩豆腐">
-            <img class="food-art" src="assets/ingredients/mapo_tofu/tofu.png" alt="豆腐"/>
-            <span>豆腐</span>
-          </button>
-          <button data-food="pork" title="上等豬絞肉">
-            <img class="food-art" src="assets/ingredients/mapo_tofu/pork.png" alt="絞肉"/>
-            <span>絞肉</span>
-          </button>
-          <button data-food="douban" title="川味豆瓣醬">
-            <img class="food-art" src="assets/ingredients/mapo_tofu/douban.png" alt="豆瓣醬"/>
-            <span>豆瓣醬</span>
-          </button>
-          <button data-food="garlic" title="鮮蒜瓣">
-            <img class="food-art" src="assets/ingredients/mapo_tofu/garlic.png" alt="蒜"/>
-            <span>蒜瓣</span>
-          </button>
-          <button data-food="scallion" title="鮮青蔥">
-            <img class="food-art" src="assets/ingredients/mapo_tofu/scallion.png" alt="青蔥"/>
-            <span>青蔥</span>
-          </button>
-          <button data-food="pepper" title="大紅袍花椒">
-            <img class="food-art" src="assets/ingredients/mapo_tofu/pepper.png" alt="花椒"/>
-            <span>花椒</span>
-          </button>
-        </div>
-
-        <!-- Cutting Board Stage -->
-        <div class="board-stage-container">
-          <div class="board" id="boardStage">
-            <img id="boardBaseImg" class="board-base-img" src="assets/cooking/board_empty.png" alt="木質砧板"/>
-            <div id="boardFoodDisplay" class="board-food-display">
-              <img id="boardFoodImg" class="board-food-img" src="" alt="食材" hidden/>
-              <div id="boardFoodPieces" class="board-food-pieces"></div>
-            </div>
-            <img id="boardKnife" class="board-knife-img" src="assets/cooking/chef_knife.png" alt="主廚刀"/>
-            <img id="boardSpoon" class="board-spoon-img" src="assets/cooking/douban_spoon.png" alt="舀醬湯匙" hidden/>
-            <div id="chopEffect" class="chop-effect"></div>
-            <div id="boardFood">砧板空著</div>
-          </div>
-          <div class="board-controls">
-            <button id="cutBtn" disabled>切配</button>
-            <div id="cutProgressText" class="cut-progress-text">點選食材放上砧板切配</div>
-          </div>
-        </div>
-
-        <!-- Prep Checklist -->
-        <div class="prep-checklist">
-          <span id="check-tofu" class="check-item">○ 豆腐切丁</span>
-          <span id="check-pork" class="check-item">○ 絞肉分切</span>
-          <span id="check-douban" class="check-item">○ 豆瓣舀取</span>
-          <span id="check-garlic" class="check-item">○ 蒜瓣切末</span>
-          <span id="check-scallion" class="check-item">○ 青蔥切花</span>
-        </div>
-      </div>
-
-      <!-- 2. WOK BENCH -->
-      <div class="wok-bench">
-        <div class="bench-title-row">
-          <h3>炒鍋 WOK</h3>
-          <span id="wokStationBadge" class="station-badge">未在爐台 (需靠近)</span>
-        </div>
-
-        <div class="wok-stage-container">
-          <div class="wok-visual" id="wokStage">
-            <div class="steam steam-a"></div>
-            <div class="steam steam-b"></div>
-            <div class="steam steam-c"></div>
-            <div id="flame" class="flame"><span></span><span></span><span></span></div>
-            <img id="wokBaseImg" class="wok-base-img" src="assets/cooking/wok_empty.png" alt="黑鐵炒鍋"/>
-            <img id="wokSimmerImg" class="wok-simmer-img" src="assets/cooking/wok_simmering.png" alt="沸騰麻婆豆腐" hidden/>
-            <div id="wokFoodLayer" class="wok-food-layer"></div>
-            <img id="wokSpatula" class="wok-spatula-img" src="assets/cooking/metal_spatula.png" alt="金屬鍋鏟"/>
-            <div id="wokContents">空鍋</div>
-          </div>
-          <div class="wok-actions">
-            <button id="heatBtn">開火</button>
-            <button id="addBtn" disabled>下鍋</button>
-            <button id="stirBtn" disabled>翻炒</button>
-            <button id="plateBtn" disabled>盛盤</button>
-          </div>
-          <div id="simmerProgressContainer" class="simmer-progress-container" hidden>
-            <div class="simmer-progress-header">
-              <span class="simmer-progress-label">🔥 燜煮收汁中</span>
-              <span id="simmerProgressText" class="simmer-progress-text">0 / 4 秒</span>
-            </div>
-            <div class="simmer-progress-bar">
-              <div id="simmerProgressBarFill" class="simmer-progress-fill" style="width: 0%"></div>
-            </div>
-          </div>
-          <div id="wokStatusText" class="wok-status-text">靠近爐台開火熱鍋</div>
-        </div>
-
-        <!-- Rice Cooker Parallel Interaction Widget -->
-        <div class="rice-cooker-widget" id="riceCookerWidget">
-          <div class="rice-widget-header">
-            <span class="rice-icon">🍚</span>
-            <span class="rice-title">電子鍋 (配餐越光米)</span>
-            <span id="riceStatusBadge" class="rice-status-badge">未盛飯</span>
-          </div>
-          <div class="rice-widget-actions">
-            <button type="button" id="riceHalfBtn" class="rice-btn" title="盛半碗飯 (減醣輕量)">盛半碗飯</button>
-            <button type="button" id="riceFullBtn" class="rice-btn" title="盛滿碗飯 (大份量)">盛滿碗飯</button>
-          </div>
-        </div>
-
-        <!-- Plated Dish Preview on Tray -->
-        <div id="platedDishPreview" class="plated-dish-preview" hidden>
-          <img src="assets/cooking/dish_plated.png" alt="麻婆豆腐青花瓷碗佐白飯" class="plated-img"/>
-          <div class="plated-info">
-            <strong>青花瓷碗麻婆豆腐 × 越光米飯</strong>
-            <span>已盛入托盤，請端回診間病人椅</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 3. COOK LOG -->
-      <details class="cook-log" open id="cookLogContainer">
-        <summary>料理紀錄</summary>
-        <ol id="recipeLog"><li>等待開始</li></ol>
-      </details>
-    </div>
-  </section>
-
-  <div id="dialogModal" class="dialog-modal" hidden>
-    <div class="dialog-backdrop"></div>
-    <div class="dialog-window" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
-      <div class="dialog-header">
-        <span class="dialog-badge" id="dialogBadge">CLINIC EMR</span>
-        <h3 id="dialogTitle">診間評估</h3>
-      </div>
-      <div class="dialog-content" id="dialogContent"></div>
-      <div class="dialog-score" id="dialogScore" hidden>
-        <div class="score-stars">★★★★★</div>
-        <div class="score-number" id="dialogScoreText">滿意度：100% (極致舒壓)</div>
-      </div>
-      <div class="dialog-disclaimer" id="dialogDisclaimer">
+<!-- Station gate overlay message if player is away from required station -->
+<div class="station-lock-overlay" hidden="" id="stationLockOverlay">
+<div class="station-lock-msg" id="stationLockMsg">【前置任務未完成】請先完成診間問診 (1)、開單 (2) 與冰箱取材 (3)！</div>
+</div>
+<div class="cook-columns">
+<!-- 1. PREP BENCH -->
+<div aria-label="備料" class="prep-bench work-panel" id="panel-prep" role="region">
+<div class="bench-title-row">
+<h3>備料 PREP</h3>
+<span class="station-badge" id="prepStationBadge">未在備料檯 (需靠近)</span>
+</div>
+<div aria-label="食材清單" class="ingredient-tray">
+<button data-food="tofu" title="嫩豆腐">
+<img alt="豆腐" class="food-art" src="assets/ingredients/mapo_tofu/tofu.png"/>
+<span>豆腐</span>
+</button>
+<button data-food="pork" title="上等豬絞肉">
+<img alt="絞肉" class="food-art" src="assets/ingredients/mapo_tofu/pork.png"/>
+<span>絞肉</span>
+</button>
+<button data-food="douban" title="川味豆瓣醬">
+<img alt="豆瓣醬" class="food-art" src="assets/ingredients/mapo_tofu/douban.png"/>
+<span>豆瓣醬</span>
+</button>
+<button data-food="garlic" title="鮮蒜瓣">
+<img alt="蒜" class="food-art" src="assets/ingredients/mapo_tofu/garlic.png"/>
+<span>蒜瓣</span>
+</button>
+<button data-food="scallion" title="鮮青蔥">
+<img alt="青蔥" class="food-art" src="assets/ingredients/mapo_tofu/scallion.png"/>
+<span>青蔥</span>
+</button>
+<button data-food="pepper" title="大紅袍花椒">
+<img alt="花椒" class="food-art" src="assets/ingredients/mapo_tofu/pepper.png"/>
+<span>花椒</span>
+</button>
+</div>
+<!-- Cutting Board Stage -->
+<div class="board-stage-container">
+<div class="board" id="boardStage">
+<img alt="木質砧板" class="board-base-img" id="boardBaseImg" src="assets/ui/board-clean.webp"/>
+<div class="board-food-display" id="boardFoodDisplay">
+<img alt="食材" class="board-food-img" hidden="" id="boardFoodImg" src=""/>
+<div class="board-food-pieces" id="boardFoodPieces"></div>
+</div>
+<img alt="主廚刀" class="board-knife-img" id="boardKnife" src="assets/ui/knife-clean.webp"/>
+<img alt="舀醬湯匙" class="board-spoon-img" hidden="" id="boardSpoon" src="assets/cooking/douban_spoon.png"/>
+<div class="chop-effect" id="chopEffect"></div>
+<div id="boardFood">砧板空著</div>
+</div>
+<div class="board-controls">
+<button disabled="" id="cutBtn">切配</button>
+<div class="cut-progress-text" id="cutProgressText">點選食材放上砧板切配</div>
+</div>
+</div>
+<!-- Prep Checklist -->
+<div class="prep-checklist">
+<span class="check-item" id="check-tofu">○ 豆腐切丁</span>
+<span class="check-item" id="check-pork">○ 絞肉分切</span>
+<span class="check-item" id="check-douban">○ 豆瓣舀取</span>
+<span class="check-item" id="check-garlic">○ 蒜瓣切末</span>
+<span class="check-item" id="check-scallion">○ 青蔥切花</span>
+</div>
+</div>
+<!-- 2. WOK BENCH -->
+<div aria-label="炒鍋" class="wok-bench work-panel" id="panel-wok" role="region">
+<div class="bench-title-row">
+<h3>炒鍋 WOK</h3>
+<span class="station-badge" id="wokStationBadge">未在爐台 (需靠近)</span>
+</div>
+<div class="wok-stage-container">
+<div class="wok-visual" id="wokStage">
+<div class="steam steam-a"></div>
+<div class="steam steam-b"></div>
+<div class="steam steam-c"></div>
+<div class="flame" id="flame"><span></span><span></span><span></span></div>
+<img alt="黑鐵炒鍋" class="wok-base-img" id="wokBaseImg" src="assets/ui/wok-clean.webp"/>
+<img alt="沸騰麻婆豆腐" class="wok-simmer-img" hidden="" id="wokSimmerImg" src="assets/cooking/wok_simmering.png"/>
+<div class="wok-food-layer" id="wokFoodLayer"></div>
+<img alt="金屬鍋鏟" class="wok-spatula-img" id="wokSpatula" src="assets/ui/spatula-clean.webp"/>
+<div id="wokContents">空鍋</div>
+</div>
+<div class="wok-actions">
+<button id="heatBtn">開火</button>
+<button disabled="" id="addBtn">下鍋</button>
+<button disabled="" id="stirBtn">翻炒</button>
+<button disabled="" id="plateBtn">盛盤</button>
+</div>
+<div class="simmer-progress-container" hidden="" id="simmerProgressContainer">
+<div class="simmer-progress-header">
+<span class="simmer-progress-label">🔥 燜煮收汁中</span>
+<span class="simmer-progress-text" id="simmerProgressText">0 / 4 秒</span>
+</div>
+<div class="simmer-progress-bar">
+<div class="simmer-progress-fill" id="simmerProgressBarFill" style="width: 0%"></div>
+</div>
+</div>
+<div class="wok-status-text" id="wokStatusText">靠近爐台開火熱鍋</div>
+</div>
+</div>
+<div aria-label="配飯與裝盤" class="serve-bench work-panel" id="panel-serve" role="region">
+<div class="order-ticket" hidden="" id="orderTicket">
+<span class="ticket-tag">處方訂單</span>
+<span class="ticket-badge" id="ticketSpicy">微辣</span>
+<span class="ticket-badge" id="ticketScallion">要青蔥</span>
+<span class="ticket-badge" id="ticketRice">正常飯</span>
+</div><div class="bench-title-row"><h3>配飯・裝盤 SERVE</h3></div>
+<!-- Rice Cooker Parallel Interaction Widget -->
+<div class="rice-cooker-widget" id="riceCookerWidget">
+<div class="rice-widget-header">
+<span class="rice-icon">🍚</span>
+<span class="rice-title">電子鍋 (配餐越光米)</span>
+<span class="rice-status-badge" id="riceStatusBadge">未盛飯</span>
+</div>
+<div class="rice-widget-actions">
+<button class="rice-btn" id="riceHalfBtn" title="盛半碗飯 (減醣輕量)" type="button">盛半碗飯</button>
+<button class="rice-btn" id="riceFullBtn" title="盛滿碗飯 (大份量)" type="button">盛滿碗飯</button>
+</div>
+</div>
+<!-- Plated Dish Preview on Tray -->
+<div class="plated-dish-preview" hidden="" id="platedDishPreview">
+<img alt="麻婆豆腐青花瓷碗佐白飯" class="plated-img" src="assets/cooking/dish_plated.png"/>
+<div class="plated-info">
+<strong>青花瓷碗麻婆豆腐 × 越光米飯</strong>
+<span>已盛入托盤，請端回診間病人椅</span>
+</div>
+</div>
+<button class="shift-control" hidden="" id="nextOrderBtn" type="button">下一份料理</button></div>
+<!-- 3. COOK LOG -->
+<details class="cook-log" id="cookLogContainer">
+<summary>料理紀錄</summary>
+<ol id="recipeLog"><li>等待開始</li></ol>
+</details>
+</div>
+<div class="dialog-modal" hidden="" id="dialogModal">
+<div class="dialog-backdrop"></div>
+<div aria-labelledby="dialogTitle" aria-modal="true" class="dialog-window" role="dialog">
+<div class="dialog-header">
+<span class="dialog-badge" id="dialogBadge">CLINIC EMR</span>
+<h3 id="dialogTitle">診間評估</h3>
+</div>
+<div class="dialog-content" id="dialogContent"></div>
+<div class="dialog-score" hidden="" id="dialogScore">
+<div class="score-stars">★★★★★</div>
+<div class="score-number" id="dialogScoreText">滿意度：100% (極致舒壓)</div>
+</div>
+<div class="dialog-disclaimer" id="dialogDisclaimer">
         【設定聲明】麻婆豆腐為虛構遊戲舒壓料理設定，提供感官撫慰與心理放鬆，非臨床醫療處方，不具戒菸或戒斷醫療療效。
       </div>
-      <div class="dialog-footer">
-        <button id="dialogActionBtn" class="dialog-btn primary">確認繼續 (Enter / E)</button>
-        <button id="dialogCloseBtn" class="dialog-btn secondary">關閉 (Esc)</button>
-      </div>
-    </div>
-  </div>
-
+<div class="dialog-footer">
+<button class="dialog-btn primary" id="dialogActionBtn">確認繼續 (Enter / E)</button>
+<button class="dialog-btn secondary" id="dialogCloseBtn">關閉 (Esc)</button>
 </div>
-<script src="src/three.min.js?v=r2-20260918"></script>
-<script src="src/scene3d.js?v=r2-20260918"></script>
-<script src="src/main.js?v=r2-20260918"></script>
+</div>
+</div>
+<section aria-label="回合狀態" class="session-overlay" hidden="" id="sessionOverlay">
+<div><small>CLINIC KITCHEN · SHIFT</small><h2 id="sessionTitle">門診暫停</h2><p id="sessionMessage"></p><button class="shift-control" id="sessionContinueBtn" type="button">繼續料理</button></div>
+</section>
+<div class="shift-footer"><span id="ruleSummary"></span><span>角色 平面 模型仍為共用原型；數值不代表臨床療效。</span></div>
+</section>
+<dialog aria-labelledby="doctorDialogTitle" id="doctorDialog">
+<div class="doctor-dialog-head"><div><small>CHOOSE YOUR DOCTOR</small><h2 id="doctorDialogTitle">選擇今天的值班醫師</h2></div><button id="closeDoctorBtn" type="button">返回 Esc</button></div>
+<p>沿用第一版的能力分工。確認料理單前可更換，開始出餐後本單鎖定。</p>
+<div class="doctor-options">
+<button aria-pressed="true" data-doctor="speed" type="button"><img alt="快刀醫師參考立繪" src="assets/ui/doctor-speed.webp"/><span><strong>DR. SPEED</strong><b>快刀醫師</b><small>正確備料 Focus +8</small></span></button>
+<button aria-pressed="false" data-doctor="heat" type="button"><img alt="火候醫師參考立繪" src="assets/ui/doctor-heat.webp"/><span><strong>DR. HEAT</strong><b>火候醫師</b><small>過火前容錯時間 +12%</small></span></button>
+<button aria-pressed="false" data-doctor="strategy" type="button"><img alt="處方醫師參考立繪" src="assets/ui/doctor-strategy.webp"/><span><strong>DR. STRATEGY</strong><b>處方醫師</b><small>Craving 上升速度 −18%</small></span></button>
+</div><small>立繪僅用於選角介面；場景內仍使用共用 placeholder 模型，以名稱標示角色。</small>
+<span hidden="" id="doctorAbility">每份正確備料：Focus +8</span></dialog>
+</div>
+
+<script src="src/scene2d.js?v=flat-20260919"></script>
+<script src="src/shift-rules.js?v=flat-20260919"></script>
+<script src="src/main.js?v=flat-20260919"></script>
+<script src="src/clinic-shift.js?v=flat-20260919"></script>
 </body>
 </html>
+

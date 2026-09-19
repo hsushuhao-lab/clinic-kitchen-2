@@ -22,5 +22,6 @@ for url in p.urls:
     assert (ROOT/parsed.path).is_file(), f'Missing resource: {url}'
 assert shutil.which('node'), 'Node.js is required for the syntax gate.'
 subprocess.run(['node','--check',str(ROOT/'src/main.js')],check=True)
-subprocess.run(['node','--check',str(ROOT/'src/scene3d.js')],check=True)
+for name in ('src/scene2d.js', 'src/clinic-shift.js', 'src/shift-rules.js'):
+    subprocess.run(['node','--check',str(ROOT/name)],check=True)
 print(f'Static QA PASS: {len(p.ids)} unique DOM IDs; {len(p.urls)} local script/style resources; JavaScript syntax.')

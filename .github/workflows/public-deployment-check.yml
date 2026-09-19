@@ -1,32 +1,36 @@
 name: Public game verification
 on:
-  push:
+  workflow_run:
+    workflows: ['Runtime-only web release audit']
+    types: [completed]
     branches: [main]
-    paths:
-      - tests/test_public_deployment.py
-      - .github/workflows/public-deployment-check.yml
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   live-browser:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-      - name: Install Chromium verification tools
+      - name: Install Chromium
         run: |
-          python -m pip install playwright==1.57.0
+          python -m pip install -r requirements-qa.txt
           python -m playwright install --with-deps chromium
-      - name: Walk the published mission using keyboard input
-        run: python tests/test_public_deployment.py
-      - name: Preserve public-site evidence
+      - name: Verify live source SHA and every runtime file
+        run: python tools/verify_public_build.py --url https://hsushuhao-lab.github.io/clinic-kitchen-2/ --expect-sha $(git rev-parse HEAD)
+      - name: Play the published game using real keyboard and pointer input
+        run: python tests/test_flat_clinic.py --base-url https://hsushuhao-lab.github.io/clinic-kitchen-2/ --output qa/public-flat
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: public-game-evidence
-          path: qa/public-deployment/
+          name: public-flat-game-evidence
+          path: qa/public-flat/
           retention-days: 14

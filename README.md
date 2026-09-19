@@ -1,3 +1,33 @@
+# Craving Kitchen — 平面診間 × 麻婆豆腐
+
+**[線上遊戲：GitHub Pages](https://hsushuhao-lab.github.io/clinic-kitchen-2/)**
+
+本版依最新確認的設計改成：上方 1/3 固定平面診間、下方 2/3 備料／炒鍋／配飯裝盤。移除重複的料理工作台標題與分頁列，保留三位醫師选择、Craving／Focus、分數、出餐與連勝。
+
+W/S/A/D 上下左右；可點地圖工作站走過去，抵達後 E 互動。P 暫停、R 重來。醫師在接單前選擇；手機按地圖站點行走，抵達後下方呈現對應料理區。
+
+美術使用原本核准設定稿的 UI 立繪及輪廓去背器具；不是新生成的高解析模型。Craving 與料理都是虛構遊戲規則，不是醫療療效。
+
+詳見 [本輪發布範圍](docs/FLAT_CLINIC_RELEASE_20260919.md)。只有 main 作為開發與發布線。舊 AppDeploy 固定版本不作為最新版驗收入口。
+
+## 執行與驗證
+```sh
+python -m pip install -r requirements-qa.txt
+python -m playwright install chromium
+python tests/smoke_test.py
+python tools/verify_assets.py
+python tools/verify_shift_assets.py
+node --test tests/shift_rules.test.cjs
+python tools/build_web_release.py
+python -m http.server 8000 --bind 127.0.0.1 --directory web-dist
+# 另一個終端執行：
+python tests/test_flat_clinic.py --base-url http://127.0.0.1:8000/
+```
+原本 3D 程式、模型與測試保留供歷史參考，目前首頁不載入 Three.js 或 GLB。
+
+---
+## 歷史說明（以下不代表目前介面）
+
 # Clinic Kitchen 2.0
 
 ## 線上試玩（最新發布版本）

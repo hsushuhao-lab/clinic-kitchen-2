@@ -1,0 +1,405 @@
+{
+  "purpose": "Approved art UI and masked utensils; no private photos",
+  "assets": [
+    {
+      "path": "assets/ui/doctor-speed.webp",
+      "bytes": 20504,
+      "sha256": "3eab3abe77409e2a0b9ebb7f4b87e173e71dbd8f65b2e00c6b78225d74abb9b2",
+      "source": "assets/art_direction/approved/doctor_concepts.png",
+      "source_sha256": "bbdb86634a431a7555a5c4c557bd90b885ce32adf75bd55b3c261d83e34b0dfb",
+      "crop": [
+        98,
+        132,
+        364,
+        398
+      ],
+      "usage": "2D selection portrait and map marker, not a production model"
+    },
+    {
+      "path": "assets/ui/doctor-heat.webp",
+      "bytes": 16380,
+      "sha256": "630d5181c3dd1525ce75376d39f19d957697b08bfffab7d8a110b8ac8984dcbf",
+      "source": "assets/art_direction/approved/doctor_concepts.png",
+      "source_sha256": "bbdb86634a431a7555a5c4c557bd90b885ce32adf75bd55b3c261d83e34b0dfb",
+      "crop": [
+        520,
+        73,
+        780,
+        333
+      ],
+      "usage": "2D selection portrait and map marker, not a production model"
+    },
+    {
+      "path": "assets/ui/doctor-strategy.webp",
+      "bytes": 19882,
+      "sha256": "62d04d9a3acd8050e11e71c47a80d986efd6bdac4e417a09faff7c7129c88caa",
+      "source": "assets/art_direction/approved/doctor_concepts.png",
+      "source_sha256": "bbdb86634a431a7555a5c4c557bd90b885ce32adf75bd55b3c261d83e34b0dfb",
+      "crop": [
+        950,
+        75,
+        1230,
+        355
+      ],
+      "usage": "2D selection portrait and map marker, not a production model"
+    },
+    {
+      "path": "assets/ui/patient-office.webp",
+      "bytes": 25754,
+      "sha256": "a6c0b1149dd57f918b5ce5f0313fb7fd5917efb407fde91a807cfb04aafd00ed",
+      "source": "assets/art_direction/approved/patient_npcs.png",
+      "source_sha256": "f30774a30821d84d3d95d45d39b4a11830a7ef1d8814b29c47ee507bb2ccad67",
+      "crop": [
+        82,
+        128,
+        342,
+        388
+      ],
+      "usage": "2D selection portrait and map marker, not a production model"
+    },
+    {
+      "path": "assets/ui/wok-clean.webp",
+      "bytes": 32868,
+      "sha256": "d3a27fbcc0b4325f2baa617eb1d9475ab0a121057e73168b21d1a3309deda0c5",
+      "source": "assets/art_direction/approved/props_station.png",
+      "source_sha256": "cefcd59a85540b12e75c72ca11653996bdedafa69b252ffdc97c12150e03d903",
+      "crop": [
+        1048,
+        146,
+        1315,
+        289
+      ],
+      "mask_polygon": [
+        [
+          1050,
+          208
+        ],
+        [
+          1059,
+          189
+        ],
+        [
+          1086,
+          174
+        ],
+        [
+          1110,
+          164
+        ],
+        [
+          1151,
+          157
+        ],
+        [
+          1192,
+          160
+        ],
+        [
+          1222,
+          171
+        ],
+        [
+          1240,
+          183
+        ],
+        [
+          1246,
+          180
+        ],
+        [
+          1254,
+          177
+        ],
+        [
+          1297,
+          149
+        ],
+        [
+          1308,
+          148
+        ],
+        [
+          1312,
+          155
+        ],
+        [
+          1310,
+          165
+        ],
+        [
+          1258,
+          190
+        ],
+        [
+          1255,
+          204
+        ],
+        [
+          1253,
+          222
+        ],
+        [
+          1243,
+          244
+        ],
+        [
+          1228,
+          263
+        ],
+        [
+          1201,
+          278
+        ],
+        [
+          1164,
+          286
+        ],
+        [
+          1131,
+          286
+        ],
+        [
+          1098,
+          278
+        ],
+        [
+          1073,
+          263
+        ],
+        [
+          1057,
+          242
+        ],
+        [
+          1050,
+          221
+        ]
+      ],
+      "native_size": [
+        267,
+        143
+      ],
+      "usage": "Native-resolution prop cutout; no claim of new high-resolution render"
+    },
+    {
+      "path": "assets/ui/knife-clean.webp",
+      "bytes": 7182,
+      "sha256": "849fc75c3d48b981af1192bd11c26ae6cacd547afca454c2c0d8b2571e8438c1",
+      "source": "assets/art_direction/approved/props_station.png",
+      "source_sha256": "cefcd59a85540b12e75c72ca11653996bdedafa69b252ffdc97c12150e03d903",
+      "crop": [
+        1065,
+        330,
+        1223,
+        383
+      ],
+      "mask_polygon": [
+        [
+          1067,
+          345
+        ],
+        [
+          1070,
+          337
+        ],
+        [
+          1083,
+          332
+        ],
+        [
+          1140,
+          338
+        ],
+        [
+          1169,
+          346
+        ],
+        [
+          1196,
+          356
+        ],
+        [
+          1216,
+          370
+        ],
+        [
+          1220,
+          377
+        ],
+        [
+          1191,
+          380
+        ],
+        [
+          1130,
+          375
+        ],
+        [
+          1136,
+          355
+        ],
+        [
+          1074,
+          356
+        ],
+        [
+          1067,
+          352
+        ]
+      ],
+      "native_size": [
+        158,
+        53
+      ],
+      "usage": "Native-resolution prop cutout; no claim of new high-resolution render"
+    },
+    {
+      "path": "assets/ui/board-clean.webp",
+      "bytes": 25874,
+      "sha256": "7d2b8559265c15e47958eca6ac8039062922b05e365b4cec927a4ebd7da257b2",
+      "source": "assets/art_direction/approved/props_station.png",
+      "source_sha256": "cefcd59a85540b12e75c72ca11653996bdedafa69b252ffdc97c12150e03d903",
+      "crop": [
+        1219,
+        325,
+        1428,
+        446
+      ],
+      "mask_polygon": [
+        [
+          1222,
+          392
+        ],
+        [
+          1265,
+          327
+        ],
+        [
+          1275,
+          327
+        ],
+        [
+          1421,
+          345
+        ],
+        [
+          1425,
+          352
+        ],
+        [
+          1412,
+          434
+        ],
+        [
+          1403,
+          443
+        ],
+        [
+          1227,
+          416
+        ],
+        [
+          1221,
+          410
+        ]
+      ],
+      "native_size": [
+        209,
+        121
+      ],
+      "usage": "Native-resolution prop cutout; no claim of new high-resolution render"
+    },
+    {
+      "path": "assets/ui/spatula-clean.webp",
+      "bytes": 9104,
+      "sha256": "c1a64d2601f196030f2288e154e9211f84362534a94f1adb7d365c03b6dab75e",
+      "source": "assets/art_direction/approved/props_station.png",
+      "source_sha256": "cefcd59a85540b12e75c72ca11653996bdedafa69b252ffdc97c12150e03d903",
+      "crop": [
+        1341,
+        152,
+        1437,
+        302
+      ],
+      "mask_polygon": [
+        [
+          1343,
+          283
+        ],
+        [
+          1365,
+          248
+        ],
+        [
+          1372,
+          235
+        ],
+        [
+          1386,
+          233
+        ],
+        [
+          1402,
+          207
+        ],
+        [
+          1408,
+          188
+        ],
+        [
+          1420,
+          157
+        ],
+        [
+          1425,
+          154
+        ],
+        [
+          1430,
+          154
+        ],
+        [
+          1434,
+          158
+        ],
+        [
+          1432,
+          167
+        ],
+        [
+          1414,
+          208
+        ],
+        [
+          1405,
+          211
+        ],
+        [
+          1396,
+          238
+        ],
+        [
+          1404,
+          245
+        ],
+        [
+          1401,
+          293
+        ],
+        [
+          1399,
+          299
+        ],
+        [
+          1350,
+          291
+        ]
+      ],
+      "native_size": [
+        96,
+        150
+      ],
+      "usage": "Native-resolution prop cutout; no claim of new high-resolution render"
+    }
+  ]
+}

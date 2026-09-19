@@ -1,4 +1,4 @@
-name: Clinic Kitchen R2 QA
+name: Clinic Kitchen QA
 on:
   push:
     branches: [main]
@@ -11,6 +11,8 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
@@ -18,29 +20,21 @@ jobs:
         run: |
           python -m pip install -r requirements-qa.txt
           python -m playwright install --with-deps chromium
-      - name: Static and asset integrity
+      - name: Source, rules and art integrity
         run: |
           python tests/smoke_test.py
           python tools/verify_assets.py
-      - name: Browser verification over HTTP
+          python tools/verify_shift_assets.py
+          node --test tests/shift_rules.test.cjs
+          python tools/build_web_release.py
+      - name: Test actual runtime-only HTTP site
         run: |
-          python -m http.server 8000 --bind 127.0.0.1 > /tmp/ck-http.log 2>&1 &
+          python -m http.server 8000 --bind 127.0.0.1 --directory web-dist > /tmp/ck-flat-http.log 2>&1 &
           sleep 2
-          python tests/test_initial_viewport.py
-          python tests/browser_qa.py --base-url http://127.0.0.1:8000/ --output qa/current
-          python tests/test_full_mission_chain.py
-          python tests/test_movement_direction.py
-          python tests/test_patient_glb_nodes.py
-          python tests/test_wok_dom_persistence.py
-          python tests/test_plating_state_machine.py
-          python tests/test_batch_addition_and_parallel_cooking.py
-          python tests/test_culinary_order_and_execution.py
-          python tests/test_real_gameplay_acceptance.py
+          python tests/test_flat_clinic.py --base-url http://127.0.0.1:8000/ --output qa/current/flat
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ck-r2-browser-evidence
-          path: |
-            qa/current/
-            qa/acceptance/
+          name: ck-flat-browser-evidence
+          path: qa/current/flat/
           retention-days: 14

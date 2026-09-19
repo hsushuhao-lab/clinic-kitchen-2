@@ -31,6 +31,15 @@ let isPlating = false;
 let platingTimeout = null;
 let simmerTimer = 0;
 const REQUIRED_SIMMER_TIME = 4.0;
+const actionTimers = new Set();
+function queueAction(callback, delay) {
+  const timer = setTimeout(() => { actionTimers.delete(timer); callback(); }, delay);
+  actionTimers.add(timer);
+  return timer;
+}
+function cancelActionTimers() {
+  actionTimers.forEach(clearTimeout); actionTimers.clear();
+}
 
 let cookedDish = {
   hasScallion: false,
@@ -108,6 +117,7 @@ let dialogCallback = null;
 
 function setStage(stage) {
   currentStage = stage;
+  if (stage === STAGES.GATHER) window.CKShift?.begin();
   if (window.setMissionStage) window.setMissionStage(stage);
   if (window.setCarryingTray) window.setCarryingTray(stage === STAGES.SERVE);
   if (window.setPatientDishVisible) window.setPatientDishVisible(stage >= STAGES.FIRST_BITE);
@@ -155,7 +165,9 @@ function showDialog({ badge, title, content, showScore, scoreText, confirmText, 
   if (!dialogModal) return;
   dialogBadge.textContent = badge || 'CLINIC EMR';
   dialogTitle.textContent = title || '通知';
-  dialogContent.innerHTML = content || '';
+  dialogContent.innerHTML = (content || '').replaceAll('Dr. Speed', window.CKShift?.doctorName || 'DR. SPEED');
+  keys.clear();
+  if (window.update3DPlayerMovement) window.update3DPlayerMovement(0, 0, 0, 1);
   if (showScore) {
     dialogScore.removeAttribute('hidden');
     if (scoreText) dialogScoreText.textContent = scoreText;
@@ -232,7 +244,8 @@ function updateCameraAndPlayer() {
 }
 
 function move(now) {
-  const dt = previousTime ? Math.min((now - previousTime) / 1000, 0.1) : 0;
+  const stopped = dialogOpen || Boolean(window.CKShift?.isFrozen());
+  const dt = !stopped && previousTime ? Math.min((now - previousTime) / 1000, 0.1) : 0;
   previousTime = now;
   let dx = Number(keys.has('d') || keys.has('arrowright')) - Number(keys.has('a') || keys.has('arrowleft'));
   let dy = Number(keys.has('s') || keys.has('arrowdown')) - Number(keys.has('w') || keys.has('arrowup'));
@@ -244,20 +257,24 @@ function move(now) {
   if (canStand(x, ny)) y = ny;
   updateCameraAndPlayer();
 
-  if (window.update3DPlayerMovement && !dialogOpen) {
+  if (stopped && window.update3DPlayerMovement) window.update3DPlayerMovement(0, 0, 0, 1);
+  if (window.update3DPlayerMovement && !stopped) {
     window.update3DPlayerMovement(dx, dy, dt, keys.has('shift') ? 1.6 : 1.0);
   }
 
-  // Simmer timer progression during active cooking
-  if (currentStage === STAGES.COOK && heated && stirs >= 3 && required.every(id => inWok.has(id))) {
+  window.CKShift?.tick(dt, dialogOpen);
+
+  // Keep the heat clock running after readiness; doctor tolerance affects real overcooking.
+  if ((currentStage === STAGES.COOK || currentStage === STAGES.PLATE) && !isPlating && heated && stirs >= 3 && required.every(id => inWok.has(id))) {
     simmerTimer += dt;
     cookedDish.simmerProgress = Math.min(100, Math.round((simmerTimer / REQUIRED_SIMMER_TIME) * 100));
     if (simmerTimer >= REQUIRED_SIMMER_TIME && !cookedDish.isSimmered) {
       cookedDish.isSimmered = true;
+      window.CKShift?.simmer();
       setStage(STAGES.PLATE);
       cookLog('炒鍋：燜煮完成、紅油均勻收汁濃郁！請準備盛盤 (亦可先至電子鍋盛飯)');
     }
-    if (simmerTimer > 15.0 && !cookedDish.isBurnt) {
+    if (simmerTimer > (window.CKShift?.burnAfter ?? 15.0) && !cookedDish.isBurnt) {
       cookedDish.isBurnt = true;
     }
   }
@@ -703,6 +720,7 @@ function syncWokFoodDOM() {
 }
 
 function resetAll() {
+  cancelActionTimers();
   if (platingTimeout) {
     clearTimeout(platingTimeout);
     platingTimeout = null;
@@ -761,9 +779,11 @@ function resetAll() {
   if (window.set3DPlayerPosition) window.set3DPlayerPosition(-8.0, -0.2);
   if (window.setCarryingTray) window.setCarryingTray(false);
   if (window.setPatientDishVisible) window.setPatientDishVisible(false);
+  window.CKShift?.reset();
 }
 
 function handleInteraction(name) {
+  if (window.CKShift && !window.CKShift.canInteract()) return;
   visited.add(name);
   $('log').textContent = `互動：${name}｜已探索 ${visited.size} 個重點`;
   cookLog(`互動：${name}`);
@@ -777,8 +797,8 @@ function handleInteraction(name) {
         badge: 'CLINIC EMR — 初診與客製偏好',
         title: '【診間問診】上班族病患主訴與料理客製',
         content: `
-          <p><strong>上班族病患：</strong>「醫師，最近專案截稿連續熬夜，肩頸緊繃、精神焦躁，完全吃不下飯，整個人快被壓力壓垮了……」</p>
-          <p><strong>Dr. Speed：</strong>「長期高壓會讓交感神經持續亢奮、消化機能低落。我們今天不開苦藥，而是為你特調一道<strong>家常舒壓料理——麻婆豆腐</strong>。請選擇你的飲食客製偏好：」</p>
+          <p><strong>上班族病患：</strong>「醫師，今天煙癮有些強，想找件事轉移注意力，也想吃一份麻婆豆腐。」</p>
+          <p><strong>Dr. Speed：</strong>「先確認今天想吃的口味，再安排這份料理。請選擇辣度、青蔥和飯量：」</p>
           <div class="preference-grid" id="prefGrid">
             <div class="pref-row">
               <span class="pref-label">辣度喜好：</span>
@@ -909,6 +929,9 @@ function handleInteraction(name) {
       const finalScore = Math.max(50, Math.min(100, score));
       let scoreDetail = `${finalScore}%（${finalScore === 100 ? '完美客製舒壓神作' : (finalScore >= 80 ? '風味優良、符合主訴' : '完成料理、客製稍有出入')}）`;
       if (notes.length) scoreDetail += ` [${notes.join('、')}]`;
+      // Delivery is committed once; dismissing feedback is not another serving action.
+      setStage(STAGES.FIRST_BITE);
+      window.CKShift?.finish(finalScore);
 
       showDialog({
         badge: 'PATIENT DINING & FEEDBACK',
@@ -1074,7 +1097,7 @@ $('cutBtn').addEventListener('click', () => {
     // Spoon scoop action (舀取)
     if ($('boardSpoon')) {
       $('boardSpoon').className = 'board-spoon-img is-scooping';
-      setTimeout(() => $('boardSpoon') && ($('boardSpoon').className = 'board-spoon-img'), 300);
+      queueAction(() => $('boardSpoon') && ($('boardSpoon').className = 'board-spoon-img'), 300);
     }
     cutStages.douban = 1;
     prepped.add('douban');
@@ -1086,7 +1109,7 @@ $('cutBtn').addEventListener('click', () => {
       const alignClass = curT === 0 ? 'align-tofu-center' : (curT === 1 ? 'align-tofu-horizontal' : 'align-tofu-dice');
       $('boardKnife').className = `board-knife-img ${alignClass} is-chopping`;
       if ($('chopEffect')) $('chopEffect').classList.add('is-active');
-      setTimeout(() => {
+      queueAction(() => {
         if ($('boardKnife')) $('boardKnife').className = `board-knife-img ${alignClass}`;
         if ($('chopEffect')) $('chopEffect').classList.remove('is-active');
       }, 220);
@@ -1104,7 +1127,7 @@ $('cutBtn').addEventListener('click', () => {
     if ($('boardKnife')) {
       $('boardKnife').className = 'board-knife-img align-scallion is-chopping';
       if ($('chopEffect')) $('chopEffect').classList.add('is-active');
-      setTimeout(() => {
+      queueAction(() => {
         if ($('boardKnife')) $('boardKnife').className = 'board-knife-img align-scallion';
         if ($('chopEffect')) $('chopEffect').classList.remove('is-active');
       }, 220);
@@ -1116,7 +1139,7 @@ $('cutBtn').addEventListener('click', () => {
     if ($('boardKnife')) {
       $('boardKnife').className = 'board-knife-img align-garlic is-chopping';
       if ($('chopEffect')) $('chopEffect').classList.add('is-active');
-      setTimeout(() => {
+      queueAction(() => {
         if ($('boardKnife')) $('boardKnife').className = 'board-knife-img align-garlic';
         if ($('chopEffect')) $('chopEffect').classList.remove('is-active');
       }, 220);
@@ -1128,7 +1151,7 @@ $('cutBtn').addEventListener('click', () => {
     if ($('boardKnife')) {
       $('boardKnife').className = 'board-knife-img align-pork is-chopping';
       if ($('chopEffect')) $('chopEffect').classList.add('is-active');
-      setTimeout(() => {
+      queueAction(() => {
         if ($('boardKnife')) $('boardKnife').className = 'board-knife-img align-pork';
         if ($('chopEffect')) $('chopEffect').classList.remove('is-active');
       }, 220);
@@ -1141,6 +1164,9 @@ $('cutBtn').addEventListener('click', () => {
     cookLog(`備料完成：${foodNames[selectedFood]}`);
   }
 
+  if (selectedFood && prepped.has(selectedFood)) {
+    window.CKShift?.prep(selectedFood, selectedFood !== 'scallion' || currentOrder.scallion);
+  }
   if (required.every(id => prepped.has(id) || inWok.has(id)) && currentStage <= STAGES.PREP) {
     setStage(STAGES.COOK);
     cookLog('麻婆豆腐核心食材全數備妥！請走向炒鍋爐台開火下鍋');
@@ -1221,7 +1247,7 @@ $('stirBtn').addEventListener('click', () => {
     $('wokSpatula').classList.remove('is-stirring');
     void $('wokSpatula').offsetWidth;
     $('wokSpatula').classList.add('is-stirring');
-    setTimeout(() => $('wokSpatula') && $('wokSpatula').classList.remove('is-stirring'), 400);
+    queueAction(() => $('wokSpatula') && $('wokSpatula').classList.remove('is-stirring'), 400);
   }
 
   // Reactive physical displacement of food items
@@ -1229,7 +1255,7 @@ $('stirBtn').addEventListener('click', () => {
   if (foodLayer) {
     const items = foodLayer.querySelectorAll('.wok-food-item');
     items.forEach(item => item.classList.add('is-pushed'));
-    setTimeout(() => items.forEach(item => item.classList.remove('is-pushed')), 250);
+    queueAction(() => items.forEach(item => item.classList.remove('is-pushed')), 250);
   }
 
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -1318,6 +1344,14 @@ const movementKeys = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrow
 addEventListener('keydown', event => {
   if (event.target.matches('input,textarea,select,[contenteditable="true"]')) return;
   const key = event.key.toLowerCase();
+  if (event.target.closest('#doctorDialog')) return;
+  if (key === 'r' && !event.repeat) { event.preventDefault(); resetAll(); return; }
+  if (event.target.closest('[data-worktab],.shift-control')) return;
+  if (!dialogOpen && key !== 'r' && window.CKShift?.isFrozen()) {
+    if (movementKeys.has(key) || key === 'e') event.preventDefault();
+    return;
+  }
+  if (dialogOpen && event.target.closest('.pref-btn') && (key === 'enter' || key === ' ')) return;
 
   if (dialogOpen) {
     if (key === 'escape') {
@@ -1338,7 +1372,6 @@ addEventListener('keydown', event => {
     keys.add(key);
   }
   if (event.repeat) return;
-  if (key === 'r') resetAll();
   if (key === 'e') {
     const prop = nearProp();
     const target3d = window.scene3DState && window.scene3DState.interactiveTarget;
@@ -1389,6 +1422,23 @@ window.setGameStage = window.setMissionStage;
 
 window.getMissionStage = function () {
   return currentStage;
+};
+
+window.clearGameKeys = function () {
+  keys.clear(); previousTime = 0;
+  if (window.update3DPlayerMovement) window.update3DPlayerMovement(0, 0, 0, 1);
+};
+window.stopShiftCooking = function () {
+  cancelActionTimers();
+  window.clearGameKeys();
+  heated = false;
+  if (platingTimeout) clearTimeout(platingTimeout);
+  platingTimeout = null; isPlating = false;
+  $('wokStage').classList.remove('wok-plating-active');
+  $('wokSpatula').classList.remove('is-stirring');
+  $('platedDishPreview').classList.remove('is-transferring');
+  if (window.setCarryingTray) window.setCarryingTray(false);
+  updateCooking();
 };
 
 if (window.initScene3D) window.initScene3D(world);
