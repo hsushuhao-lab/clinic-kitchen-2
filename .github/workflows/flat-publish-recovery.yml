@@ -1,0 +1,45 @@
+name: Recover pending flat-layout source
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/flat-publish-recovery.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Export tracked source and existing staging objects without executing them
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p recovery
+          git archive HEAD > recovery/repo-source.tar
+          python - <<'PY'
+          import base64, json, lzma, pathlib, subprocess
+          out = pathlib.Path('recovery')
+          chunks = []
+          for index, sha in enumerate(['fa85a3fe0a1dedbd96bc01f8f133634a7eff28f0', '8008c9ca47a354456123192b49c2c9fd1780acc0'], 1):
+              result = json.loads(subprocess.check_output(['gh', 'api', f'repos/hsushuhao-lab/clinic-kitchen-2/git/blobs/{sha}']))
+              raw = base64.b64decode(result['content'])
+              (out / f'pending-{index}.bin').write_bytes(raw)
+              chunks.append(raw)
+          decoder = lzma.LZMADecompressor()
+          try:
+              recovered = decoder.decompress(b''.join(chunks))
+              (out / 'partial-source.bin').write_bytes(recovered)
+              print('Recovered prefix bytes:', len(recovered), 'Complete archive:', decoder.eof)
+          except lzma.LZMAError as error:
+              print('Staging prefix could not be decoded:', error)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: flat-publish-recovery
+          path: recovery/
+          retention-days: 2
+          if-no-files-found: error
