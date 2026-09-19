@@ -6,12 +6,13 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <title>Craving Kitchen — 平面診間與料理</title>
 <link href="data:," rel="icon"/>
-<link href="styles.css?v=chibi-r2" rel="stylesheet"/>
-<link href="r2-fixes.css?v=chibi-r2" rel="stylesheet"/>
-<link href="clinic-shift.css?v=chibi-r2" rel="stylesheet"/>
-<link rel="stylesheet" href="character-art.css?v=chibi-r2"/>
-<link rel="stylesheet" href="workspace-art.css?v=chibi-r2"/>
-<link rel="stylesheet" href="chibi-world.css?v=chibi-r2"/>
+<link href="styles.css?v=rush-r3" rel="stylesheet"/>
+<link href="r2-fixes.css?v=rush-r3" rel="stylesheet"/>
+<link href="clinic-shift.css?v=rush-r3" rel="stylesheet"/>
+<link rel="stylesheet" href="character-art.css?v=rush-r3"/>
+<link rel="stylesheet" href="workspace-art.css?v=rush-r3"/>
+<link rel="stylesheet" href="chibi-world.css?v=rush-r3"/>
+<link rel="stylesheet" href="rush.css?v=rush-r3"/>
 </head>
 <body>
 <div id="app">
@@ -83,6 +84,12 @@
 <div class="station-lock-overlay" hidden="" id="stationLockOverlay">
 <div class="station-lock-msg" id="stationLockMsg">【前置任務未完成】請先完成診間問診 (1)、開單 (2) 與冰箱取材 (3)！</div>
 </div>
+
+<section id="rushStrip" aria-label="晚班挑戰、精準判定與音樂">
+  <div><div class="rush-summary"><strong id="rushTicket">精準加分</strong><b id="rushClock">自由練習</b><span id="rushCombo">0 COMBO</span></div><span id="rushHint">接單前可選擇晚班挑戰</span></div>
+  <div class="precision-meter"><div class="precision-info"><span>精準判定 · Space</span><span id="precisionFeedback" role="status">本單技巧 +0</span></div><div id="precisionTrack" aria-label="白色游標進入金色區可取得精準加分" data-active="false"><span class="precision-good"></span><span class="precision-perfect"></span><span id="precisionCursor"></span></div></div>
+  <div class="rush-controls"><button class="shift-control" type="button" id="rushMode" aria-pressed="false">練習 → 晚班挑戰</button><button class="shift-control" type="button" id="musicToggle" aria-pressed="false">開啟音樂</button><details><summary aria-label="音量設定">音量</summary><div class="audio-options"><label for="musicVolume">音樂與音效音量</label><input id="musicVolume" type="range" min="0" max="100" value="45"/><small id="musicState">輕快 96 BPM</small><small>快捷鍵 M 靜音。靜音不影響精準判定。</small></div></details></div>
+</section>
 <div class="cook-columns">
 <!-- 1. PREP BENCH -->
 <div aria-label="備料" class="prep-bench work-panel" id="panel-prep" role="region">
@@ -252,11 +259,14 @@
 <span hidden="" id="doctorAbility">每份正確備料：Focus +8</span></dialog>
 </div>
 
-<script src="src/scene2d.js?v=chibi-r2"></script>
-<script src="src/shift-rules.js?v=chibi-r2"></script>
-<script src="src/character-art.js?v=chibi-r2"></script>
-<script src="src/main.js?v=chibi-r2"></script>
-<script src="src/workspace-art.js?v=chibi-r2"></script>
-<script src="src/clinic-shift.js?v=chibi-r2"></script>
+<script src="src/scene2d.js?v=rush-r3"></script>
+<script src="src/shift-rules.js?v=rush-r3"></script>
+<script src="src/character-art.js?v=rush-r3"></script>
+<script src="src/rush-rules.js?v=rush-r3"></script>
+<script src="src/adaptive-audio.js?v=rush-r3"></script>
+<script src="src/main.js?v=rush-r3"></script>
+<script src="src/workspace-art.js?v=rush-r3"></script>
+<script src="src/clinic-shift.js?v=rush-r3"></script>
+<script src="src/rush.js?v=rush-r3"></script>
 </body>
 </html>

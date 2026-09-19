@@ -1,29 +1,27 @@
-# Craving Kitchen — Q 版可動診間 R2
+# Craving Kitchen — Q 版診間 R3・晚班挑戰
 
 **[直接試玩 GitHub Pages](https://hsushuhao-lab.github.io/clinic-kitchen-2/)**
 
-上方是可走、可跑的連續診間，下方是麻婆豆腐料理工作區。三位 Q 版全身醫師可切換；不再使用靜態位置導引或滑動半身像。
+保留上方可走、可跑、可端餐的三位 Q 版全身醫師與連續診間，下方製作麻婆豆腐。本輪加入三單晚班挑戰、精準連擊、準時賞金，以及隨壓力升高的原創動態配樂；沒有退回導航圖或更換畫風。
 
-鍵盤：WASD／方向鍵移動，Shift 跑步，E 互動，P 暫停，R 重來。手機：按住方向鍵、跑步切換與 E 按鈕；工作站快捷鍵會讓角色實際走过去。選角／對話保留核准半寫實立繪。
+## 怎麼玩
+先用練習模式熟悉路線；接單前按「晚班挑戰」：90／80／70 秒三種指定口味，連續完成後比較晚班總分與本機最高紀錄。超過準時目標只失去賞金，Craving 達 100% 才失敗。
 
-[最後衝刺清單、驗收與 AGENT 接手](docs/R2_RELEASE_SPRINT.md) · [核准原稿](assets/art_direction/approved/) · [建置／部署紀錄](https://github.com/hsushuhao-lab/clinic-kitchen-2/actions)
+WASD／方向鍵移動，Shift 跑步，E 互動；手機按住方向鍵與跑步／E 按鈕。料理時白色游標進入中央金色區按 Space 或原操作鈕可得 PERFECT 與 COMBO；未命中不會卡住料理。收汁後可先關火，再去盛飯，仍能回來盛盤。
 
-## 此版本內容
-三位醫師各 96 格：四方向，每方向 idle 2、walk 6、run 6、carry 6、work 4。腿和手臂影格會改變，不是只平移圖片。家具碰撞、腳部深度排序、手機鏡頭、坐姿病人、雙手端餐、配料到送餐流程均與遊戲狀態連動。
+**M 靜音、P 暫停、R 重來。** 音量可調；配樂在玩家操作後開始，隨輕快／忙碌／衝刺切換 96／120／144 BPM。暫停及背景分頁停止音訊和計時；靜音不影響判定。
 
-原有 `src/main.js`、`src/shift-rules.js`、下方料理邏輯保持不變；沒有新增第二道菜。使用的是 2D raster atlas，不是 3D 模型。部分家具為核准裁切，部分為配色補繪；美術品質仍等待使用者驗收。
+[R3 遊玩規則、配樂與驗收](docs/R3_NIGHT_SHIFT.md) · [R2 Q版角色交班](docs/R2_RELEASE_SPRINT.md) · [核准原稿](assets/art_direction/approved/) · [建置／部署紀錄](https://github.com/hsushuhao-lab/clinic-kitchen-2/actions)
 
 ## 執行
 ```sh
 python -m pip install -r requirements-qa.txt
 python -m playwright install chromium
+node --test tests/shift_rules.test.cjs tests/rush_rules.test.cjs
 python tools/build_web_release.py
 python -m http.server 8000 --bind 127.0.0.1 --directory web-dist
 ```
 
-建置會從完整原稿與程式化身體生成 16 個 `assets/chibi/*.webp`，輸出有尺寸、完整 SHA-256 與來源 manifest，Pages 使用真實 raster 檔，不依赖對話附件。完整原稿不覆寫。
+建置沿用 R2 的三位醫師圖集與原稿來源核對。音樂由 `src/adaptive-audio.js` 原創合成，無外部音源依賴或錄音。CI 保留原有流程與 Q 版動作驗收，增加三單實際遊玩及音訊能量測試，通過才部署 Pages；發布依相同 commit 的驗證紀錄，不只建立 blob。
 
-## 驗收
-原有 21 項流程、10 項人物 UI、5 項工作區檢查，加上 16 組 Q 版控制／動畫／完整端餐驗收。CI 以 HTTP 執行，通過才部署 Pages，之後比對公開 source_commit、檔案 hash 並再實測。只建立 blob 不算發布；成功證據以相同 commit 的 Actions 為準。
-
-遊戲的 Craving 與麻婆豆腐效果均是虛構規則，不代表醫療療效。公開 runtime 排除私有真人照片、完整原稿海報、歷史 3D 檔與測試。
+目前是 2D Q 版遊戲，角色／家具原稿與可動圖集未在本輪重畫，仍保留美術驗收。公開 runtime 排除真人私照、完整原稿海報與歷史 3D 檔案。Craving 與料理效果是虛構遊戲規則，不代表醫療療效。

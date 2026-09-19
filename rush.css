@@ -1,0 +1,48 @@
+/* R3: compact challenge / sound controls. Upper chibi room and 1:2 ratio are unchanged. */
+#cookingDeck{grid-template-rows:55px minmax(0,1fr) 18px}
+#rushStrip{display:grid;grid-template-columns:minmax(210px,1fr) minmax(210px,1fr) auto;gap:14px;align-items:center;padding:5px 10px;background:#213d4d;color:#fff6de;border-radius:6px;border-left:3px solid #dcb461;min-width:0;z-index:22;position:relative}
+.rush-summary{display:flex;gap:10px;align-items:baseline;white-space:nowrap;font-size:12px;min-width:0}
+#rushClock{font-size:19px;color:#ffdc89;min-width:54px;font-variant-numeric:tabular-nums}
+#rushCombo{font-size:10px;color:#afe0c6}
+#rushHint{display:block;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:9px;color:#cbd9d8}
+.precision-info{display:flex;justify-content:space-between;gap:8px;font-size:9px;color:#cbd9d8;margin-bottom:5px}
+#precisionFeedback{color:#c7ddd3;font-variant-numeric:tabular-nums}
+#precisionFeedback[data-grade='perfect']{color:#ffe296}
+#precisionTrack{height:11px;border-radius:8px;background:#526772;position:relative;overflow:hidden;opacity:.45}
+#precisionTrack[data-active='true']{opacity:1}
+.precision-good{position:absolute;left:25%;width:50%;height:100%;background:#719f8b}
+.precision-perfect{position:absolute;left:40%;width:20%;height:100%;background:#e7c573}
+#precisionCursor{position:absolute;width:4px;height:100%;background:#fff;transform:translateX(-50%);border-radius:2px;box-shadow:0 0 3px #152c37}
+.rush-controls{display:flex;align-items:center;gap:6px;position:relative}
+#rushStrip .shift-control,#rushStrip summary{font:600 10px system-ui;background:#fbf4df;color:#2e4855;border:1px solid #c9b98f;border-radius:4px;min-height:30px;padding:4px 8px;white-space:nowrap;cursor:pointer}
+#rushStrip .shift-control:disabled{opacity:.55;cursor:default}
+#rushMode[aria-pressed='true']{background:#e6bc65;color:#243b48}
+#musicToggle[aria-pressed='false']{background:#dbe0d7}
+#rushStrip details{position:relative}
+#rushStrip summary{display:flex;align-items:center;list-style:none}
+.audio-options{position:absolute;right:0;top:36px;width:200px;padding:14px;background:#243d4f;box-shadow:0 5px 16px #17324360;border:1px solid #bea879;border-radius:6px;font-size:12px;z-index:90}
+.audio-options input{width:100%;margin:12px 0}
+.audio-options small{display:block;color:#d7dfd6;font-size:10px;line-height:1.5}
+#app[data-pressure='urgent'] #rushStrip{border-color:#f1946d;background:#633e35}
+#app[data-pressure='urgent'] #rushClock{color:#ffe5b1}
+#app[data-pressure='busy'] #rushStrip{border-color:#e2bb62}
+.rush-order-note,.rush-result{background:#f6e8bd;padding:10px 12px;border-left:3px solid #bb8c41;color:#344d56;font-size:12px;line-height:1.7;grid-column:1/-1}
+#rushStrip button:focus-visible,#rushStrip summary:focus-visible{outline:3px solid #a2d7e3;outline-offset:2px}
+@media(max-width:1050px) and (min-width:700px){
+ #rushStrip{grid-template-columns:minmax(180px,1fr) minmax(140px,1fr) auto;gap:8px;padding-inline:7px}
+ #rushStrip .shift-control,#rushStrip summary{padding-inline:5px;font-size:9px}
+ .rush-summary{font-size:10px;gap:6px}#rushClock{font-size:17px}.precision-info{font-size:8px}
+}
+@media(max-width:699px){
+ #cookingDeck{grid-template-rows:77px minmax(0,1fr) 14px}
+ #rushStrip{grid-template-columns:1fr auto;gap:5px 8px;padding:5px 7px;border-radius:4px;align-content:center}
+ .rush-summary{font-size:10px;gap:8px}#rushClock{font-size:15px;min-width:40px}#rushCombo{font-size:8px}
+ .precision-meter{grid-row:2;grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center}
+ .precision-info{font-size:8px;margin:0;display:block}.precision-info>span:first-child{display:none}
+ #precisionTrack{height:9px}.rush-controls{grid-column:2;grid-row:1;gap:3px}
+ #rushStrip .shift-control,#rushStrip summary{font-size:8px;min-height:28px;padding:3px 5px}
+ #rushMode{max-width:73px;white-space:normal!important;line-height:1.3!important}
+ #rushHint{grid-column:1/-1;max-width:180px;font-size:8px;line-height:1.3;margin-top:2px}
+ .audio-options{top:33px;width:180px}#rushStrip details{position:static}
+ #rushStrip summary{font-size:8px}
+}

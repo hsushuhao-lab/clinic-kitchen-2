@@ -525,7 +525,7 @@ function updateCooking() {
   $('stirBtn').disabled = (currentStage < STAGES.COOK) || plated || isPlating || !heated || inWok.size === 0;
 
   const canPlate = ready && stirs >= 3 && ((currentStage === STAGES.PLATE) || (cookedDish.isSimmered || simmerTimer >= REQUIRED_SIMMER_TIME));
-  $('plateBtn').disabled = (currentStage < STAGES.COOK) || plated || isPlating || !heated || !canPlate;
+  $('plateBtn').disabled = (currentStage < STAGES.COOK) || plated || isPlating || !canPlate;
   $('plateBtn').textContent = isPlating ? '盛盤中...' : '盛盤';
   $('flame').classList.toggle('is-on', heated);
   document.querySelector('.wok-visual').classList.toggle('is-cooking', heated && inWok.size > 0);
@@ -561,7 +561,7 @@ function updateCooking() {
     } else if (!atWok) {
       $('wokStatusText').textContent = '提示：請先靠近後廚炒鍋台 (X: ~9.0)';
     } else if (!heated) {
-      $('wokStatusText').textContent = '點擊「開火」啟動瓦斯爐火加熱黑鐵炒鍋';
+      $('wokStatusText').textContent = cookedDish.isSimmered ? '收汁完成並已關火，可直接盛盤。' : '點擊「開火」啟動瓦斯爐火加熱黑鐵炒鍋';
     } else if (inWok.size === 0) {
       $('wokStatusText').textContent = '鍋已燒熱，點擊「下鍋」倒入備妥食材';
     } else if (stirs < 3) {
@@ -594,7 +594,7 @@ function updateCooking() {
   if (currentStage >= STAGES.COOK && !plated) {
     $('cookObjective').textContent = !inWok.size ? '備妥豆腐、絞肉、豆瓣醬、蒜，再開火下鍋' :
       !ready ? `尚缺：${required.filter(id => !inWok.has(id)).map(id => foodNames[id]).join('、')}` :
-      !heated ? '重新開火才能翻炒與燜煮' : stirs < 3 ? `翻炒推勻 ${stirs} / 3 次` :
+      !heated ? (cookedDish.isSimmered ? '已安全關火，可直接盛盤' : '重新開火才能翻炒與燜煮') : stirs < 3 ? `翻炒推勻 ${stirs} / 3 次` :
       (!cookedDish.isSimmered && simmerTimer < REQUIRED_SIMMER_TIME) ? `燜煮收汁中 (${simmerTimer.toFixed(1)} / ${REQUIRED_SIMMER_TIME} 秒，可並行至電子鍋盛飯)` : '燜煮完成！可以進行盛盤';
   } else if (plated && currentStage === STAGES.SERVE) {
     $('cookObjective').textContent = '階段 7/8：麻婆豆腐盛盤完成！端起托盤送回診間給病人';
@@ -791,7 +791,7 @@ function handleInteraction(name) {
   // 1. Patient Chair Interaction (Consult & First Bite)
   if (name.includes('病人') || name.includes('Patient')) {
     if (currentStage === STAGES.CONSULT) {
-      const pendingPref = { ...currentOrder };
+      const pendingPref = { ...(window.CKRush?.prescribedOrder() || currentOrder) };
 
       showDialog({
         badge: 'CLINIC EMR — 初診與客製偏好',
@@ -837,6 +837,7 @@ function handleInteraction(name) {
       // Bind interactive click handlers to preference buttons
       const grid = $('prefGrid');
       if (grid) {
+        window.CKRush?.lockPreferences(grid);
         grid.querySelectorAll('.pref-btn').forEach(btn => {
           btn.addEventListener('click', e => {
             e.stopPropagation();
@@ -1164,6 +1165,7 @@ $('cutBtn').addEventListener('click', () => {
     cookLog(`備料完成：${foodNames[selectedFood]}`);
   }
 
+  window.CKRush?.action(`cut:${selectedFood}:${cutStages[selectedFood] || 1}`, selectedFood !== 'scallion' || currentOrder.scallion);
   if (selectedFood && prepped.has(selectedFood)) {
     window.CKShift?.prep(selectedFood, selectedFood !== 'scallion' || currentOrder.scallion);
   }
@@ -1204,6 +1206,7 @@ $('addBtn').addEventListener('click', () => {
   if (!toAdd) return;
 
   inWok.add(toAdd);
+  window.CKAudio?.cue('sizzle');
   prepped.delete(toAdd);
   if (selectedFood === toAdd) selectedFood = null;
 
@@ -1241,6 +1244,7 @@ $('stirBtn').addEventListener('click', () => {
   }
   stirs++;
   cookedDish.stirs = stirs;
+  if (stirs <= 3 && required.every(id => inWok.has(id))) window.CKRush?.action('stir:' + stirs);
 
   // Spatula sweeping animation
   if ($('wokSpatula')) {
@@ -1440,6 +1444,12 @@ window.stopShiftCooking = function () {
   if (window.setCarryingTray) window.setCarryingTray(false);
   updateCooking();
 };
+
+window.getCookingStatus = () => ({
+  stage: currentStage, selectedFood, atPrep: isNearPrepStation(), atWok: isNearWokStation(),
+  prepped: [...prepped], inWok: [...inWok], ready: required.every(id => inWok.has(id)),
+  heated, stirs, simmerTimer, plated, isPlating, rice: cookedDish.ricePortion
+});
 
 if (window.initScene3D) window.initScene3D(world);
 resetAll();

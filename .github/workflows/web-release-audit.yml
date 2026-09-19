@@ -28,6 +28,8 @@ on:
       - 'tools/chibi_*.py'
       - 'tools/verify_chibi_world.py'
       - 'tests/test_chibi_world.py'
+      - 'tests/rush_rules.test.cjs'
+      - 'tests/test_rush_game.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -66,6 +68,7 @@ jobs:
           python tests/test_character_art.py --base-url http://127.0.0.1:8000/ --output qa/current/characters
           python tests/test_workspace_visuals.py --base-url http://127.0.0.1:8000/ --output qa/current/workspace
           python tests/test_chibi_world.py --base-url http://127.0.0.1:8000/ --output qa/current/chibi
+          python tests/test_rush_game.py --base-url http://127.0.0.1:8000/ --output qa/current/rush --preview
           python - <<'PY'
           from urllib.request import urlopen
           from urllib.error import HTTPError

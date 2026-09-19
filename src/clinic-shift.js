@@ -80,6 +80,7 @@
       if (window.stopShiftCooking) window.stopShiftCooking();
       el('sessionContinueBtn').focus({ preventScroll: true });
     }
+    window.CKRush?.renderResult(round.snapshot(), modalVisible, shouldBlock);
     lastStatus = round.status;
     const p = window.scene3DState?.playerPos;
     const station = p && p.x >= 10.8 ? 'serve' : p && p.x >= 7.2 ? 'wok' : p && p.x >= 3.2 ? 'prep' : '';
@@ -93,12 +94,21 @@
     snapshot: () => round.snapshot(),
     isFrozen: frozen,
     canInteract: () => !round.paused && !picker.open && round.status !== 'lost' && round.status !== 'won',
-    tick(dt, dialogOpen) { if (!frozen() && !dialogOpen) round.tick(dt); render(); },
-    begin() { round.begin(); render(); },
+    tick(dt, dialogOpen) {
+      const stopped = frozen() || dialogOpen;
+      if (!stopped) round.tick(dt, window.CKRush?.pressureMultiplier() || 1);
+      window.CKRush?.update(stopped ? 0 : dt, round.snapshot(), stopped);
+      render();
+    },
+    begin() { if (round.begin()) window.CKRush?.begin(); render(); },
     prep(id, correct) { round.reward('prep:' + id, correct); render(); },
     simmer() { round.reward('simmer', true, true); render(); },
-    finish(quality) { round.finish(quality); render(); },
-    reset() { round.reset(); resultDismissed = false; resumeOnReturn = false; lastKey = ''; applyDoctor(); selectPanel('prep'); render(); el('world').focus({ preventScroll: true }); },
+    finish(quality) {
+      if (round.status !== "active") return;
+      round.finish(quality, window.CKRush?.settle(quality) || 0);
+      window.CKRush?.record(round.lastEarned); render();
+    },
+    reset() { window.CKRush?.reset(); round.reset(); resultDismissed = false; resumeOnReturn = false; lastKey = ''; applyDoctor(); selectPanel('prep'); render(); el('world').focus({ preventScroll: true }); },
     render
   };
   document.querySelectorAll('[data-doctor]').forEach(button => button.addEventListener('click', () => {
@@ -138,7 +148,7 @@
   });
   // Guard normal UI events while paused/finished without altering recipe eligibility.
   el('cookingDeck').addEventListener('click', event => {
-    if (!frozen() || event.target.closest('.shift-control,[data-worktab],#cookLogContainer,#dialogModal')) return;
+    if (!frozen() || event.target.closest('.shift-control,[data-worktab],#cookLogContainer,#dialogModal,#rushStrip')) return;
     event.preventDefault(); event.stopImmediatePropagation();
   }, true);
   el('cookingDeck').dataset.panel = 'prep';

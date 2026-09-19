@@ -46,10 +46,10 @@
       this.status = 'active';
       return true;
     }
-    tick(dt) {
+    tick(dt, pressure = 1) {
       if (this.status !== 'active' || this.paused || !Number.isFinite(dt) || dt <= 0) return;
       this.elapsed += dt;
-      this.craving = clamp(this.craving + rules.cravingPerSecond * this.doctor.timeSlow * dt);
+      this.craving = clamp(this.craving + rules.cravingPerSecond * this.doctor.timeSlow * dt * pressure);
       this.focus = clamp(this.focus - rules.focusLossPerSecond * dt);
       if (this.craving >= 100) {
         this.status = 'lost';
@@ -64,11 +64,11 @@
       if (this.craving >= 100) { this.status = 'lost'; this.streak = 0; }
       return true;
     }
-    finish(quality) {
+    finish(quality, bonus = 0) {
       if (this.status !== 'active') return false;
       this.quality = clamp(quality);
       this.status = 'won';
-      this.lastEarned = 80 + Math.round(this.quality) + Math.max(0, 100 - Math.round(this.craving)) + Math.round(this.focus * 0.6);
+      this.lastEarned = 80 + Math.round(this.quality) + Math.max(0, 100 - Math.round(this.craving)) + Math.round(this.focus * 0.6) + Math.max(0, Math.round(bonus));
       this.points += this.lastEarned;
       this.served++;
       this.streak++;

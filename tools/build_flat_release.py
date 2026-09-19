@@ -10,7 +10,7 @@ from verify_workspace_art import main as verify_workspace
 from build_chibi_world import build as build_chibi
 from verify_chibi_world import main as verify_chibi
 ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'web-dist'
-CORE=('index.html','styles.css','r2-fixes.css','clinic-shift.css','character-art.css','workspace-art.css','chibi-world.css','src/main.js','src/scene2d.js','src/shift-rules.js','src/clinic-shift.js','src/character-art.js','src/workspace-art.js')
+CORE=('index.html','styles.css','r2-fixes.css','clinic-shift.css','character-art.css','workspace-art.css','chibi-world.css','rush.css','src/main.js','src/scene2d.js','src/shift-rules.js','src/clinic-shift.js','src/character-art.js','src/workspace-art.js','src/rush-rules.js','src/rush.js','src/adaptive-audio.js')
 class References(HTMLParser):
  def __init__(self):super().__init__();self.paths=[]
  def handle_starttag(self,tag,attrs):
@@ -19,8 +19,9 @@ class References(HTMLParser):
   if tag=='link' and a.get('href'):self.paths.append(a['href'])
 def main():
  build_characters();verify_characters();build_workspace();verify_workspace();build_chibi();verify_chibi()
- for script in ('src/character-art.js','src/workspace-art.js','src/scene2d.js'):
+ for script in ('src/character-art.js','src/workspace-art.js','src/scene2d.js','src/rush-rules.js','src/rush.js','src/adaptive-audio.js'):
   subprocess.run(['node','--check',script],cwd=ROOT,check=True)
+ subprocess.run(['node','--test','tests/rush_rules.test.cjs'],cwd=ROOT,check=True)
  for folder,manifest in [('characters','assets/ui/character-manifest.json'),('workspace','assets/workspace/manifest.json'),('chibi','assets/chibi/manifest.json')]:
   audit=ROOT/'qa/current'/folder;audit.mkdir(parents=True,exist_ok=True)
   shutil.copyfile(ROOT/manifest,audit/'asset-provenance.json')
@@ -47,7 +48,7 @@ def main():
  for rel in CORE:
   if rel.endswith('.css'):
    for ref in re.findall(r'url\(([^)]+)\)',(OUT/rel).read_text(encoding='utf-8')):check(rel,ref)
- manifest={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'renderer':'canvas2d','release_status':'BUILD_VERIFIED_PENDING_DEPLOYMENT','art_status':'CHIBI_WORLD_R2_FULL_BODY_PLAYABLE','files':[]}
+ manifest={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'renderer':'canvas2d','release_status':'BUILD_VERIFIED_PENDING_DEPLOYMENT','art_status':'CHIBI_WORLD_R2_FULL_BODY_PLAYABLE','gameplay_version':'R3_NIGHT_SHIFT_PRECISION_ADAPTIVE_MUSIC','files':[]}
  for rel in sorted(files):
   raw=(OUT/rel).read_bytes();manifest['files'].append({'path':rel,'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()})
  (OUT/'build-info.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
