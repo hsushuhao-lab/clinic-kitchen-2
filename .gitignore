@@ -9,6 +9,7 @@ node_modules/
 .vscode/
 .idea/
 qa/current/
+qa/public-deployment/
 assets/reference/private/
 private-history/
 archive/
