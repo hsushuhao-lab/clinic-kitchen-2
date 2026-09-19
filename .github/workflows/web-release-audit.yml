@@ -20,16 +20,17 @@ on:
       - 'tools/build_character_portraits.py'
       - 'tools/verify_character_assets.py'
       - 'tests/test_character_art.py'
+      - 'tools/build_workspace_art.py'
+      - 'tools/verify_workspace_art.py'
+      - 'tests/test_workspace_visuals.py'
   workflow_dispatch:
 permissions:
   contents: read
   pages: write
   id-token: write
-
 concurrency:
   group: "pages"
   cancel-in-progress: false
-
 jobs:
   package-and-test:
     runs-on: ubuntu-latest
@@ -58,6 +59,7 @@ jobs:
           sleep 2
           python tests/test_flat_clinic.py --base-url http://127.0.0.1:8000/ --output qa/current/flat
           python tests/test_character_art.py --base-url http://127.0.0.1:8000/ --output qa/current/characters
+          python tests/test_workspace_visuals.py --base-url http://127.0.0.1:8000/ --output qa/current/workspace
           python - <<'PY'
           from urllib.request import urlopen
           from urllib.error import HTTPError
@@ -91,7 +93,6 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: web-dist/
-
   deploy:
     name: Deploy to GitHub Pages
     environment:
@@ -103,4 +104,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-

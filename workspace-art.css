@@ -1,0 +1,89 @@
+/* Workspace R1. Approved room views, native loose food, coherent physical stations.
+   No rule/layout change: upper clinic : lower cooking stays 1:2. */
+:root{--paper:#f7f3e9;--ink:#213d4e;--brass:#b18343;--steel:#cbd3ce}
+.shift-hud{background:#1d3544;color:#fff7e5;border-bottom:2px solid #bb9157;padding-inline:20px}
+.shift-brand strong{color:#fff5e2;font-size:23px;letter-spacing:-.8px}.shift-brand small{color:#bdc6bd;font-size:10px;letter-spacing:.12em}
+.shift-stats,.shift-stats b{color:#f6e8cc}.shift-stats{gap:22px}
+.shift-hud .shift-control{background:#2e4858;color:#f4ecdb;border-color:#65736f;border-radius:5px}
+.shift-hud .doctor-picker{background:#233f50;border-color:#bfa471}.shift-hud .doctor-picker small{color:#d5bb89}
+#world{background:linear-gradient(#e6e4d9,#f1ede2);border-bottom:1px solid #bcb69f}
+.patient-hud{left:14px;top:10px;bottom:44px;width:202px;background:#fcf9f0;border:0;border-left:3px solid #b2894d;border-radius:3px;box-shadow:none;grid-template-columns:58px minmax(0,1fr);padding:11px 8px;gap:8px}
+.patient-hud .patient-portrait{height:90px;object-fit:cover;object-position:65% 12%;background:#e4e9e2;border-bottom:1px solid #b9965b}
+.patient-heading strong{font-size:12px}.meter-row{letter-spacing:.07em}.meter-row progress{height:5px}.patient-foot{font-size:8px}
+.map-station{background:#f9f6ecee;border:0;border-bottom:2px solid transparent;box-shadow:none;border-radius:0;padding:5px 6px;font-size:11px;line-height:1.2;transform:translate(-50%,0)}
+.map-station.is-objective{background:#eedbb6;border-color:#a57936;box-shadow:none}.map-station.is-near{background:#2e5261;color:#fff4dc;border-color:#a78344}
+.control-hint{bottom:6px;font-size:9px;color:#49616a;left:14px}#prompt{font-size:10px;max-width:52%;left:66%;bottom:5px;padding:3px 12px;border-radius:3px}
+.mission{width:auto;max-width:170px;right:15px;top:12px;background:#f6efdfed;border:0;box-shadow:0 1px 6px #142a3428}
+.cooking-deck{padding:12px 18px 4px;gap:6px;border-top:2px solid #bfa67c;background:linear-gradient(112deg,#cad2cf 0,#e3e6e1 28%,#c9d0cb 62%,#dee1d9 100%)}
+.cook-columns{grid-template-columns:minmax(0,1fr) minmax(0,1.06fr) minmax(0,.7fr);gap:0}
+.work-panel{border:0;border-radius:0;box-shadow:none;background:transparent;padding:4px 18px 4px 0;position:relative}
+.work-panel+.work-panel{border-left:1px solid #afbcb7;padding-left:18px}.work-panel:last-of-type{padding-right:0}
+.bench-title-row{padding:0 0 10px;border-bottom:1px solid #819992;min-height:28px}.cook-columns h3{font-size:16px;letter-spacing:.04em;font-weight:750;color:#213c4c}
+.station-badge{font-size:9px;background:#f5f1e7;border:0;border-radius:2px;color:#657773;padding:4px 6px}.station-badge.is-ready{background:#315b55;color:#f5f1e4}
+.prep-bench{gap:10px;grid-template-rows:auto auto minmax(0,1fr) auto}
+.ingredient-tray{grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin-bottom:0;padding:3px 0 7px}
+.ingredient-tray button{flex-direction:column;gap:4px;padding:6px 1px;background:linear-gradient(#f8f8ef,#e8ece3);border:1px solid #bac7bf;border-radius:5px;box-shadow:inset 0 1px #fff;position:relative}
+.ingredient-tray button span{font-size:10px;line-height:1.2;white-space:nowrap}.ingredient-tray .food-art{background:transparent;box-shadow:none;width:44px;height:45px;object-fit:contain;filter:drop-shadow(0 2px 2px #203a4a2b);border-radius:0}
+.ingredient-tray button.is-selected{background:#f4ead0;border-color:#ad8041;box-shadow:inset 0 -2px #b99054}.ingredient-tray button.is-prepped{background:#dce7db;border-color:#9bb5a2}.ingredient-tray button:disabled{opacity:.8}
+.board-stage-container{padding:0;gap:8px;border:0;border-radius:4px;background:transparent;grid-template-rows:minmax(0,1fr) 44px}
+.board{border-radius:6px;box-shadow:inset 0 1px #ffffffbb,0 4px 10px #30453b18;background:linear-gradient(124deg,#dce1d8,#e7e8df 30%,#c6d0c5);overflow:hidden;display:block}
+.board-base-img{inset:auto;top:50%;left:50%;transform:translate(-50%,-50%);width:min(92%,370px);height:auto;max-height:90%;object-fit:contain;opacity:1;filter:drop-shadow(0 10px 7px #3b3d3540)}
+.board-food-display{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transform:translate(-8px,0);pointer-events:none}.board-food-pieces{display:none!important}
+#boardFoodImg{width:clamp(90px,9vw,130px);height:130px;object-fit:contain;filter:drop-shadow(0 3px 2px #40311e50);transition:none;z-index:3}
+.board[data-food='scallion'] #boardFoodImg{width:130px;height:120px}.board[data-food='scallion'][data-cut='1'] #boardFoodImg,.board[data-food='garlic'][data-cut='1'] #boardFoodImg{width:112px;height:75px}
+.board[data-food='tofu'][data-cut='3'] #boardFoodImg{width:155px;height:106px}.board[data-food='pork'][data-cut='1'] #boardFoodImg{width:145px;height:76px}
+#boardKnife{width:155px;max-width:38%;height:auto;left:53%;right:auto;top:35%;bottom:auto;transform:rotate(15deg);transform-origin:25% 70%;filter:drop-shadow(0 4px 3px #2927194a);z-index:5;transition:transform .15s}
+#boardKnife.is-cutting{animation:contactChop .21s ease-in-out}@keyframes contactChop{0%,100%{transform:translate(0,0) rotate(15deg)}40%{transform:translate(-24px,-20px) rotate(-4deg)}70%{transform:translate(-22px,22px) rotate(12deg)}}
+#boardSpoon{height:94px;width:auto;right:22%;bottom:42%;filter:drop-shadow(0 3px 2px #29393733)}
+#boardFood{left:12px;bottom:10px;font-size:11px;background:#f9f5e8d9;border-radius:2px;color:#4a503e;padding:4px 8px;z-index:8}
+.board-controls{min-height:40px;gap:10px;margin:0}#cutBtn{height:36px;min-height:36px;background:#294b59;border:1px solid #294b59;color:#fff5df;padding:6px 16px;font-size:12px;border-radius:4px;white-space:nowrap}.cut-progress-text{font-size:10px;color:#50605b;line-height:1.4}
+.prep-checklist{gap:4px 8px;padding-top:4px;border-top:1px solid #acbcb4;min-height:19px}.check-item,.check-item.is-done{background:none;padding:0;color:#4f6d5c;font-size:9px}
+.wok-stage-container{grid-template-rows:minmax(0,1fr) 38px auto auto;gap:8px}
+.wok-visual{border:0;border-radius:6px;background:linear-gradient(135deg,#e0e3d9,#ccd4cd 70%,#b8c3b9);box-shadow:inset 0 1px #ffffffe0,0 4px 10px #30453b18}
+.station-stove{position:absolute;left:50%;top:55%;transform:translate(-50%,-30%);width:min(82%,305px);height:auto;z-index:1;filter:drop-shadow(0 12px 7px #243b333c)}
+#wokBaseImg{inset:auto;left:50%;top:46%;transform:translate(-50%,-57%);width:min(91%,340px);height:auto;max-height:80%;object-fit:contain;z-index:3;filter:drop-shadow(0 4px 3px #192c3830)}
+#wokSpatula{inset:auto;left:55%;top:calc(46% - 94px);width:74px;height:124px;object-fit:contain;transform:rotate(32deg);transform-origin:50% 92%;filter:drop-shadow(0 3px 2px #21352440);z-index:7}
+#wokSpatula.is-stirring{animation:physicalStir .4s ease-in-out}@keyframes physicalStir{0%,100%{transform:rotate(32deg)}50%{transform:translate(-32px,9px) rotate(55deg)}}
+#wokFoodLayer{inset:auto;left:50%;top:46%;width:210px;height:95px;transform:translate(-61%,-51%);z-index:4;clip-path:ellipse(48% 43% at 50% 50%);overflow:hidden}
+#wokFoodLayer.is-stirred{transform:translate(-65%,-47%) rotate(-5deg)}
+#wokFoodLayer::before{content:'';position:absolute;inset:8px 10px;background:radial-gradient(ellipse,#c1431870,#952c14bb);opacity:0;border-radius:50%}#wokFoodLayer[data-red-oil='true']::before{opacity:1}#wokFoodLayer[data-simmered='true']{visibility:hidden}
+#wokFoodLayer .wok-food-item{filter:drop-shadow(0 1px 1px #6335173b);object-fit:contain}
+#wokFoodLayer .wok-food-tofu{width:118px;height:80px;left:45px;bottom:5px}#wokFoodLayer .wok-food-pork{width:75px;height:68px;left:75px;bottom:8px}#wokFoodLayer .wok-food-garlic{width:45px;height:30px;left:42px;bottom:38px}
+#wokFoodLayer .wok-food-douban{width:69px;height:41px;left:83px;bottom:18px}#wokFoodLayer .wok-food-scallion{width:78px;height:38px;left:80px;bottom:22px;z-index:2}#wokFoodLayer .wok-food-pepper{width:22px;height:18px;left:54px;bottom:37px}
+#wokSimmerImg{inset:auto;left:50%;top:46%;transform:translate(-62%,-50%);width:206px;height:88px;object-fit:fill;z-index:5;animation:none;clip-path:ellipse(49% 43% at 50% 50%)}
+#wokContents{left:12px;bottom:10px;font-size:11px;color:#415044;background:#f8f4e8d9;padding:4px 8px;z-index:8;max-width:90%}
+.wok-actions{margin:0;gap:5px}.wok-actions button{height:36px;min-height:36px;font-size:11px;border-radius:4px;background:#2c4d59;color:#fff4df;border:0;padding:4px}.wok-actions button:last-child{background:#b78946;color:#fff;border:0}.wok-actions button:disabled{background:#788981;color:#fff;opacity:.6}
+.wok-status-text{font-size:10px;line-height:1.4;min-height:26px;color:#4e655e}
+.flame{bottom:auto;top:56%;left:45%;transform:translate(-50%,0);width:142px;height:25px;z-index:2;filter:blur(1px)}.steam{left:42%;top:22%;z-index:6;width:20px;height:70px;pointer-events:none}.steam-b{left:55%}.steam-c{left:33%}
+.serve-bench{gap:10px}.serving-stilllife{flex:1;min-height:80px;max-height:235px;position:relative;background:linear-gradient(145deg,#e9e7dc,#d6dfd3);border-radius:6px;box-shadow:inset 0 1px #fff}
+.serving-stilllife img{position:absolute;object-fit:contain;filter:drop-shadow(0 5px 4px #32493930)}.ready-rice{width:42%;max-width:126px;left:5%;top:34%;opacity:.6}.ready-dish{width:61%;max-width:190px;right:3%;top:26%;opacity:.15;filter:grayscale(1)!important}#app[data-round-status='won'] .ready-dish{opacity:1;filter:drop-shadow(0 4px 3px #32493930)!important}
+.rice-cooker-widget{padding:10px;background:#f6f3e6;border:1px solid #c5cbbb;border-radius:4px}.rice-title{font-size:11px}.rice-icon{display:none}.rice-status-badge{border-radius:2px;font-size:9px}.rice-widget-actions{margin-top:8px;gap:6px}.rice-btn{font-size:11px;padding:7px 2px;border-radius:3px}
+.order-ticket{background:#f9f0d6;border:0;border-left:3px solid #b38545;border-radius:0;padding:9px;gap:5px;font-size:10px}.order-ticket span{background:none;border:0;padding:0 5px}.ticket-tag{font-weight:750}
+.plated-dish-preview{min-height:85px;border:0;background:#f4ead0;border-radius:5px}.plated-info strong{font-size:11px}.plated-info span{font-size:10px}
+.shift-footer{font-size:8px;color:#53695f}#ruleSummary{max-width:58%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.station-lock-overlay{background:linear-gradient(90deg,#e6e8df66,#e9e8dd55);backdrop-filter:blur(.8px)}
+.station-lock-msg{background:#1c384beb!important;border:1px solid #b99c67!important;color:#f9f0d9!important;border-radius:5px;padding:16px 24px!important;font-size:13px!important;max-width:75%;box-shadow:0 10px 35px #1a313b30}
+@media(max-width:1100px) and (min-width:700px){
+ .cooking-deck{padding-inline:12px}.work-panel{padding-right:10px}.work-panel+.work-panel{padding-left:10px}.cook-columns{grid-template-columns:1fr 1fr .74fr}.ingredient-tray{grid-template-columns:repeat(3,1fr)}
+ .ingredient-tray button{flex-direction:row;gap:4px;padding:3px}.ingredient-tray .food-art{width:29px;height:30px}.cook-columns h3{font-size:12px}.station-badge{font-size:8px;padding:3px}.wok-actions button{font-size:10px}
+ #wokBaseImg{width:96%}#wokFoodLayer{width:160px;height:76px}#wokSimmerImg{width:160px;height:72px}#wokSpatula{left:54%;width:60px;height:101px;top:calc(46% - 70px)}.shift-brand strong{font-size:21px}.shift-stats{gap:9px}
+}
+@media(max-width:699px){
+ .shift-hud{padding:5px 8px}.shift-brand strong{font-size:15px}.shift-brand small{display:none}.shift-stats{gap:5px}.shift-stats b{font-size:12px}
+ .patient-hud{top:5px;left:10px;right:10px;bottom:auto;width:auto;height:48px;grid-template-columns:34px 1fr;padding:3px 7px;background:#faf6e9;border-left:2px solid #b38545}.patient-hud .patient-portrait{height:39px;width:30px;border:0}
+ .patient-heading strong{font-size:10px}.patient-heading{display:flex;gap:8px;align-items:center}.patient-status{display:grid;grid-template-columns:1fr 1fr;gap:1px 8px}.patient-heading{grid-column:1/-1}.patient-foot{display:none}.meter-row{font-size:8px;margin:0;gap:1px}.meter-row b{font-size:9px}.meter-row progress{height:4px}
+ .map-station{font-size:9px;padding:4px 1px;white-space:nowrap}.mission{display:none}.control-hint{font-size:8px;bottom:5px;max-width:58%;overflow:hidden}#prompt{left:auto;right:10px;transform:none;font-size:9px;max-width:40%;padding:3px 6px}
+ .cooking-deck{padding:9px 10px 3px}.cook-columns{display:block;height:100%}.work-panel,.work-panel+.work-panel{padding:0;border:0;height:100%}.prep-bench{gap:8px;grid-template-rows:auto auto minmax(0,1fr) auto}.wok-bench{gap:8px}
+ .ingredient-tray{grid-template-columns:repeat(6,1fr);gap:4px}.ingredient-tray button{padding:4px 0;gap:2px}.ingredient-tray .food-art{width:34px;height:34px}.ingredient-tray button span{font-size:9px}.bench-title-row{min-height:27px;padding-bottom:7px}.cook-columns h3{font-size:14px}
+ .board-stage-container{grid-template-rows:minmax(0,1fr) 38px;gap:6px}.board-base-img{max-width:315px}#cutBtn{font-size:11px;height:33px;min-height:33px}.cut-progress-text{font-size:9px}#boardKnife{max-width:38%;width:135px}.prep-checklist{font-size:8px;min-height:18px}#boardFoodImg{width:110px;height:105px}
+ #wokBaseImg{max-width:320px}.wok-actions button{font-size:11px}.shift-footer{font-size:7px;height:14px}#ruleSummary{max-width:100%}.shift-footer>span:last-child{display:none}.station-lock-msg{font-size:12px!important;line-height:1.7;max-width:87%;padding:14px!important}.serving-stilllife{max-height:200px}
+}
+@media(prefers-reduced-motion:reduce){#boardKnife.is-cutting,#wokSpatula.is-stirring{animation:none}.steam{animation:none!important}}
+#selectedDoctorName{color:#fff4df}
+#boardKnife.is-chopping{animation:contactChop .21s ease-in-out}
+#cookingDeck[data-rice='ready'] .ready-rice{opacity:1}
+#cookingDeck[data-plated='true'] .ready-dish{opacity:1;filter:drop-shadow(0 4px 3px #32493930)!important}
+@media(prefers-reduced-motion:reduce){#boardKnife.is-chopping{animation:none}}
+
+#cookingDeck[data-plated='true'] .serving-stilllife{display:none}
+.plated-dish-preview .plated-img{max-width:300px;max-height:220px;border:0;background:transparent}

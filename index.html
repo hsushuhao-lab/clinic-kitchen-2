@@ -6,15 +6,16 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <title>Craving Kitchen — 平面診間與料理</title>
 <link href="data:," rel="icon"/>
-<link href="styles.css?v=character-20260919" rel="stylesheet"/>
-<link href="r2-fixes.css?v=character-20260919" rel="stylesheet"/>
-<link href="clinic-shift.css?v=character-20260919" rel="stylesheet"/>
-<link rel="stylesheet" href="character-art.css?v=character-20260919"/>
+<link href="styles.css?v=workspace-r1" rel="stylesheet"/>
+<link href="r2-fixes.css?v=workspace-r1" rel="stylesheet"/>
+<link href="clinic-shift.css?v=workspace-r1" rel="stylesheet"/>
+<link rel="stylesheet" href="character-art.css?v=workspace-r1"/>
+<link rel="stylesheet" href="workspace-art.css?v=workspace-r1"/>
 </head>
 <body>
 <div id="app">
 <header class="hud shift-hud">
-<div class="shift-brand"><strong>Craving Kitchen<span>!</span></strong><small>同一間診間，一碗麻婆豆腐。</small></div>
+<div class="shift-brand"><strong>Craving Kitchen<span>!</span></strong><small>診間裡，多一點飯香。</small></div>
 <button class="doctor-picker shift-control" id="doctorPickerBtn" title="更換值班醫師；接單後鎖定至本單結束" type="button">
 <img alt="值班醫師參考立繪" id="selectedDoctorPortrait" src="assets/ui/doctor-speed.webp"/>
 <span><strong id="selectedDoctorName">DR. SPEED</strong><small id="selectedDoctorTitle">快刀醫師</small></span><span aria-hidden="true">▾</span>
@@ -31,7 +32,7 @@
 <div class="patient-foot"><span id="roundStatus">確認料理單後計時</span><span id="shiftTime">0 秒</span></div>
 </div>
 </aside>
-<div class="control-hint">W ↑ S ↓ A ← D →　或點工作站走過去；E 互動</div>
+<div class="control-hint">位置導引 · WASD 移動／點站點前往，抵達後 E 互動</div>
 <div id="camera">
 <section class="room clinic">
 <h2>診間 CLINIC</h2>
@@ -88,27 +89,27 @@
 </div>
 <div aria-label="食材清單" class="ingredient-tray">
 <button data-food="tofu" title="嫩豆腐">
-<img alt="豆腐" class="food-art" src="assets/ingredients/mapo_tofu/tofu.png"/>
+<img alt="豆腐" class="food-art" src="assets/workspace/tofu-whole.webp"/>
 <span>豆腐</span>
 </button>
 <button data-food="pork" title="上等豬絞肉">
-<img alt="絞肉" class="food-art" src="assets/ingredients/mapo_tofu/pork.png"/>
+<img alt="絞肉" class="food-art" src="assets/workspace/pork-raw.webp"/>
 <span>絞肉</span>
 </button>
 <button data-food="douban" title="川味豆瓣醬">
-<img alt="豆瓣醬" class="food-art" src="assets/ingredients/mapo_tofu/douban.png"/>
+<img alt="豆瓣醬" class="food-art" src="assets/workspace/douban-paste.webp"/>
 <span>豆瓣醬</span>
 </button>
 <button data-food="garlic" title="鮮蒜瓣">
-<img alt="蒜" class="food-art" src="assets/ingredients/mapo_tofu/garlic.png"/>
+<img alt="蒜" class="food-art" src="assets/workspace/garlic-whole.webp"/>
 <span>蒜瓣</span>
 </button>
 <button data-food="scallion" title="鮮青蔥">
-<img alt="青蔥" class="food-art" src="assets/ingredients/mapo_tofu/scallion.png"/>
+<img alt="青蔥" class="food-art" src="assets/workspace/scallion-whole.webp"/>
 <span>青蔥</span>
 </button>
 <button data-food="pepper" title="大紅袍花椒">
-<img alt="花椒" class="food-art" src="assets/ingredients/mapo_tofu/pepper.png"/>
+<img alt="花椒" class="food-art" src="assets/workspace/pepper.webp"/>
 <span>花椒</span>
 </button>
 </div>
@@ -121,7 +122,7 @@
 <div class="board-food-pieces" id="boardFoodPieces"></div>
 </div>
 <img alt="主廚刀" class="board-knife-img" id="boardKnife" src="assets/ui/knife-clean.webp"/>
-<img alt="舀醬湯匙" class="board-spoon-img" hidden="" id="boardSpoon" src="assets/cooking/douban_spoon.png"/>
+<img alt="舀醬湯匙" class="board-spoon-img" hidden="" id="boardSpoon" src="assets/workspace/ladle-clean.webp"/>
 <div class="chop-effect" id="chopEffect"></div>
 <div id="boardFood">砧板空著</div>
 </div>
@@ -147,12 +148,13 @@
 </div>
 <div class="wok-stage-container">
 <div class="wok-visual" id="wokStage">
+<img class="station-stove" src="assets/workspace/stove.webp" alt="可攜式爐台"/>
 <div class="steam steam-a"></div>
 <div class="steam steam-b"></div>
 <div class="steam steam-c"></div>
 <div class="flame" id="flame"><span></span><span></span><span></span></div>
 <img alt="黑鐵炒鍋" class="wok-base-img" id="wokBaseImg" src="assets/ui/wok-clean.webp"/>
-<img alt="沸騰麻婆豆腐" class="wok-simmer-img" hidden="" id="wokSimmerImg" src="assets/cooking/wok_simmering.png"/>
+<img alt="沸騰麻婆豆腐" class="wok-simmer-img" hidden="" id="wokSimmerImg" src="assets/workspace/simmer-food.webp"/>
 <div class="wok-food-layer" id="wokFoodLayer"></div>
 <img alt="金屬鍋鏟" class="wok-spatula-img" id="wokSpatula" src="assets/ui/spatula-clean.webp"/>
 <div id="wokContents">空鍋</div>
@@ -183,6 +185,7 @@
 <span class="ticket-badge" id="ticketRice">正常飯</span>
 </div><div class="bench-title-row"><h3>配飯・裝盤 SERVE</h3></div>
 <!-- Rice Cooker Parallel Interaction Widget -->
+<div class="serving-stilllife" aria-hidden="true"><img class="ready-rice" src="assets/cooking/rice_bowl.png" alt=""/><img class="ready-dish" src="assets/cooking/dish_plated.png" alt=""/></div>
 <div class="rice-cooker-widget" id="riceCookerWidget">
 <div class="rice-widget-header">
 <span class="rice-icon">🍚</span>
@@ -196,7 +199,7 @@
 </div>
 <!-- Plated Dish Preview on Tray -->
 <div class="plated-dish-preview" hidden="" id="platedDishPreview">
-<img alt="麻婆豆腐青花瓷碗佐白飯" class="plated-img" src="assets/cooking/dish_plated.png"/>
+<img alt="麻婆豆腐青花瓷碗佐白飯" class="plated-img" src="assets/cooking/tray_served.png"/>
 <div class="plated-info">
 <strong>青花瓷碗麻婆豆腐 × 越光米飯</strong>
 <span>已盛入托盤，請端回診間病人椅</span>
@@ -233,7 +236,7 @@
 <section aria-label="回合狀態" class="session-overlay" hidden="" id="sessionOverlay">
 <div><small>CLINIC KITCHEN · SHIFT</small><h2 id="sessionTitle">門診暫停</h2><p id="sessionMessage"></p><button class="shift-control" id="sessionContinueBtn" type="button">繼續料理</button></div>
 </section>
-<div class="shift-footer"><span id="ruleSummary"></span><span>人物為核准原稿的 2D 立繪；數值不代表臨床療效。</span></div>
+<div class="shift-footer"><span id="ruleSummary"></span><span>人物為核准 2D 插畫；上方為位置導引，非全身行走動畫。</span></div>
 </section>
 <dialog aria-labelledby="doctorDialogTitle" class="doctor-dialog" id="doctorDialog">
 <div class="doctor-dialog-head"><div><small>CHOOSE YOUR DOCTOR</small><h2 id="doctorDialogTitle">選擇今天的值班醫師</h2></div><button id="closeDoctorBtn" type="button">返回 Esc</button></div>
@@ -246,10 +249,11 @@
 <span hidden="" id="doctorAbility">每份正確備料：Focus +8</span></dialog>
 </div>
 
-<script src="src/scene2d.js?v=character-20260919"></script>
-<script src="src/shift-rules.js?v=character-20260919"></script>
-<script src="src/character-art.js?v=character-20260919"></script>
-<script src="src/main.js?v=character-20260919"></script>
-<script src="src/clinic-shift.js?v=character-20260919"></script>
+<script src="src/scene2d.js?v=workspace-r1"></script>
+<script src="src/shift-rules.js?v=workspace-r1"></script>
+<script src="src/character-art.js?v=workspace-r1"></script>
+<script src="src/main.js?v=workspace-r1"></script>
+<script src="src/workspace-art.js?v=workspace-r1"></script>
+<script src="src/clinic-shift.js?v=workspace-r1"></script>
 </body>
 </html>
