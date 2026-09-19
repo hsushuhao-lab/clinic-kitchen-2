@@ -12,8 +12,9 @@ try:
   page.on('response',lambda r:failed.append(r.url) if r.status>=400 else None)
   r=page.goto(a.base_url,wait_until='networkidle');assert r and r.status==200
   page.wait_for_function('window.CKWorkspaceArt?.version==="workspace-r1" && getSceneStatus().imagesReady')
-  assert page.locator('#world').get_attribute('data-presentation')=='illustrated-location-navigator'
-  record('four illustrated station views decode; position indicator is not a sliding torso')
+  assert page.locator('#world').get_attribute('data-presentation')=='chibi-playable-world'
+  assert page.evaluate('getSceneStatus().actor.fullBody && getSceneStatus().actor.spriteSheet.startsWith("assets/chibi/")')
+  record('continuous chibi world decodes; full-body actor is not a location dot')
   # Deliberate visual fixtures, not a claim that these steps tested real navigation.
   page.evaluate('set3DPlayerPosition(5,-1.4);setStage(3)')
   tofu=[]

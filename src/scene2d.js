@@ -1,137 +1,121 @@
-/* Fixed 2D clinic plan. Coordinates are shared with the cooking state machine.
-   Legacy *3D method names below are adapters only; no WebGL or GLB is loaded. */
-(function () {
-  'use strict';
-  const state = { initialized: false, renderer: 'canvas2d', usingGlb: false,
-    playerPos: { x: -8, y: 0, z: -.2 }, playerFacing: 0, isMoving: false,
-    missionStage: 0, interactiveTarget: null, carryingTray: false,
-    patientDishVisible: false, doctorId: 'speed' };
-  window.scene3DState = state;
-  window.scene2DState = state;
-  const obstacles = [
-    [-9.9,-8.1,-2.6,-1.4],[-9.4,-8.6,-3,-2.4],[-7.6,-7,-1.7,-1.1],
-    [-12.3,-11,-3,-2.2],[-11.6,-9.4,1.5,2.5],[-2.6,-1.4,-3.2,-2.4],
-    [-.5,.9,-3.3,-2.3],[-1.3,-.3,1.4,2.2],[1.7,2.3,-3.1,-2.5],
-    [3.8,6.2,-3.1,-2.1],[6.2,7.8,-3.5,-3],[8.2,10.2,-3.1,-2],
-    [11,12,-3.1,-2.1],[7.2,9.8,1.7,2.7]
-  ];
-  const stations = [
-    {id:'patient',name:'病人椅',label:'看診・送餐',x:-7.3,z:-1.4,at:[-7.3,-.65],r:1.35},
-    {id:'desk',name:'醫師桌',label:'開立料理單',x:-9,z:-1.8,at:[-9.2,-1],r:1.5},
-    {id:'fridge',name:'冰箱',label:'冰箱取材',x:.2,z:-2.4,at:[.2,-1.4],r:1.6},
-    {id:'prep',name:'備料檯',label:'備料',x:5,z:-2.2,at:[5,-1.4],r:1.6},
-    {id:'wok',name:'炒鍋爐台',label:'炒鍋',x:9,z:-2.2,at:[9,-1.35],r:1.6},
-    {id:'rice',name:'電子鍋',label:'配飯・裝盤',x:11.5,z:-2.2,at:[11.5,-1.35],r:1.6}
-  ];
-  const targets = ['patient','desk','fridge','prep','wok','wok','patient','patient'];
-  let canvas,ctx,host,buttons=[],images={},route=[],view={x:0,y:0,w:1,h:1},last=0;
-  let routeStage=null, width=1,height=1;
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-  function point(x,z) { return [view.x+(x+12.6)/25.5*view.w,view.y+(z+3.65)/7.3*view.h]; }
-  function stand(x,z) {
-    if(x< -11.48 || x>11.98 || z< -2.38 || z>2.38)return false;
-    return obstacles.every(([a,b,c,d])=>x+.28<=a||x-.28>=b||z+.28<=c||z-.28>=d);
+/* CK R2: a continuous playable chibi room. Legacy *3D names are engine adapters,
+   not a claim of a 3D renderer. Recipe logic remains in main.js. */
+(function(){
+ 'use strict';
+ const state={initialized:false,renderer:'canvas2d',usingGlb:false,playerPos:{x:-8,y:0,z:-.2},playerFacing:0,isMoving:false,isRunning:false,missionStage:0,interactiveTarget:null,carryingTray:false,patientDishVisible:false,doctorId:'speed'};
+ window.scene3DState=state;window.scene2DState=state;
+ const obstacles=[[-9.9,-8.1,-2.6,-1.4],[-9.4,-8.6,-3,-2.4],[-7.6,-7,-1.7,-1.1],[-12.3,-11,-3,-2.2],[-11.6,-9.4,1.5,2.5],[-2.6,-1.4,-3.2,-2.4],[-.5,.9,-3.3,-2.3],[-1.3,-.3,1.4,2.2],[1.7,2.3,-3.1,-2.5],[3.8,6.2,-3.1,-2.1],[6.2,7.8,-3.5,-3],[8.2,10.2,-3.1,-2],[11,12,-3.1,-2.1],[7.2,9.8,1.7,2.7]];
+ const stations=[
+  {id:'patient',name:'病人椅',label:'看診・送餐',x:-7.3,z:-1.4,at:[-7.3,-.65],r:1.35},
+  {id:'desk',name:'醫師桌',label:'料理處方',x:-9,z:-1.8,at:[-9.2,-1],r:1.5},
+  {id:'fridge',name:'冰箱',label:'冰箱取材',x:.2,z:-2.4,at:[.2,-1.4],r:1.6},
+  {id:'prep',name:'備料檯',label:'備料',x:5,z:-2.2,at:[5,-1.4],r:1.6},
+  {id:'wok',name:'炒鍋爐台',label:'炒鍋',x:9,z:-2.2,at:[9,-1.35],r:1.6},
+  {id:'rice',name:'電子鍋',label:'配飯・裝盤',x:11.5,z:-2.2,at:[11.5,-1.35],r:1.6}];
+ const targetIds=['patient','desk','fridge','prep','wok','wok','patient','patient'];
+ const furniture=[{img:'desk',x:-9,z:-1.4,label:'醫師桌'},{img:'cabinet',x:-11.65,z:-2.2},
+  {img:'bed',x:-10.5,z:2.5},{img:'sink',x:-2,z:-2.4,label:'洗手台'},
+  {img:'fridge',x:.2,z:-2.3,label:'冰箱'},{img:'printer',x:2,z:-2.5,label:'處方機'},
+  {img:'cabinet',x:-.8,z:2.2},{img:'prep',x:5,z:-2.1,label:'備料檯'},
+  {img:'cabinet',x:7,z:-3},{img:'stove',x:9.2,z:-2,label:'爐台'},
+  {img:'rice',x:11.5,z:-2.1,label:'配飯'},{img:'table',x:8.5,z:2.7},{img:'patientSeat',x:-7.3,z:-1.05,label:'病人'}];
+ const CW=112,CH=144,root='assets/chibi/';
+ const directions=['south','west','east','north'];
+ const anim={idle:[0,2,2],walk:[2,6,8],run:[8,6,13],carry:[14,6,8],work:[20,4,9]};
+ let host,canvas,ctx,buttons=[],images={},route=[],routeStage=null,width=1,height=1,last=0,clock=0,workUntil=0;
+ let face='south',actor={},view={x:0,y:0,w:1,h:1},camera={x:0,y:0,scale:1},touch={x:0,z:0,run:false};
+ const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+ const worldPoint=(x,z)=>({x:55+(x+12.6)*66,y:230+z*25});
+ const screenPoint=(x,z)=>{const p=worldPoint(x,z);return{x:view.x+(p.x-camera.x)*camera.scale,y:view.y+(p.y-camera.y)*camera.scale};};
+ function frozen(){return !!window.CKShift?.isFrozen()||!document.getElementById('dialogModal').hidden;}
+ function stand(x,z){return x>=-11.48&&x<=11.98&&z>=-2.38&&z<=2.38&&obstacles.every(([a,b,c,d])=>x+.28<=a||x-.28>=b||z+.28<=c||z-.28>=d);}
+ function nearby(x,z){let best=null,dist=Infinity;for(const s of stations){const d=Math.hypot(x-s.x,z-s.z);if(d<=s.r&&d<dist){best=s;dist=d;}}return best?{...best,prompt:'E — '+best.label}:null;}
+ function step(dx,dz,dt,speed=1){
+  const p=state.playerPos,ox=p.x,oz=p.z,l=Math.hypot(dx,dz)||1,total=Math.min(dt,.1),parts=Math.max(1,Math.ceil(total/.02));
+  for(let n=0;n<parts;n++){const d=4.2*speed*total/parts,nx=p.x+dx/l*d,nz=p.z+dz/l*d;if(stand(nx,p.z))p.x=nx;if(stand(p.x,nz))p.z=nz;}
+  state.isMoving=Math.hypot(p.x-ox,p.z-oz)>.0001;state.isRunning=state.isMoving&&speed>1.1;
+  if(dx||dz){state.playerFacing=Math.atan2(dx,dz);face=Math.abs(dz)>Math.abs(dx)?(dz<0?'north':'south'):(dx<0?'west':'east');}
+  state.interactiveTarget=nearby(p.x,p.z);
+ }
+ function go(s){if(frozen())return;touch.x=touch.z=0;route=[[state.playerPos.x,0],[s.at[0],0],s.at];routeStage=state.missionStage;host.focus({preventScroll:true});}
+ function resize(){
+  width=host.clientWidth;height=host.clientHeight;const dpr=Math.min(devicePixelRatio||1,2);
+  canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);canvas.style.width=width+'px';canvas.style.height=height+'px';
+  const small=width<700;
+  view={x:small?0:176,y:small?34:0,w:width-(small?0:176),h:Math.max(1,height-(small?64:30))};
+  camera.scale=small?Math.min(.78,(view.h-10)/CH):Math.min(view.w/1800,view.h/350);
+  buttons.forEach(({button},i)=>{button.style.left=(i+.5)*width/6+'px';button.style.bottom='3px';button.style.top='auto';});
+ }
+ function updateCamera(){
+  const p=worldPoint(state.playerPos.x,state.playerPos.z),ex=view.w/camera.scale,ey=view.h/camera.scale;
+  camera.x=ex>=1800?(1800-ex)/2:Math.max(0,Math.min(1800-ex,p.x-ex/2));
+  camera.y=ey>=350?(350-ey)/2:Math.max(0,Math.min(350-ey,p.y-64-ey/2));
+ }
+ function image(name,x,y,w,h){const im=images[name];if(im?.complete&&im.naturalWidth)ctx.drawImage(im,x,y,w??im.naturalWidth,h??im.naturalHeight);}
+ function drawFurniture(f){
+  const p=worldPoint(f.x,f.z);
+  if(f.img==='patientSeat'){
+   image('chair',p.x-45,p.y-130,90,135);
+   const frame=window.CKShift?.craving>=70?Math.floor(clock*4)%4:Math.floor(clock)%2,im=images.patient;
+   if(im?.naturalWidth)ctx.drawImage(im,frame*CW,0,CW,CH,p.x-53,p.y-130,CW*.95,CH*.95);
+   if(state.patientDishVisible)image('meal',p.x-32,p.y-39,64,27);
+  }else{const im=images[f.img];if(!im?.naturalWidth)return;image(f.img,p.x-im.naturalWidth/2,p.y-im.naturalHeight+8);}
+  if(f.label){ctx.font='600 14px system-ui';ctx.textAlign='center';ctx.fillStyle='#2e5362';ctx.fillText(f.label,p.x,p.y+18);}
+ }
+ function drawDoctor(){
+  const p=worldPoint(state.playerPos.x,state.playerPos.z);
+  const animation=state.carryingTray?'carry':state.isMoving?(state.isRunning?'run':'walk'):clock<workUntil?'work':'idle';
+  const [offset,count,fps]=anim[animation],frame=state.carryingTray&&!state.isMoving?0:Math.floor(clock*fps)%count,row=directions.indexOf(face),im=images[state.doctorId];
+  ctx.fillStyle='#263c4b32';ctx.beginPath();ctx.ellipse(p.x,p.y,26,7,0,0,Math.PI*2);ctx.fill();
+  if(state.isRunning&&!reduced.matches){ctx.fillStyle='#d6c7a37a';for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(p.x-Math.sin(state.playerFacing)*(22+i*7),p.y-Math.cos(state.playerFacing)*(6+i*3),2+i,0,Math.PI*2);ctx.fill();}}
+  if(im?.naturalWidth)ctx.drawImage(im,(offset+frame)*CW,row*CH,CW,CH,p.x-56,p.y-132,CW,CH);
+  const sp=screenPoint(state.playerPos.x,state.playerPos.z),scale=camera.scale;
+  actor={fullBody:true,animation,frame,direction:face,spriteSheet:root+state.doctorId+'.webp',cell:[offset+frame,row],screenRect:{x:sp.x-56*scale,y:sp.y-132*scale,w:CW*scale,h:CH*scale},foot:sp};
+  if(state.interactiveTarget){ctx.strokeStyle='#e3b95c';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y+1,29,9,0,0,Math.PI*2);ctx.stroke();}
+ }
+ function draw(){
+  updateCamera();ctx.clearRect(0,0,width,height);ctx.fillStyle='#e3e5d9';ctx.fillRect(0,0,width,height);
+  ctx.save();ctx.beginPath();ctx.rect(view.x,view.y,view.w,view.h);ctx.clip();ctx.translate(view.x-camera.x*camera.scale,view.y-camera.y*camera.scale);ctx.scale(camera.scale,camera.scale);
+  image('room-back',0,0,1800,350);
+  const target=stations.find(s=>s.id===targetIds[state.missionStage]);if(target){const p=worldPoint(...target.at);ctx.fillStyle='#d5bc6c40';ctx.beginPath();ctx.ellipse(p.x,p.y,34,12,0,0,Math.PI*2);ctx.fill();}
+  const objects=furniture.map(f=>({z:f.z,draw:()=>drawFurniture(f)}));objects.push({z:state.playerPos.z,draw:drawDoctor});objects.sort((a,b)=>a.z-b.z).forEach(o=>o.draw());
+  if(document.getElementById('flame').classList.contains('is-on')){const p=worldPoint(9.2,-2);ctx.strokeStyle='#f09f47';ctx.lineWidth=3;for(let i=0;i<4;i++){const lift=reduced.matches?4:4+Math.sin(clock*8+i)*3;ctx.beginPath();ctx.moveTo(p.x-18+i*11,p.y-91);ctx.quadraticCurveTo(p.x-20+i*11,p.y-95-lift,p.x-14+i*11,p.y-99-lift);ctx.stroke();}}
+  ctx.restore();
+  for(const {button,s} of buttons){button.classList.toggle('is-objective',s.id===targetIds[state.missionStage]);button.classList.toggle('is-near',s.id===state.interactiveTarget?.id);}
+  const interact=document.getElementById('sceneInteractBtn');interact.disabled=!state.interactiveTarget||frozen();interact.textContent=state.interactiveTarget?'E '+state.interactiveTarget.label:'E 互動';
+ }
+ function clearTouch(){touch.x=touch.z=0;state.isMoving=state.isRunning=false;}
+ function loop(now){
+  const dt=last?Math.min((now-last)/1000,.05):0;last=now;if(!frozen())clock+=dt;else clearTouch();
+  if(route.length){
+   if(routeStage!==state.missionStage||frozen()){route=[];state.isMoving=state.isRunning=false;}
+   else{const [x,z]=route[0],p=state.playerPos,dx=x-p.x,dz=z-p.z;if(Math.hypot(dx,dz)<.07){route.shift();state.isMoving=state.isRunning=false;}else step(dx,dz,Math.min(dt,Math.hypot(dx,dz)/4.2));}
   }
-  function nearby(x,z) {
-    let best=null,distance=Infinity;
-    for(const s of stations){const d=Math.hypot(x-s.x,z-s.z);if(d<=s.r&&d<distance){distance=d;best=s;}}
-    return best?{...best,prompt:'E — '+best.label}:null;
-  }
-  function step(dx,dz,dt,speed=1) {
-    const l=Math.hypot(dx,dz)||1,p=state.playerPos;
-    const nx=p.x+dx/l*4.2*speed*dt,nz=p.z+dz/l*4.2*speed*dt;
-    const oldX=p.x,oldZ=p.z;
-    if(stand(nx,p.z))p.x=nx;
-    if(stand(p.x,nz))p.z=nz;
-    state.isMoving=Math.hypot(p.x-oldX,p.z-oldZ)>.0001;
-    if(state.isMoving)state.playerFacing=Math.atan2(dx,dz);
-    state.interactiveTarget=nearby(p.x,p.z);
-  }
-  function go(s){
-    if(window.CKShift?.isFrozen()||!document.getElementById('dialogModal').hidden)return;
-    route=[[state.playerPos.x,0],[s.at[0],0],s.at];routeStage=state.missionStage;
-    host.focus({preventScroll:true});
-  }
-  function resize(){
-    width=host.clientWidth;height=host.clientHeight;
-    const scale=Math.min(devicePixelRatio||1,2);
-    canvas.width=Math.round(width*scale);canvas.height=Math.round(height*scale);
-    canvas.style.width=width+'px';canvas.style.height=height+'px';ctx.setTransform(scale,0,0,scale,0,0);
-    view={x:width<700?10:232,y:10,w:Math.max(1,width-(width<700?20:246)),h:Math.max(1,height-(width<700?84:70))};
-    const ordered=['desk','patient','fridge','prep','wok','rice'];
-    for(const {button,s} of buttons){
-      const index=ordered.indexOf(s.id),x=view.x+view.w*(index+.5)/6;
-      button.style.left=x+'px';button.style.top=(height-42)+'px';
-    }
-  }
-  function round(x,y,w,h,r,fill,stroke){
-    ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();}
-  }
-  function cover(image,x,y,w,h){
-    if(!image?.complete||!image.naturalWidth)return;
-    const ratio=Math.max(w/image.naturalWidth,h/image.naturalHeight);
-    const sw=w/ratio,sh=h/ratio;
-    ctx.drawImage(image,(image.naturalWidth-sw)/2,(image.naturalHeight-sh)/2,sw,sh,x,y,w,h);
-  }
-  function draw(now){
-    ctx.clearRect(0,0,width,height);
-    // Four photographic-style illustrations of the SAME approved clinic/workstations.
-    // This is explicitly a location navigator. Never slide a cropped torso as an avatar.
-    const y=width<700?60:view.y,h=Math.max(24,height-y-67),x=view.x,w=view.w;
-    const portions=[.34,.20,.23,.23],ids=['clinic','storage','prep','wok'];
-    const names=['診間 · CONSULTATION','收納 · INGREDIENTS','備料 · PREPARATION','爐台 · COOKING'];
-    ctx.save();ctx.beginPath();ctx.roundRect(x,y,w,h,10);ctx.clip();
-    let offset=0;
-    ids.forEach((id,i)=>{
-      const cw=w*portions[i];cover(images[id],x+offset,y,cw,h);
-      const shade=ctx.createLinearGradient(0,y,0,y+h);shade.addColorStop(0,'#102d454a');shade.addColorStop(.5,'#102d4500');shade.addColorStop(1,'#112c4cba');
-      ctx.fillStyle=shade;ctx.fillRect(x+offset,y,cw,h);
-      ctx.fillStyle='#fff9ec';ctx.font=`600 ${width<700?9:11}px system-ui`;ctx.textAlign='left';
-      ctx.fillText(width<700?names[i].split(' ·')[0]:names[i],x+offset+10,y+h-12);
-      offset+=cw;if(i<3){ctx.fillStyle='#ffffff7a';ctx.fillRect(x+offset-1,y,2,h);}
-    });
-    ctx.restore();
-    // Continuous position feedback for the unchanged physical navigation. The dot is
-    // labeled POSITION, not an animated doctor; vertical movement has a short depth tick.
-    const anchors=[[-9,.5],[-7.3,1.5],[.2,2.5],[5,3.5],[9,4.5],[11.5,5.5]];
-    const px=state.playerPos.x;let u=px<anchors[0][0]?0:6;
-    for(let i=0;i<anchors.length-1;i++)if(px>=anchors[i][0]&&px<=anchors[i+1][0])u=anchors[i][1]+(px-anchors[i][0])/(anchors[i+1][0]-anchors[i][0]);
-    const mx=x+w*Math.max(.04,Math.min(.96,u/6)),my=height-53;
-    ctx.strokeStyle='#b8a686';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+9,my);ctx.lineTo(x+w-9,my);ctx.stroke();
-    ctx.strokeStyle='#335466';ctx.beginPath();ctx.moveTo(mx,my-6);ctx.lineTo(mx,my+Math.max(-6,Math.min(6,state.playerPos.z*4)));ctx.stroke();
-    ctx.beginPath();ctx.arc(mx,my,4,0,Math.PI*2);ctx.fillStyle='#b17732';ctx.fill();
-    const desired=targets[state.missionStage];
-    for(const {button,s} of buttons){button.classList.toggle('is-objective',s.id===desired);button.classList.toggle('is-near',s.id===state.interactiveTarget?.id);}
-    host.dataset.presentation='illustrated-location-navigator';
-  }
-  function loop(now){
-    const dt=last?Math.min((now-last)/1000,.05):0;last=now;
-    if(route.length){
-      if(routeStage!==state.missionStage||window.CKShift?.isFrozen()||!document.getElementById('dialogModal').hidden){route=[];state.isMoving=false;}
-      else {const [x,z]=route[0],p=state.playerPos;const dx=x-p.x,dz=z-p.z;
-        if(Math.hypot(dx,dz)<.07){route.shift();state.isMoving=false;}
-        else step(dx,dz,Math.min(dt,Math.hypot(dx,dz)/4.2));}
-    }
-    draw(now);requestAnimationFrame(loop);
-  }
-  function init(world){
-    host=world;canvas=document.createElement('canvas');canvas.id='scene2dCanvas';canvas.setAttribute('aria-label','固定平面診間與後廚');
-    host.append(canvas);ctx=canvas.getContext('2d');
-    for(const [id,path] of Object.entries({clinic:'workspace/clinic-view.webp',storage:'workspace/storage-view.webp',prep:'workspace/prep-view.webp',wok:'workspace/wok-view.webp'})){
-      const im=new Image();im.src='assets/'+path;images[id]=im;
-    }
-    for(const s of stations){const button=document.createElement('button');button.className='map-station';button.type='button';button.dataset.station=s.id;button.textContent=s.label;button.title='點擊走向'+s.label+'；到達後 E 互動';button.setAttribute('aria-label','走向'+s.label);button.addEventListener('click',()=>go(s));host.append(button);buttons.push({button,s});}
-    state.initialized=true;state.interactiveTarget=nearby(state.playerPos.x,state.playerPos.z);
-    new ResizeObserver(resize).observe(host);resize();requestAnimationFrame(loop);
-  }
-  window.update3DPlayerMovement=(dx,dz,dt,speed)=>{if(dx||dz){route=[];step(dx,dz,dt,speed);}else if(!route.length)state.isMoving=false;};
-  window.set3DPlayerPosition=(x,z)=>{route=[];state.playerPos.x=x;state.playerPos.z=z;state.interactiveTarget=nearby(x,z);};
-  window.setMissionStage=n=>{state.missionStage=n;};
-  window.setCarryingTray=value=>{state.carryingTray=!!value;};
-  window.setPatientDishVisible=value=>{state.patientDishVisible=!!value;};
-  window.setDoctorRole=id=>{state.doctorId=id;};
-  window.getNearbyTarget=nearby;
-  window.getSceneStatus=()=>({...state,playerPos:{...state.playerPos},obstacleCount:obstacles.length,routeLength:route.length,imagesReady:Object.keys(images).length===4 && Object.values(images).every(im=>im.complete && im.naturalWidth>0)});
-  window.get3DStatus=window.getSceneStatus; // Historical test/engine API; renderer is explicitly canvas2d.
-  window.initScene3D=init;
+  draw();requestAnimationFrame(loop);
+ }
+ function init(world){
+  host=world;host.dataset.presentation='chibi-playable-world';canvas=document.createElement('canvas');canvas.id='scene2dCanvas';canvas.setAttribute('aria-label','可自由行走與跑步的 Q 版診間');host.append(canvas);ctx=canvas.getContext('2d');
+  for(const name of ['speed','heat','strategy','patient','room-back','desk','chair','fridge','printer','sink','cabinet','prep','stove','rice','table','bed']){const im=new Image();im.src=root+name+'.webp';images[name]=im;}
+  images.meal=new Image();images.meal.src='assets/cooking/tray_served.png';
+  for(const s of stations){const button=document.createElement('button');button.type='button';button.className='map-station';button.dataset.station=s.id;button.textContent=s.label;button.setAttribute('aria-label','走向'+s.label);button.addEventListener('click',()=>go(s));host.append(button);buttons.push({button,s});}
+  document.querySelectorAll('[data-move]').forEach(button=>{
+   const vector={north:[0,-1],south:[0,1],west:[-1,0],east:[1,0]}[button.dataset.move];
+   button.addEventListener('pointerdown',e=>{if(frozen())return;e.preventDefault();route=[];[touch.x,touch.z]=vector;host.focus({preventScroll:true});if(e.isTrusted)button.setPointerCapture(e.pointerId);});
+   for(const type of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(type,clearTouch);
+  });
+  document.getElementById('sceneRunBtn').addEventListener('click',e=>{touch.run=!touch.run;e.currentTarget.setAttribute('aria-pressed',String(touch.run));host.focus({preventScroll:true});});
+  document.getElementById('sceneInteractBtn').addEventListener('click',()=>{if(!frozen()&&state.interactiveTarget)window.handleInteraction(state.interactiveTarget.name);});
+  for(const id of ['cutBtn','stirBtn','plateBtn'])document.getElementById(id).addEventListener('click',e=>{if(!e.currentTarget.disabled&&!frozen())workUntil=clock+.6;},true);
+  addEventListener('blur',()=>{clearTouch();route=[];});document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTouch();route=[];}});
+  state.initialized=true;state.interactiveTarget=nearby(state.playerPos.x,state.playerPos.z);new ResizeObserver(resize).observe(host);resize();requestAnimationFrame(loop);
+ }
+ window.update3DPlayerMovement=(dx,dz,dt,speed)=>{
+  if(!dt||frozen()){clearTouch();return;}
+  if(!dx&&!dz&&(touch.x||touch.z)){dx=touch.x;dz=touch.z;speed=touch.run?1.6:1;}
+  if(dx||dz){route=[];step(dx,dz,dt,Math.max(speed||1,touch.run?1.6:1));}else if(!route.length)state.isMoving=state.isRunning=false;
+ };
+ window.set3DPlayerPosition=(x,z)=>{route=[];clearTouch();state.playerPos.x=x;state.playerPos.z=z;state.interactiveTarget=nearby(x,z);face='south';state.playerFacing=0;workUntil=0;touch.run=false;document.getElementById('sceneRunBtn')?.setAttribute('aria-pressed','false');};
+ window.setMissionStage=n=>{state.missionStage=n;};window.setCarryingTray=v=>{state.carryingTray=!!v;};window.setPatientDishVisible=v=>{state.patientDishVisible=!!v;};window.setDoctorRole=id=>{state.doctorId=id;};window.getNearbyTarget=nearby;
+ window.getSceneStatus=()=>({...state,playerPos:{...state.playerPos},actor:{...actor},viewport:{...view},camera:{...camera},obstacleCount:obstacles.length,routeLength:route.length,imagesReady:Object.keys(images).length===17&&Object.values(images).every(im=>im.complete&&im.naturalWidth>0)});
+ window.get3DStatus=window.getSceneStatus;window.initScene3D=init;
 })();

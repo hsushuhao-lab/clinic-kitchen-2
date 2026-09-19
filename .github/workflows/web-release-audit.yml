@@ -12,6 +12,7 @@ on:
       - 'assets/cooking/**'
       - 'assets/ingredients/**'
       - 'assets/ui/**'
+      - 'assets/art_direction/approved/**'
       - 'tests/test_flat_clinic.py'
       - 'tools/build_flat_release.py'
       - 'tools/build_flat_portraits.py'
@@ -23,6 +24,10 @@ on:
       - 'tools/build_workspace_art.py'
       - 'tools/verify_workspace_art.py'
       - 'tests/test_workspace_visuals.py'
+      - 'tools/build_chibi_world.py'
+      - 'tools/chibi_*.py'
+      - 'tools/verify_chibi_world.py'
+      - 'tests/test_chibi_world.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -53,13 +58,14 @@ jobs:
           python tools/verify_shift_assets.py
           node --test tests/shift_rules.test.cjs
           python tools/build_web_release.py
-      - name: Test runtime-only HTTP root, not private repository root
+      - name: Test runtime-only HTTP root
         run: |
           python -m http.server 8000 --bind 127.0.0.1 --directory web-dist > /tmp/ck-release-http.log 2>&1 &
           sleep 2
           python tests/test_flat_clinic.py --base-url http://127.0.0.1:8000/ --output qa/current/flat
           python tests/test_character_art.py --base-url http://127.0.0.1:8000/ --output qa/current/characters
           python tests/test_workspace_visuals.py --base-url http://127.0.0.1:8000/ --output qa/current/workspace
+          python tests/test_chibi_world.py --base-url http://127.0.0.1:8000/ --output qa/current/chibi
           python - <<'PY'
           from urllib.request import urlopen
           from urllib.error import HTTPError
@@ -69,8 +75,8 @@ jobs:
               except HTTPError as e:
                   assert e.code == 404, (path, e.code)
               else:
-                  raise AssertionError('Private/non-runtime path was served: ' + path)
-          print('Release privacy smoke: PASS (six non-runtime paths return 404)')
+                  raise AssertionError('Non-runtime path was served: ' + path)
+          print('Release privacy smoke: PASS')
           PY
       - uses: actions/upload-artifact@v4
         with:

@@ -26,11 +26,15 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Verify live source SHA and every runtime file
         run: python tools/verify_public_build.py --url https://hsushuhao-lab.github.io/clinic-kitchen-2/ --expect-sha $(git rev-parse HEAD)
-      - name: Play the published game using real keyboard and pointer input
-        run: python tests/test_flat_clinic.py --base-url https://hsushuhao-lab.github.io/clinic-kitchen-2/ --output qa/public-flat
+      - name: Play published recipe and chibi controls with real input
+        run: |
+          python tests/test_flat_clinic.py --base-url https://hsushuhao-lab.github.io/clinic-kitchen-2/ --output qa/public-flat
+          python tests/test_chibi_world.py --base-url https://hsushuhao-lab.github.io/clinic-kitchen-2/ --output qa/public-chibi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: public-flat-game-evidence
-          path: qa/public-flat/
+          path: |
+            qa/public-flat/
+            qa/public-chibi/
           retention-days: 14

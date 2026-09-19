@@ -6,11 +6,12 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <title>Craving Kitchen — 平面診間與料理</title>
 <link href="data:," rel="icon"/>
-<link href="styles.css?v=workspace-r1" rel="stylesheet"/>
-<link href="r2-fixes.css?v=workspace-r1" rel="stylesheet"/>
-<link href="clinic-shift.css?v=workspace-r1" rel="stylesheet"/>
-<link rel="stylesheet" href="character-art.css?v=workspace-r1"/>
-<link rel="stylesheet" href="workspace-art.css?v=workspace-r1"/>
+<link href="styles.css?v=chibi-r2" rel="stylesheet"/>
+<link href="r2-fixes.css?v=chibi-r2" rel="stylesheet"/>
+<link href="clinic-shift.css?v=chibi-r2" rel="stylesheet"/>
+<link rel="stylesheet" href="character-art.css?v=chibi-r2"/>
+<link rel="stylesheet" href="workspace-art.css?v=chibi-r2"/>
+<link rel="stylesheet" href="chibi-world.css?v=chibi-r2"/>
 </head>
 <body>
 <div id="app">
@@ -32,7 +33,9 @@
 <div class="patient-foot"><span id="roundStatus">確認料理單後計時</span><span id="shiftTime">0 秒</span></div>
 </div>
 </aside>
-<div class="control-hint">位置導引 · WASD 移動／點站點前往，抵達後 E 互動</div>
+<div class="control-hint">WASD / 方向鍵移動 · Shift 跑步 · E 互動</div>
+<div class="scene-actions" aria-label="場景操作"><button id="sceneRunBtn" type="button" aria-pressed="false">跑步</button><button id="sceneInteractBtn" type="button">E 互動</button></div>
+<div class="scene-dpad" aria-label="手機方向控制"><button type="button" data-move="north" aria-label="往上走">↑</button><button type="button" data-move="west" aria-label="往左走">←</button><button type="button" data-move="south" aria-label="往下走">↓</button><button type="button" data-move="east" aria-label="往右走">→</button></div>
 <div id="camera">
 <section class="room clinic">
 <h2>診間 CLINIC</h2>
@@ -236,7 +239,7 @@
 <section aria-label="回合狀態" class="session-overlay" hidden="" id="sessionOverlay">
 <div><small>CLINIC KITCHEN · SHIFT</small><h2 id="sessionTitle">門診暫停</h2><p id="sessionMessage"></p><button class="shift-control" id="sessionContinueBtn" type="button">繼續料理</button></div>
 </section>
-<div class="shift-footer"><span id="ruleSummary"></span><span>人物為核准 2D 插畫；上方為位置導引，非全身行走動畫。</span></div>
+<div class="shift-footer"><span id="ruleSummary"></span><span>上方為 Q 版全身可動診間；下方為料理操作。</span></div>
 </section>
 <dialog aria-labelledby="doctorDialogTitle" class="doctor-dialog" id="doctorDialog">
 <div class="doctor-dialog-head"><div><small>CHOOSE YOUR DOCTOR</small><h2 id="doctorDialogTitle">選擇今天的值班醫師</h2></div><button id="closeDoctorBtn" type="button">返回 Esc</button></div>
@@ -249,11 +252,11 @@
 <span hidden="" id="doctorAbility">每份正確備料：Focus +8</span></dialog>
 </div>
 
-<script src="src/scene2d.js?v=workspace-r1"></script>
-<script src="src/shift-rules.js?v=workspace-r1"></script>
-<script src="src/character-art.js?v=workspace-r1"></script>
-<script src="src/main.js?v=workspace-r1"></script>
-<script src="src/workspace-art.js?v=workspace-r1"></script>
-<script src="src/clinic-shift.js?v=workspace-r1"></script>
+<script src="src/scene2d.js?v=chibi-r2"></script>
+<script src="src/shift-rules.js?v=chibi-r2"></script>
+<script src="src/character-art.js?v=chibi-r2"></script>
+<script src="src/main.js?v=chibi-r2"></script>
+<script src="src/workspace-art.js?v=chibi-r2"></script>
+<script src="src/clinic-shift.js?v=chibi-r2"></script>
 </body>
 </html>
