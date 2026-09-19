@@ -59,6 +59,12 @@
   <section id="cookingDeck" class="cooking-deck" aria-label="備料與煮菜操作區" tabindex="0">
     <div class="cook-head">
       <div><span>LOWER WORKBENCH</span><h2>備料・煮菜</h2></div>
+      <div id="orderTicket" class="order-ticket" hidden>
+        <span class="ticket-tag">處方訂單</span>
+        <span id="ticketSpicy" class="ticket-badge">微辣</span>
+        <span id="ticketScallion" class="ticket-badge">要青蔥</span>
+        <span id="ticketRice" class="ticket-badge">正常飯</span>
+      </div>
       <strong id="cookObjective">階段 1/8：前往診間病人椅進行問診</strong>
     </div>
 
@@ -170,10 +176,10 @@
       </div>
 
       <!-- 3. COOK LOG -->
-      <div class="cook-log">
-        <h3>料理紀錄</h3>
+      <details class="cook-log" open id="cookLogContainer">
+        <summary>料理紀錄</summary>
         <ol id="recipeLog"><li>等待開始</li></ol>
-      </div>
+      </details>
     </div>
   </section>
 

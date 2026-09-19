@@ -43,6 +43,22 @@ const STAGES = {
 };
 let currentStage = STAGES.CONSULT;
 
+// Patient Dining Order Preferences
+let currentOrder = {
+  spicy: '正常', // '微辣', '正常', '重辣'
+  scallion: true, // true (要青蔥), false (去青蔥)
+  rice: '正常飯' // '正常飯', '半碗飯'
+};
+
+function syncOrderTicketUI() {
+  const tSpicy = $('ticketSpicy');
+  const tScallion = $('ticketScallion');
+  const tRice = $('ticketRice');
+  if (tSpicy) tSpicy.textContent = currentOrder.spicy === '正常' ? '正常辣' : currentOrder.spicy;
+  if (tScallion) tScallion.textContent = currentOrder.scallion ? '要青蔥' : '去青蔥';
+  if (tRice) tRice.textContent = currentOrder.rice;
+}
+
 // Dialog modal elements
 const dialogModal = $('dialogModal');
 const dialogBadge = $('dialogBadge');
@@ -119,7 +135,7 @@ function showDialog({ badge, title, content, showScore, scoreText, confirmText, 
   dialogActionBtn.focus();
 }
 
-function closeDialog() {
+function confirmDialog() {
   if (!dialogModal) return;
   dialogModal.setAttribute('hidden', '');
   dialogOpen = false;
@@ -128,11 +144,21 @@ function closeDialog() {
     dialogCallback = null;
     cb();
   }
-  world.focus({ preventScroll: true });
+  if (world) world.focus({ preventScroll: true });
 }
 
-if (dialogActionBtn) dialogActionBtn.addEventListener('click', closeDialog);
-if (dialogCloseBtn) dialogCloseBtn.addEventListener('click', closeDialog);
+function cancelDialog() {
+  if (!dialogModal) return;
+  dialogModal.setAttribute('hidden', '');
+  dialogOpen = false;
+  dialogCallback = null; // Do not execute callback on cancellation
+  if (world) world.focus({ preventScroll: true });
+}
+
+const closeDialog = confirmDialog;
+
+if (dialogActionBtn) dialogActionBtn.addEventListener('click', confirmDialog);
+if (dialogCloseBtn) dialogCloseBtn.addEventListener('click', cancelDialog);
 
 function propRect(prop) {
   return {
@@ -438,42 +464,7 @@ function updateCooking() {
     $('wokSimmerImg').hidden = !(inWok.size >= 4 && stirs >= 3 && !plated);
   }
 
-  if ($('wokFoodLayer')) {
-    if (inWok.size === 0 || plated) {
-      $('wokFoodLayer').innerHTML = '';
-    } else {
-      let html = '';
-      if (inWok.has('douban')) {
-        html += '<div class="wok-red-oil-glow"></div>';
-      }
-      if (inWok.has('pork')) {
-        const porkSrc = stirs >= 1 ? 'assets/cooking/pork_browned.png' : 'assets/ingredients/mapo_tofu/pork.png';
-        html += `<img class="wok-food-item wok-food-pork ${stirs >= 1 ? 'is-browned' : ''}" src="${porkSrc}" alt="絞肉"/>`;
-      }
-      if (inWok.has('garlic')) {
-        html += `<img class="wok-food-item wok-food-garlic" src="assets/cooking/garlic_mince.png" alt="蒜末"/>`;
-      }
-      if (inWok.has('douban')) {
-        html += `<img class="wok-food-item wok-food-douban ${stirs >= 2 ? 'is-red-oil' : ''}" src="assets/cooking/douban_jar.png" alt="豆瓣醬"/>`;
-      }
-      if (inWok.has('tofu')) {
-        html += `<img class="wok-food-item wok-food-tofu" src="assets/cooking/tofu_cubes.png" alt="豆腐丁"/>`;
-      }
-      if (inWok.has('scallion')) {
-        html += `<img class="wok-food-item wok-food-scallion" src="assets/cooking/scallion_rings.png" alt="蔥花"/>`;
-      }
-      if (stirs >= 2 && inWok.size >= 4) {
-        html += `
-          <div class="simmer-bubbles">
-            <span class="simmer-bubble" style="left:34%;bottom:26px;animation-delay:0s"></span>
-            <span class="simmer-bubble" style="left:52%;bottom:38px;animation-delay:0.35s"></span>
-            <span class="simmer-bubble" style="left:42%;bottom:22px;animation-delay:0.7s"></span>
-            <span class="simmer-bubble" style="left:60%;bottom:32px;animation-delay:1.05s"></span>
-          </div>`;
-      }
-      $('wokFoodLayer').innerHTML = html;
-    }
-  }
+  syncWokFoodDOM();
 
   if ($('platedDishPreview')) {
     if (plated) {
@@ -498,9 +489,67 @@ function updateCooking() {
   }
 }
 
+let lastWokFoodKey = '';
+
+function syncWokFoodDOM() {
+  const container = $('wokFoodLayer');
+  if (!container) return;
+  if (inWok.size === 0 || plated) {
+    if (container.hasChildNodes()) container.innerHTML = '';
+    lastWokFoodKey = '';
+    return;
+  }
+
+  const wokKey = `${[...inWok].sort().join(',')}|stirs:${stirs >= 2 ? 2 : (stirs >= 1 ? 1 : 0)}|plated:${plated}`;
+  if (wokKey === lastWokFoodKey) {
+    return; // Keep existing nodes to preserve running CSS animations & transitions
+  }
+  lastWokFoodKey = wokKey;
+
+  let html = '';
+  if (inWok.has('douban')) {
+    html += '<div class="wok-red-oil-glow"></div>';
+  }
+  if (inWok.has('pork')) {
+    const porkSrc = stirs >= 1 ? 'assets/cooking/pork_browned.png' : 'assets/ingredients/mapo_tofu/pork.png';
+    html += `<img class="wok-food-item wok-food-pork ${stirs >= 1 ? 'is-browned' : ''}" src="${porkSrc}" alt="絞肉"/>`;
+  }
+  if (inWok.has('garlic')) {
+    html += `<img class="wok-food-item wok-food-garlic" src="assets/cooking/garlic_mince.png" alt="蒜末"/>`;
+  }
+  if (inWok.has('douban')) {
+    // Pure red-oil sauce paste layer without jar container
+    html += `<div class="wok-food-item wok-food-douban-paste ${stirs >= 2 ? 'is-red-oil' : ''}" title="發酵紅油豆瓣醬"></div>`;
+  }
+  if (inWok.has('tofu')) {
+    html += `<img class="wok-food-item wok-food-tofu" src="assets/cooking/tofu_cubes.png" alt="豆腐丁"/>`;
+  }
+  if (inWok.has('scallion')) {
+    html += `<img class="wok-food-item wok-food-scallion" src="assets/cooking/scallion_rings.png" alt="蔥花"/>`;
+  }
+  if (stirs >= 2 && inWok.size >= 4) {
+    html += `
+      <div class="simmer-bubbles">
+        <span class="simmer-bubble" style="left:34%;bottom:26px;animation-delay:0s"></span>
+        <span class="simmer-bubble" style="left:52%;bottom:38px;animation-delay:0.35s"></span>
+        <span class="simmer-bubble" style="left:42%;bottom:22px;animation-delay:0.7s"></span>
+        <span class="simmer-bubble" style="left:60%;bottom:32px;animation-delay:1.05s"></span>
+      </div>`;
+  }
+  container.innerHTML = html;
+}
+
 function resetAll() {
+  if (platingTimeout) {
+    clearTimeout(platingTimeout);
+    platingTimeout = null;
+  }
+  isPlating = false;
   x = 250; y = 470; previousTime = 0; keys.clear(); visited.clear();
   selectedFood = null; prepped.clear(); inWok.clear(); heated = false; stirs = 0; plated = false;
+  lastWokFoodKey = '';
+  currentOrder = { spicy: '正常', scallion: true, rice: '正常飯' };
+  syncOrderTicketUI();
   for (const k in cutStages) cutStages[k] = 0;
   $('boardFood').textContent = '砧板空著';
   if ($('boardFoodImg')) $('boardFoodImg').setAttribute('hidden', '');
@@ -508,6 +557,7 @@ function resetAll() {
   if ($('boardKnife')) $('boardKnife').className = 'board-knife-img';
   if ($('boardSpoon')) $('boardSpoon').className = 'board-spoon-img';
   if ($('wokSimmerImg')) $('wokSimmerImg').setAttribute('hidden', '');
+  if ($('wokFoodLayer')) $('wokFoodLayer').innerHTML = '';
   if ($('platedDishPreview')) $('platedDishPreview').setAttribute('hidden', '');
   $('recipeLog').innerHTML = '<li>等待開始</li>';
   $('log').textContent = '已重置：探索與料理狀態皆已清空';
@@ -530,24 +580,79 @@ function handleInteraction(name) {
   // 1. Patient Chair Interaction (Consult & First Bite)
   if (name.includes('病人') || name.includes('Patient')) {
     if (currentStage === STAGES.CONSULT) {
+      const pendingPref = { ...currentOrder };
+
       showDialog({
-        badge: 'CLINIC EMR — 初診評估',
-        title: '【診間問診】上班族病患主訴',
+        badge: 'CLINIC EMR — 初診與客製偏好',
+        title: '【診間問診】上班族病患主訴與料理客製',
         content: `
           <p><strong>上班族病患：</strong>「醫師，最近專案截稿連續熬夜，肩頸緊繃、精神焦躁，完全吃不下飯，整個人快被壓力壓垮了……」</p>
-          <p><strong>Dr. Speed：</strong>「長期高壓會讓交感神經持續亢奮、消化機能低落。我們今天不開苦藥，而是為你特調一道<strong>家常舒壓料理——麻婆豆腐</strong>。豆腐滑嫩易吞嚥，花椒的芳香微麻與豆瓣醬的醇厚能喚醒食慾，透過熱食的感官療癒撫慰身心。」</p>
-          <p><em>問診完成！請前往醫師桌或處方機開立料理處方單。</em></p>
+          <p><strong>Dr. Speed：</strong>「長期高壓會讓交感神經持續亢奮、消化機能低落。我們今天不開苦藥，而是為你特調一道<strong>家常舒壓料理——麻婆豆腐</strong>。請選擇你的飲食客製偏好：」</p>
+          <div class="preference-grid" id="prefGrid">
+            <div class="pref-row">
+              <span class="pref-label">辣度喜好：</span>
+              <div class="pref-buttons" data-pref="spicy">
+                <button type="button" class="pref-btn ${pendingPref.spicy === '微辣' ? 'is-selected' : ''}" data-val="微辣">微辣 (輕盈微麻)</button>
+                <button type="button" class="pref-btn ${pendingPref.spicy === '正常' ? 'is-selected' : ''}" data-val="正常">正常 (正宗川味)</button>
+                <button type="button" class="pref-btn ${pendingPref.spicy === '重辣' ? 'is-selected' : ''}" data-val="重辣">重辣 (大汗淋漓)</button>
+              </div>
+            </div>
+            <div class="pref-row">
+              <span class="pref-label">青蔥配置：</span>
+              <div class="pref-buttons" data-pref="scallion">
+                <button type="button" class="pref-btn ${pendingPref.scallion ? 'is-selected' : ''}" data-val="yes">要青蔥 (提鮮爽脆)</button>
+                <button type="button" class="pref-btn ${!pendingPref.scallion ? 'is-selected' : ''}" data-val="no">不要蔥 (純粹豆腐)</button>
+              </div>
+            </div>
+            <div class="pref-row">
+              <span class="pref-label">越光米飯：</span>
+              <div class="pref-buttons" data-pref="rice">
+                <button type="button" class="pref-btn ${pendingPref.rice === '正常飯' ? 'is-selected' : ''}" data-val="正常飯">正常 (一滿碗)</button>
+                <button type="button" class="pref-btn ${pendingPref.rice === '半碗飯' ? 'is-selected' : ''}" data-val="半碗飯">半碗 (減醣輕量)</button>
+              </div>
+            </div>
+          </div>
+          <p><em>確認偏好後，請前往醫師桌或處方機開立料理處方單。</em></p>
         `,
-        confirmText: '開立處方單 (Enter / E)',
+        confirmText: '確認偏好並開立處方 (Enter / E)',
         onConfirm: () => {
+          currentOrder = { ...pendingPref };
+          syncOrderTicketUI();
           setStage(STAGES.ORDER);
-          cookLog('問診完成：請前往醫師桌或料理處方機出單');
+          cookLog(`問診完成：記錄客製偏好【${currentOrder.spicy === '正常' ? '正常辣' : currentOrder.spicy}、${currentOrder.scallion ? '要青蔥' : '去青蔥'}、${currentOrder.rice}】，前往開立處方單`);
         }
       });
+
+      // Bind interactive click handlers to preference buttons
+      const grid = $('prefGrid');
+      if (grid) {
+        grid.querySelectorAll('.pref-btn').forEach(btn => {
+          btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const group = btn.closest('.pref-buttons');
+            if (!group) return;
+            group.querySelectorAll('.pref-btn').forEach(b => b.classList.remove('is-selected'));
+            btn.classList.add('is-selected');
+            const prefType = group.dataset.pref;
+            const val = btn.dataset.val;
+            if (prefType === 'spicy') pendingPref.spicy = val;
+            if (prefType === 'scallion') pendingPref.scallion = (val === 'yes');
+            if (prefType === 'rice') pendingPref.rice = val;
+          });
+        });
+      }
       return;
     } else if (currentStage === STAGES.SERVE) {
       if (window.setCarryingTray) window.setCarryingTray(false);
       if (window.setPatientDishVisible) window.setPatientDishVisible(true);
+
+      // Tailored culinary feedback reflecting player choices
+      let spicyRemark = '正宗川味香氣四溢，麻辣適中、豆腐滑嫩極了！';
+      if (currentOrder.spicy === '微辣') spicyRemark = '微辣溫潤微麻、暖胃而不刺激，正好撫慰了疲憊的腸胃！';
+      if (currentOrder.spicy === '重辣') spicyRemark = '重辣熱辣過癮、發汗舒暢，整個人的壓力和疲憊感全都散開了！';
+
+      let scallionRemark = currentOrder.scallion ? '翠綠青蔥點綴提香，清爽解膩！' : '太貼心了，完全按照要求沒有放蔥花，口感純粹濃郁！';
+      let riceRemark = currentOrder.rice === '半碗飯' ? '搭配減醣半碗越光米飯，份量恰到好處無負擔！' : '熱騰騰越光米飯吸飽紅油肉汁，極致療癒下飯！';
 
       const dynamicScore = (required.every(id => inWok.has(id)) && stirs >= 3) ? 100 : 90;
 
@@ -559,10 +664,11 @@ function handleInteraction(name) {
             <img src="assets/cooking/tray_served.png" alt="美味托盤" class="patient-eating-portrait"/>
             <div class="patient-eating-text">
               <strong>上班族病患雙手端起托盤，用湯匙舀起第一口熱氣騰騰的麻婆豆腐：</strong>
-              <p>「熱氣瞬間在嘴裡散開！花椒的清香微麻、豆瓣醬的醬香醇厚，加上細緻滑嫩的豆腐，微辣但完全不嗆，整個人從胸口到胃裡都暖了起來……剛才緊繃的肩膀一下子全放鬆了！」</p>
+              <p>「熱氣瞬間在嘴裡散開！${spicyRemark} ${scallionRemark} ${riceRemark}」</p>
+              <p>「剛才緊繃僵硬的肩膀一下子全放鬆了，整個人胸腹暖暖的，真的太療癒了！」</p>
             </div>
           </div>
-          <p><strong>Dr. Speed：</strong>「熱食入腹、感官得到撫慰，心情自然舒暢。今晚請放下工作，好好享受美味與休息！」</p>
+          <p><strong>Dr. Speed：</strong>「熱食入腹、感官得到撫慰，心情自然舒暢。今晚請放下工作，好好享受美味與充分休息！」</p>
         `,
         showScore: true,
         scoreText: `病患滿意度：${dynamicScore}%（極致舒壓、色香味俱全）`,
@@ -585,9 +691,10 @@ function handleInteraction(name) {
         title: '【電子病歷系統 / 料理處方單出單】',
         content: `
           <p><strong>處方代碼：</strong>#CK2-MAPO-001</p>
-          <p><strong>料理品項：</strong>經典舒壓家常麻婆豆腐 (Fictional Stress-Relief Meal)</p>
-          <p><strong>標準食材明細：</strong>嫩豆腐 1 塊、特級豬絞肉 100g、川味豆瓣醬 2 大匙、鮮蒜瓣碎、大紅袍花椒少許、青蔥段。</p>
-          <p><strong>料理要點：</strong>先爆香肉碎與蒜瓣豆瓣，下豆腐燴煮入味，起鍋前撒花椒蔥花。</p>
+          <p><strong>料理品項：</strong>客製舒壓家常麻婆豆腐 (${currentOrder.spicy === '正常' ? '正宗川味' : currentOrder.spicy}配方)</p>
+          <p><strong>客製化規格：</strong>辣度【${currentOrder.spicy === '正常' ? '正常辣' : currentOrder.spicy}】｜青蔥【${currentOrder.scallion ? '要青蔥' : '免放蔥'}】｜附餐【越光米飯 ${currentOrder.rice}】</p>
+          <p><strong>標準食材明細：</strong>嫩豆腐 1 塊、特級豬絞肉 100g、川味豆瓣醬 2 大匙、鮮蒜瓣碎、大紅袍花椒少許${currentOrder.scallion ? '、青蔥段' : ''}。</p>
+          <p><strong>料理要點：</strong>先爆香肉碎與蒜瓣豆瓣，下豆腐燴煮入味，起鍋前盛盤。</p>
           <p><em>料理處方單已列印！請前往過渡區不鏽鋼冰箱取出冷藏食材。</em></p>
         `,
         confirmText: '前往冰箱取材 (Enter / E)',
@@ -827,19 +934,30 @@ $('stirBtn').addEventListener('click', () => {
   updateCooking();
 });
 
+let isPlating = false;
+let platingTimeout = null;
+
 $('plateBtn').addEventListener('click', () => {
-  if ($('plateBtn').disabled) return;
+  if ($('plateBtn').disabled || isPlating) return;
   if (!isNearWokStation()) {
     $('log').textContent = '未到炒鍋爐台：請先走近炒鍋爐台盛盤！';
     return;
   }
 
+  isPlating = true;
+  $('plateBtn').disabled = true;
+
   // Plating transfer animation
   const wok = $('wokStage');
   if (wok) wok.classList.add('wok-plating-active');
-  setTimeout(() => {
+  if ($('wokSpatula')) $('wokSpatula').classList.add('is-stirring');
+
+  platingTimeout = setTimeout(() => {
     if (wok) wok.classList.remove('wok-plating-active');
-  }, 500);
+    if ($('wokSpatula')) $('wokSpatula').classList.remove('is-stirring');
+    isPlating = false;
+    platingTimeout = null;
+  }, 450);
 
   plated = true;
   heated = false;
@@ -857,9 +975,14 @@ addEventListener('keydown', event => {
   const key = event.key.toLowerCase();
 
   if (dialogOpen) {
-    if (key === 'escape' || key === 'enter' || key === ' ' || key === 'e') {
+    if (key === 'escape') {
       event.preventDefault();
-      closeDialog();
+      cancelDialog();
+      return;
+    }
+    if (key === 'enter' || key === ' ' || key === 'e') {
+      event.preventDefault();
+      confirmDialog();
       return;
     }
     return;

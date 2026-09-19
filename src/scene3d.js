@@ -281,8 +281,7 @@ window.scene3DState = {
     box(0.1, 3.6, 7.0, mats.clinicWall, -12.55, 1.8, 0);
     box(0.1, 3.6, 7.0, mats.stainless, 13.05, 1.8, 0);
 
-    // Ceiling beam
-    box(25.6, 0.3, 0.4, mats.darkSteel, 0.25, 3.45, 0);
+    // Ceiling beam removed to ensure completely unobstructed 3D isometric camera view across Clinic-Prep-Kitchen
 
     // Clinic Props
     box(1.8, 0.06, 0.9, mats.deskWood, -9.0, 0.75, -2.0); // desk
@@ -399,8 +398,10 @@ window.scene3DState = {
     const group = new THREE.Group();
     group.name = 'Procedural_PatientOffice_Placeholder';
     const head = new THREE.Mesh(new THREE.CylinderGeometry(0.095, 0.085, 0.21, 12), mats.skin);
+    head.name = 'PatientHead';
     head.position.set(0, 1.25, 0);
     const hair = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.08, 0.2), mats.hair);
+    hair.name = 'PatientHair';
     hair.position.set(0, 1.33, 0);
     const torso = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.45, 0.25), mats.suitBlue);
     torso.position.set(0, 0.88, 0);
@@ -411,7 +412,20 @@ window.scene3DState = {
     const calves = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.45, 0.14), mats.trousers);
     calves.position.set(0, 0.25, 0.38);
 
-    group.add(head, hair, torso, tie, thighs, calves);
+    // Patient right arm for dining kinematics
+    const rightArmPivot = new THREE.Group();
+    rightArmPivot.name = 'PatientRightArm';
+    rightArmPivot.position.set(0.24, 1.05, 0.05);
+    const rightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.045, 0.42, 8), mats.suitBlue);
+    rightArm.position.set(0, -0.21, 0);
+    const rightHand = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.035, 0.1, 8), mats.skin);
+    rightHand.position.set(0, -0.44, 0);
+    const chopstick = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.003, 0.22, 6), mats.deskWood);
+    chopstick.rotation.x = Math.PI / 3;
+    chopstick.position.set(0, -0.45, 0.06);
+    rightArmPivot.add(rightArm, rightHand, chopstick);
+
+    group.add(head, hair, torso, tie, thighs, calves, rightArmPivot);
     group.position.set(-7.3, 0, -1.4);
     group.rotation.y = Math.PI; // facing doctor desk
     return group;
@@ -452,10 +466,10 @@ window.scene3DState = {
     scene.background = new THREE.Color(0x0f171b);
     clock = new THREE.Clock();
 
-    // Camera: Third-person elevated perspective
-    camera = new THREE.PerspectiveCamera(42, w / h, 0.1, 100);
-    camera.position.set(window.scene3DState.playerPos.x, 5.2, window.scene3DState.playerPos.z + 5.8);
-    camera.lookAt(window.scene3DState.playerPos.x, 1.2, window.scene3DState.playerPos.z);
+    // Camera: Third-person elevated perspective with clear room visibility
+    camera = new THREE.PerspectiveCamera(44, w / h, 0.1, 100);
+    camera.position.set(window.scene3DState.playerPos.x, 6.2, window.scene3DState.playerPos.z + 5.2);
+    camera.lookAt(window.scene3DState.playerPos.x, 1.0, window.scene3DState.playerPos.z);
 
     // Lighting
     const ambLight = new THREE.AmbientLight(0xdde5e8, 0.7);
@@ -512,6 +526,22 @@ window.scene3DState = {
 
     loader.load('assets/models/environment/clinic_kitchen_scene.glb', function (gltf) {
       envGroup = gltf.scene;
+      envGroup.traverse(child => {
+        if (child.isMesh) {
+          const name = (child.name || '').toLowerCase();
+          if (name.includes('beam') || name.includes('ceiling')) {
+            child.visible = false;
+            return;
+          }
+          if (child.geometry) {
+            if (!child.geometry.boundingBox) child.geometry.computeBoundingBox();
+            const bb = child.geometry.boundingBox;
+            if (bb && (bb.max.x - bb.min.x) > 20) {
+              child.visible = false;
+            }
+          }
+        }
+      });
       scene.add(envGroup);
       glbLoadedCount++;
       window.scene3DState.usingGlb = true;
@@ -625,14 +655,14 @@ window.scene3DState = {
       playerGroup.rotation.y = state.playerFacing;
     }
 
-    // Third-person smooth camera tracking
+    // Third-person smooth camera tracking (elevated isometric view)
     const targetCamX = state.playerPos.x;
-    const targetCamY = 5.2;
-    const targetCamZ = state.playerPos.z + 5.8;
+    const targetCamY = 6.2;
+    const targetCamZ = state.playerPos.z + 5.2;
     camera.position.x += (targetCamX - camera.position.x) * 0.08;
     camera.position.y += (targetCamY - camera.position.y) * 0.08;
     camera.position.z += (targetCamZ - camera.position.z) * 0.08;
-    camera.lookAt(state.playerPos.x, 1.2, state.playerPos.z);
+    camera.lookAt(state.playerPos.x, 1.0, state.playerPos.z);
 
     // Check interaction target
     state.interactiveTarget = getNearbyTarget(state.playerPos.x, state.playerPos.z);
@@ -658,12 +688,33 @@ window.scene3DState = {
       patientDishMesh.visible = !!state.patientDishVisible;
     }
 
-    // Patient dining savoring animation
+    // Patient dining savoring animation (scoop, lift, savor nod)
     if (patientGroup) {
       if (state.patientDishVisible) {
-        patientGroup.rotation.x = Math.sin(Date.now() * 0.005) * 0.06;
-        patientGroup.position.y = Math.abs(Math.sin(Date.now() * 0.005)) * 0.015;
+        const t = Date.now() * 0.0035;
+        const cycle = t % (Math.PI * 2);
+        const patientArm = patientGroup.getObjectByName('PatientRightArm');
+        if (patientArm) {
+          patientArm.rotation.x = -0.35 + Math.sin(cycle) * 0.45;
+          patientArm.rotation.z = Math.cos(cycle) * 0.12;
+        }
+        const patientHead = patientGroup.getObjectByName('PatientHead');
+        if (patientHead) {
+          patientHead.rotation.x = Math.sin(cycle * 2) * 0.1;
+        } else {
+          patientGroup.rotation.x = Math.sin(cycle * 2) * 0.05;
+        }
+        patientGroup.position.y = Math.abs(Math.sin(cycle)) * 0.02;
       } else {
+        const patientArm = patientGroup.getObjectByName('PatientRightArm');
+        if (patientArm) {
+          patientArm.rotation.x = 0;
+          patientArm.rotation.z = 0;
+        }
+        const patientHead = patientGroup.getObjectByName('PatientHead');
+        if (patientHead) {
+          patientHead.rotation.x = 0;
+        }
         patientGroup.rotation.x = 0;
         patientGroup.position.y = 0;
       }
