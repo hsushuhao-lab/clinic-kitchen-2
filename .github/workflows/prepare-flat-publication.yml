@@ -1,0 +1,52 @@
+name: Prepare verified flat-clinic publication
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/prepare-flat-publication.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install verification tools
+        run: |
+          python -m pip install -r requirements-qa.txt
+          python -m playwright install --with-deps chromium
+      - name: Apply hash-checked pending update (no branch update)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp tools/prepare_flat_tree.py /tmp/ck-prepare-flat.py
+          python /tmp/ck-prepare-flat.py apply
+      - name: Verify source, original art, new cutouts and game rules
+        run: |
+          python tests/smoke_test.py
+          python tools/verify_assets.py
+          python tools/verify_shift_assets.py
+          node --test tests/shift_rules.test.cjs
+          python tools/build_web_release.py
+      - name: Test all gameplay from the runtime-only HTTP server
+        run: |
+          python -m http.server 8000 --bind 127.0.0.1 --directory web-dist > /tmp/ck-flat-http.log 2>&1 &
+          sleep 2
+          python tests/test_flat_clinic.py --base-url http://127.0.0.1:8000/ --output /tmp/flat-proof/browser
+      - name: Upload tested Git objects without moving main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python /tmp/ck-prepare-flat.py upload
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verified-flat-tree
+          path: /tmp/flat-proof/
+          retention-days: 14
+          if-no-files-found: error
