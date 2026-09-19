@@ -6,9 +6,10 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <title>Craving Kitchen — 平面診間與料理</title>
 <link href="data:," rel="icon"/>
-<link href="styles.css?v=flat-20260919" rel="stylesheet"/>
-<link href="r2-fixes.css?v=flat-20260919" rel="stylesheet"/>
-<link href="clinic-shift.css?v=flat-20260919" rel="stylesheet"/>
+<link href="styles.css?v=character-20260919" rel="stylesheet"/>
+<link href="r2-fixes.css?v=character-20260919" rel="stylesheet"/>
+<link href="clinic-shift.css?v=character-20260919" rel="stylesheet"/>
+<link rel="stylesheet" href="character-art.css?v=character-20260919"/>
 </head>
 <body>
 <div id="app">
@@ -23,7 +24,7 @@
 </header>
 <main aria-label="平面診間、取材區與後廚" id="world" tabindex="0">
 <aside aria-label="病人狀態" class="patient-hud" data-craving-band="medium" id="patientHUD">
-<img alt="上班族病人參考立繪" class="patient-portrait" src="assets/ui/patient-office.webp"/>
+<img alt="上班族病人參考立繪" class="patient-portrait" src="assets/ui/patient-office-bust.webp"/>
 <div class="patient-status"><div class="patient-heading"><strong>上班族病人</strong><span id="patientMood">有些坐不住</span></div>
 <label class="meter-row">CRAVING <b id="cravingText">40%</b><progress aria-label="Craving 遊戲渴求值" id="cravingMeter" max="100" value="40"></progress></label>
 <label class="meter-row focus-row">FOCUS <b id="focusText">24%</b><progress aria-label="Focus 遊戲專注值" id="focusMeter" max="100" value="24"></progress></label>
@@ -232,23 +233,23 @@
 <section aria-label="回合狀態" class="session-overlay" hidden="" id="sessionOverlay">
 <div><small>CLINIC KITCHEN · SHIFT</small><h2 id="sessionTitle">門診暫停</h2><p id="sessionMessage"></p><button class="shift-control" id="sessionContinueBtn" type="button">繼續料理</button></div>
 </section>
-<div class="shift-footer"><span id="ruleSummary"></span><span>角色 平面 模型仍為共用原型；數值不代表臨床療效。</span></div>
+<div class="shift-footer"><span id="ruleSummary"></span><span>人物為核准原稿的 2D 立繪；數值不代表臨床療效。</span></div>
 </section>
-<dialog aria-labelledby="doctorDialogTitle" id="doctorDialog">
+<dialog aria-labelledby="doctorDialogTitle" class="doctor-dialog" id="doctorDialog">
 <div class="doctor-dialog-head"><div><small>CHOOSE YOUR DOCTOR</small><h2 id="doctorDialogTitle">選擇今天的值班醫師</h2></div><button id="closeDoctorBtn" type="button">返回 Esc</button></div>
-<p>沿用第一版的能力分工。確認料理單前可更換，開始出餐後本單鎖定。</p>
+<p>三位醫師，各有分工。確認料理單前可更換；接單後本單鎖定。</p>
 <div class="doctor-options">
-<button aria-pressed="true" data-doctor="speed" type="button"><img alt="快刀醫師參考立繪" src="assets/ui/doctor-speed.webp"/><span><strong>DR. SPEED</strong><b>快刀醫師</b><small>正確備料 Focus +8</small></span></button>
-<button aria-pressed="false" data-doctor="heat" type="button"><img alt="火候醫師參考立繪" src="assets/ui/doctor-heat.webp"/><span><strong>DR. HEAT</strong><b>火候醫師</b><small>過火前容錯時間 +12%</small></span></button>
-<button aria-pressed="false" data-doctor="strategy" type="button"><img alt="處方醫師參考立繪" src="assets/ui/doctor-strategy.webp"/><span><strong>DR. STRATEGY</strong><b>處方醫師</b><small>Craving 上升速度 −18%</small></span></button>
-</div><small>立繪僅用於選角介面；場景內仍使用共用 placeholder 模型，以名稱標示角色。</small>
+<button aria-pressed="true" data-doctor="speed" class="doctor-option" type="button"><img alt="快刀醫師，核准原稿半身立繪" class="doctor-keyart" src="assets/ui/doctor-speed-bust.webp"/><span><strong>DR. SPEED</strong><b>快刀醫師</b><small>正確備料 Focus +8</small></span></button>
+<button aria-pressed="false" data-doctor="heat" class="doctor-option" type="button"><img alt="火候醫師，核准原稿半身立繪" class="doctor-keyart" src="assets/ui/doctor-heat-bust.webp"/><span><strong>DR. HEAT</strong><b>火候醫師</b><small>過火前容錯時間 +12%</small></span></button>
+<button aria-pressed="false" data-doctor="strategy" class="doctor-option" type="button"><img alt="處方醫師，核准原稿半身立繪" class="doctor-keyart" src="assets/ui/doctor-strategy-bust.webp"/><span><strong>DR. STRATEGY</strong><b>處方醫師</b><small>Craving 上升速度 −18%</small></span></button>
+</div><small>立繪取自核准原稿，保留眼鏡、服裝、筆觸與原生解析度；是 2D 人物插畫，不是 3D 模型。</small>
 <span hidden="" id="doctorAbility">每份正確備料：Focus +8</span></dialog>
 </div>
 
-<script src="src/scene2d.js?v=flat-20260919"></script>
-<script src="src/shift-rules.js?v=flat-20260919"></script>
-<script src="src/main.js?v=flat-20260919"></script>
-<script src="src/clinic-shift.js?v=flat-20260919"></script>
+<script src="src/scene2d.js?v=character-20260919"></script>
+<script src="src/shift-rules.js?v=character-20260919"></script>
+<script src="src/character-art.js?v=character-20260919"></script>
+<script src="src/main.js?v=character-20260919"></script>
+<script src="src/clinic-shift.js?v=character-20260919"></script>
 </body>
 </html>
-

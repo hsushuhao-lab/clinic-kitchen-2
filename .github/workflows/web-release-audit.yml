@@ -17,6 +17,9 @@ on:
       - 'tools/build_flat_portraits.py'
       - 'tests/shift_rules.test.cjs'
       - 'tools/verify_shift_assets.py'
+      - 'tools/build_character_portraits.py'
+      - 'tools/verify_character_assets.py'
+      - 'tests/test_character_art.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -54,6 +57,7 @@ jobs:
           python -m http.server 8000 --bind 127.0.0.1 --directory web-dist > /tmp/ck-release-http.log 2>&1 &
           sleep 2
           python tests/test_flat_clinic.py --base-url http://127.0.0.1:8000/ --output qa/current/flat
+          python tests/test_character_art.py --base-url http://127.0.0.1:8000/ --output qa/current/characters
           python - <<'PY'
           from urllib.request import urlopen
           from urllib.error import HTTPError

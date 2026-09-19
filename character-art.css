@@ -1,0 +1,61 @@
+/* Realistic illustration pass: original face/coat pixels, no chibi strip or poster text.
+   The map/cooking 1:2 viewport grid is deliberately unchanged. */
+#doctorDialog.doctor-dialog{width:min(900px,94vw);padding:22px 24px;max-height:94dvh;border:1px solid #ccb983;border-radius:18px;background:linear-gradient(135deg,#fffdf8,#f5eddb);color:#233d53;box-shadow:0 22px 80px #152e4566}
+#doctorDialog::backdrop{background:#132d46a8;backdrop-filter:blur(3px)}
+#doctorDialog .doctor-dialog-head small{font-size:10px;letter-spacing:.19em;color:#856d40;font-weight:700}
+#doctorDialog h2{font-size:25px;font-weight:800;letter-spacing:.015em;margin:6px 0}
+#doctorDialog>p{font-size:12px;line-height:1.7;margin:12px 0;color:#536876}
+#doctorDialog>.doctor-options{gap:14px;margin:16px 0}
+#doctorDialog .doctor-option{display:flex;flex-direction:column;justify-content:flex-end;gap:0;padding:0;overflow:hidden;position:relative;border:1px solid #cdd3d2;border-radius:12px;background:#f6f6ef;color:#20394e;text-align:left;transition:border-color .15s,box-shadow .15s}
+#doctorDialog .doctor-option:hover{border-color:#9c7c3c;box-shadow:0 6px 20px #193d551c}
+#doctorDialog .doctor-option[aria-pressed='true']{border-color:#bd8c30;box-shadow:0 0 0 2px #e7c879}
+#doctorDialog .doctor-keyart{display:block;width:100%;height:clamp(190px,32dvh,320px);aspect-ratio:auto;object-fit:contain;object-position:center bottom;border-radius:0;padding:14px 8px 0;background:radial-gradient(ellipse at 50% 45%,#ffffff,#e2ebe8 72%,#d9e3e6)}
+#doctorDialog [data-doctor='heat'] .doctor-keyart{background:radial-gradient(ellipse at 50% 45%,#ffffff,#eee2d3 72%,#e4dbc9)}
+#doctorDialog [data-doctor='strategy'] .doctor-keyart{background:radial-gradient(ellipse at 50% 45%,#ffffff,#dfe9e7 72%,#d1dfe0)}
+#doctorDialog .doctor-option>span{display:block;align-self:stretch;padding:14px 15px 16px;border-top:2px solid #dec691;background:#fffdf7}
+#doctorDialog .doctor-option strong{display:block;white-space:nowrap;font-size:17px;letter-spacing:.025em}
+#doctorDialog .doctor-option b{display:block;margin-top:4px;font-size:12px;font-weight:600;color:#647780}
+#doctorDialog .doctor-option small{display:block;font-size:11px;margin-top:9px;padding:5px 6px;background:#f7edcf;border-radius:4px;line-height:1.45;color:#5d513a}
+#doctorDialog>small{display:block;font-size:10px;line-height:1.65;color:#687980}
+.patient-hud .patient-portrait{object-fit:contain;object-position:center bottom;height:100px;background:linear-gradient(#e5ecea,#f6f1e5);border-bottom:2px solid #d8b969}
+.dialog-window.has-character-art{width:min(970px,100%)}
+.has-character-art #dialogContent{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:22px;align-items:start}
+.consultation-portraits{display:grid;grid-template-columns:1fr 1fr;align-self:start;gap:8px;position:sticky;top:0;margin:0}
+.consultation-portraits figure{margin:0;min-width:0;background:linear-gradient(#edf2f0,#e3e7df);border:1px solid #cbd1c7;border-radius:9px;overflow:hidden}
+.consultation-portraits img{display:block;width:100%;height:165px;object-fit:contain;object-position:center bottom;padding:7px 3px 0}
+.consultation-portraits figcaption{text-align:center;padding:7px 2px;background:#fffaf0;border-top:2px solid #d8bc74;font-size:10px;font-weight:750;color:#304b5a}
+.consultation-copy{min-width:0}
+.has-character-art #shiftResultLine{grid-column:1/-1}
+@media(max-width:699px){
+ #doctorDialog.doctor-dialog{padding:14px 12px;width:96vw;max-height:94dvh}
+ #doctorDialog h2{font-size:18px}
+ #doctorDialog .doctor-dialog-head small{font-size:9px;letter-spacing:.09em}
+ #doctorDialog>p{font-size:11px;line-height:1.55;margin:8px 0}
+ #doctorDialog>.doctor-options{grid-template-columns:1fr;gap:9px;margin:11px 0}
+ #doctorDialog .doctor-option{display:grid;grid-template-columns:104px minmax(0,1fr);align-items:stretch}
+ #doctorDialog .doctor-keyart{height:123px;padding:7px 0 0}
+ #doctorDialog .doctor-option>span{border-top:0;border-left:2px solid #dec691;padding:10px 12px}
+ #doctorDialog .doctor-option strong{font-size:15px}
+ #doctorDialog .doctor-option b,#doctorDialog .doctor-option small{font-size:11px}
+ #doctorDialog .doctor-option small{margin-top:6px;padding:4px 6px}
+ #doctorDialog>small{font-size:9px}
+ .patient-hud .patient-portrait{height:38px}
+ .has-character-art #dialogContent{grid-template-columns:1fr;gap:10px}
+ .consultation-portraits{position:static;grid-template-columns:1fr 1fr;gap:8px}
+ .consultation-portraits figure{display:grid;grid-template-columns:55px minmax(0,1fr);align-items:center}
+ .consultation-portraits img{height:70px;padding:3px 0 0}
+ .consultation-portraits figcaption{border-top:0;background:transparent;border-left:1px solid #c6cdbf;font-size:9px;padding:5px 3px}
+}
+/* Override historical dark-dialog specificity and its 560px max-width. */
+#dialogModal .dialog-window.has-character-art{width:min(970px,100%);max-width:970px}
+#dialogModal .dialog-header h3{color:#203a52}
+#dialogModal .dialog-header{border-bottom-color:#d0c3a3}
+#dialogModal .dialog-score p,#dialogModal #dialogScoreText{color:#655132}
+#dialogModal .dialog-footer button{min-height:36px}
+.patient-hud .patient-portrait{object-fit:cover;object-position:65% 12%}
+@media(max-width:699px){
+ #dialogModal .has-character-art .dialog-header{display:block}
+ #dialogModal .has-character-art .dialog-header h3{font-size:15px;line-height:1.4;margin-top:5px}
+ #dialogModal .has-character-art .patient-eating-card{display:block}
+ #dialogModal .has-character-art .patient-eating-portrait{display:none}
+}

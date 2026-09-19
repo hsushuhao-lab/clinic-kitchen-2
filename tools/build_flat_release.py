@@ -3,8 +3,10 @@ from pathlib import Path
 from html.parser import HTMLParser
 from urllib.parse import urlsplit,unquote
 import hashlib,json,re,shutil,subprocess
+from build_character_portraits import build as build_characters
+from verify_character_assets import main as verify_characters
 ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'web-dist'
-CORE=('index.html','styles.css','r2-fixes.css','clinic-shift.css','src/main.js','src/scene2d.js','src/shift-rules.js','src/clinic-shift.js')
+CORE=('index.html','styles.css','r2-fixes.css','clinic-shift.css','character-art.css','src/main.js','src/scene2d.js','src/shift-rules.js','src/clinic-shift.js','src/character-art.js')
 class References(HTMLParser):
  def __init__(self):super().__init__();self.paths=[]
  def handle_starttag(self,tag,attrs):
@@ -12,6 +14,11 @@ class References(HTMLParser):
   if tag in ('script','img','source') and a.get('src'):self.paths.append(a['src'])
   if tag=='link' and a.get('href'):self.paths.append(a['href'])
 def main():
+ build_characters()
+ verify_characters()
+ subprocess.run(['node','--check','src/character-art.js'],cwd=ROOT,check=True)
+ audit=ROOT/'qa/current/characters';audit.mkdir(parents=True,exist_ok=True)
+ shutil.copyfile(ROOT/'assets/ui/character-manifest.json',audit/'asset-provenance.json')
  files=list(CORE)
  for directory in ('assets/cooking','assets/ingredients/mapo_tofu','assets/ui'):
   files.extend(p.relative_to(ROOT).as_posix() for p in (ROOT/directory).iterdir() if p.is_file() and p.suffix in ('.png','.webp'))
@@ -30,9 +37,9 @@ def main():
   if not target.is_relative_to(OUT.resolve()) or not target.is_file():raise ValueError('Unpackaged dependency: '+ref)
  refs=References();refs.feed((OUT/'index.html').read_text(encoding='utf-8'))
  for ref in refs.paths:check('index.html',ref)
- for rel in ('styles.css','r2-fixes.css','clinic-shift.css'):
+ for rel in ('styles.css','r2-fixes.css','clinic-shift.css','character-art.css'):
   for ref in re.findall(r'url\(([^)]+)\)',(OUT/rel).read_text(encoding='utf-8')):check(rel,ref)
- manifest={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'renderer':'canvas2d','release_status':'BUILD_VERIFIED_PENDING_DEPLOYMENT','art_status':'APPROVED_ART_2D_UI_AND_NATIVE_RESOLUTION_PROPS','files':[]}
+ manifest={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'renderer':'canvas2d','release_status':'BUILD_VERIFIED_PENDING_DEPLOYMENT','art_status':'APPROVED_NATIVE_2D_CHARACTER_ILLUSTRATIONS_AND_PROPS','files':[]}
  for rel in sorted(files):
   raw=(OUT/rel).read_bytes();manifest['files'].append({'path':rel,'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()})
  (OUT/'build-info.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

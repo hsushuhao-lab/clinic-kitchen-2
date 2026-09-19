@@ -68,10 +68,19 @@
   function label(text,x,y,size=11){ctx.font=`600 ${size}px system-ui`;ctx.textAlign='center';ctx.fillStyle='#20354a';ctx.fillText(text,x,y);}
   function tile(img,x,y,w,h){if(img?.complete&&img.naturalWidth){ctx.drawImage(img,x,y,w,h);}}
   function portrait(id,x,y,r){
-    ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.clip();
-    const im=images[id];if(im?.complete&&im.naturalWidth)ctx.drawImage(im,0,0,im.width,im.height,x-r,y-r,r*2,r*2);
-    else {ctx.fillStyle='#e2d5bf';ctx.fillRect(x-r,y-r,2*r,2*r);}
-    ctx.restore();ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.strokeStyle='#fffdf7';ctx.lineWidth=3;ctx.stroke();
+    // Native illustrated bust marker, NOT a synthetic full-body walking sprite.
+    const im=window.CKCharacterArt?.image(id);
+    if(im?.complete&&im.naturalWidth){
+      const h=r*3.5,w=h*im.naturalWidth/im.naturalHeight;
+      ctx.save();ctx.shadowColor='#18344736';ctx.shadowBlur=3;
+      ctx.drawImage(im,x-w/2,y+r-h,w,h);ctx.restore();
+    } else {
+      const face=images[id];
+      if(face?.complete&&face.naturalWidth){
+        ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.clip();
+        ctx.drawImage(face,x-r,y-r,r*2,r*2);ctx.restore();
+      }
+    }
   }
   function draw(now){
     ctx.clearRect(0,0,width,height);
@@ -112,7 +121,7 @@
     ctx.beginPath();ctx.ellipse(p[0],p[1]+size,Math.max(10,size*1.1),4,0,0,7);ctx.fillStyle='#193c5429';ctx.fill();
     const bob=!reduced.matches&&state.isMoving?Math.sin(now*.018)*1.3:0;
     portrait(state.doctorId,p[0],p[1]+bob,size);
-    ctx.strokeStyle='#e0ae4d';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p[0],p[1]+bob,size+3,0,7);ctx.stroke();
+    ctx.strokeStyle='#c89438';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p[0],p[1]+size+1,size*.8,3,0,0,7);ctx.stroke();
     if(state.carryingTray)tile(images.dish,p[0]+size,p[1],size*2,size*1.3);
     const desired=targets[state.missionStage];
     for(const {button,s} of buttons){button.classList.toggle('is-objective',s.id===desired);button.classList.toggle('is-near',s.id===state.interactiveTarget?.id);}
