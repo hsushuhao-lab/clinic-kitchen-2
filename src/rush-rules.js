@@ -6,7 +6,7 @@
     { name: '第二單・加辣', target: 80, pressure: 1.15, spicy: '重辣', scallion: true, rice: '正常飯' },
     { name: '最後一單・衝刺', target: 70, pressure: 1.3, spicy: '正常', scallion: true, rice: '半碗飯' }
   ]);
-  const cursorAt = seconds => (1 - Math.cos(seconds * Math.PI * 2 / 1.6)) / 2;
+  const cursorAt = seconds => (1 - Math.cos(seconds * Math.PI * 2 / 2.4)) / 2;
   const gradeAt = position => Math.abs(position - .5) <= .10 ? 'perfect' : Math.abs(position - .5) <= .25 ? 'good' : 'early';
   class Rush {
     constructor() {

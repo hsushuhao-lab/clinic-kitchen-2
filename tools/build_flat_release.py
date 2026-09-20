@@ -9,8 +9,9 @@ from build_workspace_art import build as build_workspace
 from verify_workspace_art import main as verify_workspace
 from build_chibi_world import build as build_chibi
 from verify_chibi_world import main as verify_chibi
+from build_clinic_assets import build as build_clinic
 ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'web-dist'
-CORE=('index.html','styles.css','r2-fixes.css','clinic-shift.css','character-art.css','workspace-art.css','chibi-world.css','rush.css','src/main.js','src/scene2d.js','src/shift-rules.js','src/clinic-shift.js','src/character-art.js','src/workspace-art.js','src/rush-rules.js','src/rush.js','src/adaptive-audio.js')
+CORE=('index.html','styles.css','r2-fixes.css','clinic-shift.css','character-art.css','workspace-art.css','chibi-world.css','rush.css','clinic-flow.css','src/main.js','src/scene2d.js','src/shift-rules.js','src/clinic-shift.js','src/character-art.js','src/workspace-art.js','src/rush-rules.js','src/rush.js','src/adaptive-audio.js','src/clinic-rules.js','src/clinic-flow.js')
 class References(HTMLParser):
  def __init__(self):super().__init__();self.paths=[]
  def handle_starttag(self,tag,attrs):
@@ -18,17 +19,17 @@ class References(HTMLParser):
   if tag in ('script','img','source') and a.get('src'):self.paths.append(a['src'])
   if tag=='link' and a.get('href'):self.paths.append(a['href'])
 def main():
- build_characters();verify_characters();build_workspace();verify_workspace();build_chibi();verify_chibi()
- for script in ('src/character-art.js','src/workspace-art.js','src/scene2d.js','src/rush-rules.js','src/rush.js','src/adaptive-audio.js'):
-  subprocess.run(['node','--check',script],cwd=ROOT,check=True)
- subprocess.run(['node','--test','tests/rush_rules.test.cjs'],cwd=ROOT,check=True)
- for folder,manifest in [('characters','assets/ui/character-manifest.json'),('workspace','assets/workspace/manifest.json'),('chibi','assets/chibi/manifest.json')]:
+ build_characters();verify_characters();build_workspace();verify_workspace();build_chibi();verify_chibi();build_clinic()
+ for script in CORE:
+  if script.endswith('.js'):subprocess.run(['node','--check',script],cwd=ROOT,check=True)
+ subprocess.run(['node','--test','tests/shift_rules.test.cjs','tests/rush_rules.test.cjs','tests/clinic_rules.test.cjs'],cwd=ROOT,check=True)
+ for folder,manifest in [('characters','assets/ui/character-manifest.json'),('workspace','assets/workspace/manifest.json'),('chibi','assets/chibi/manifest.json'),('clinic','assets/clinic/manifest.json')]:
   audit=ROOT/'qa/current'/folder;audit.mkdir(parents=True,exist_ok=True)
   shutil.copyfile(ROOT/manifest,audit/'asset-provenance.json')
  files=list(CORE)
  for directory in ('assets/cooking','assets/ingredients/mapo_tofu','assets/ui'):
   files.extend(p.relative_to(ROOT).as_posix() for p in (ROOT/directory).iterdir() if p.is_file() and p.suffix in ('.png','.webp'))
- for directory in ('workspace','chibi'):
+ for directory in ('workspace','chibi','clinic'):
   files.extend(e['path'] for e in json.loads((ROOT/f'assets/{directory}/manifest.json').read_text())['assets'])
  assert len(files)==len(set(files))
  if OUT.is_symlink():raise ValueError('Output must not be a symlink')
@@ -48,10 +49,10 @@ def main():
  for rel in CORE:
   if rel.endswith('.css'):
    for ref in re.findall(r'url\(([^)]+)\)',(OUT/rel).read_text(encoding='utf-8')):check(rel,ref)
- manifest={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'renderer':'canvas2d','release_status':'BUILD_VERIFIED_PENDING_DEPLOYMENT','art_status':'CHIBI_WORLD_R2_FULL_BODY_PLAYABLE','gameplay_version':'R3_NIGHT_SHIFT_PRECISION_ADAPTIVE_MUSIC','files':[]}
+ manifest={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'renderer':'canvas2d','release_status':'BUILD_VERIFIED_PENDING_DEPLOYMENT','art_status':'CHIBI_WORLD_R2_FULL_BODY_PLAYABLE','gameplay_version':'R4_SERIAL_CLINIC_SINGLE_WORKSPACE','files':[]}
  for rel in sorted(files):
   raw=(OUT/rel).read_bytes();manifest['files'].append({'path':rel,'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()})
  (OUT/'build-info.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
  assert {p.relative_to(OUT).as_posix() for p in OUT.rglob('*') if p.is_file()}==set(files)|{'build-info.json'}
- print('Runtime allowlist PASS:',len(files),'files; Q full-body atlases present; original boards, tests, private photos excluded')
+ print('Runtime allowlist PASS:',len(files),'files; serial clinic assets included; original boards, tests, private photos excluded')
 if __name__=='__main__':main()

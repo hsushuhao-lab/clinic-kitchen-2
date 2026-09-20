@@ -8,23 +8,23 @@ test('ready does not advance the bonus clock; modes lock when active', () => {
   assert.equal(r.setMode('practice'), false); assert.equal(r.ticket.target, 90);
 });
 test('precision boundaries and visible cursor agree', () => {
-  assert.equal(gradeAt(cursorAt(.4)), 'perfect'); assert.equal(gradeAt(0), 'early');
+  assert.equal(gradeAt(cursorAt(.6)), 'perfect'); assert.equal(gradeAt(0), 'early');
   assert.equal(gradeAt(.25), 'good'); assert.equal(gradeAt(.35), 'good'); assert.equal(gradeAt(.5), 'perfect');
 });
 test('duplicate actions and click spam cannot farm precision points', () => {
-  const r = new Rush(); r.begin(); r.tick(.4); assert.equal(r.judge('cut:tofu:1').grade, 'perfect');
+  const r = new Rush(); r.begin(); r.tick(.6); assert.equal(r.judge('cut:tofu:1').grade, 'perfect');
   const points = r.technique; assert.equal(r.judge('cut:tofu:1'), null); assert.equal(r.technique, points);
   assert.equal(r.judge('cut:tofu:2').earned, 0); assert.equal(r.combo, 0);
 });
 test('legitimate consecutive precision creates a capped multiplier', () => {
-  const r = new Rush(); r.begin(); r.tick(.4);
+  const r = new Rush(); r.begin(); r.tick(.6);
   let result;
-  for (let i=0;i<12;i++) { result=r.judge('cut:'+i); r.tick(1.6); }
+  for (let i=0;i<12;i++) { result=r.judge('cut:'+i); r.tick(2.4); }
   assert.equal(result.multiplier, 2); assert.equal(r.perfect, 12); assert.equal(r.bestCombo, 12);
 });
 test('miss and incorrect preference end combo without losing accrued points', () => {
-  const r = new Rush(); r.begin(); r.tick(.4); r.judge('a'); const points = r.technique;
-  r.tick(1.6); assert.equal(r.judge('b', false).grade, 'wrong'); assert.equal(r.combo, 0); assert.equal(r.technique, points);
+  const r = new Rush(); r.begin(); r.tick(.6); r.judge('a'); const points = r.technique;
+  r.tick(2.4); assert.equal(r.judge('b', false).grade, 'wrong'); assert.equal(r.combo, 0); assert.equal(r.technique, points);
 });
 test('late delivery loses only speed bonus, not the order', () => {
   const r = new Rush(); r.setMode('rush'); r.begin(); r.tick(100); assert.equal(r.status, 'active');

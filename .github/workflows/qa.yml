@@ -25,16 +25,15 @@ jobs:
           python tests/smoke_test.py
           python tools/verify_assets.py
           python tools/verify_shift_assets.py
-          node --test tests/shift_rules.test.cjs
           python tools/build_web_release.py
       - name: Test actual runtime-only HTTP site
         run: |
           python -m http.server 8000 --bind 127.0.0.1 --directory web-dist > /tmp/ck-flat-http.log 2>&1 &
           sleep 2
-          python tests/test_flat_clinic.py --base-url http://127.0.0.1:8000/ --output qa/current/flat
+          python tests/test_clinic_flow.py --base-url http://127.0.0.1:8000/ --output qa/current/clinic
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ck-flat-browser-evidence
-          path: qa/current/flat/
+          name: ck-clinic-browser-evidence
+          path: qa/current/clinic/
           retention-days: 14

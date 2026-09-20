@@ -1,0 +1,10 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict');
+const {patients,stations,evaluate}=require('../src/clinic-rules.js');
+const {cursorAt}=require('../src/rush-rules.js');
+const meal={hasDouban:true,hasPepper:false,hasScallion:false,ricePortion:'半碗飯',isSimmered:true,isBurnt:false};
+test('patient, computer, fridge, prep, wok, rice run left to right',()=>{assert.deepEqual(stations.map(s=>s.id),['patient','desk','fridge','prep','wok','rice']);for(let i=1;i<stations.length;i++)assert.ok(stations[i].x>stations[i-1].x);});
+test('six distinct clinic visitors have feasible fixed preferences',()=>{assert.equal(new Set(patients.map(p=>p.id)).size,6);for(const p of patients){assert.ok(['正常','重辣'].includes(p.spicy));assert.equal(typeof p.scallion,'boolean');assert.ok(['半碗飯','正常飯'].includes(p.rice));}});
+test('all requested ingredients and rice yield 100; not a hardcoded score',()=>{assert.equal(evaluate(patients[0],meal).quality,100);assert.equal(evaluate(patients[0],{...meal,hasScallion:true}).quality,85);assert.equal(evaluate(patients[0],{...meal,ricePortion:'正常飯'}).quality,95);assert.equal(evaluate(patients[0],{...meal,hasPepper:true}).quality,90);assert.equal(evaluate(patients[0],{...meal,isBurnt:true}).quality,80);});
+test('result preserves expected/actual cells and original lower bound',()=>{const r=evaluate(patients[0],{...meal,hasScallion:true,hasPepper:true,ricePortion:'未盛飯',isBurnt:true});assert.equal(r.quality,50);assert.equal(r.checks.length,4);assert.ok(r.checks.every(c=>!c.ok));});
+test('precision cycle is 2.4s (33% lower speed) without moving hit zones',()=>{assert.ok(Math.abs(cursorAt(.6)-.5)<1e-8);assert.equal(cursorAt(0),0);assert.equal(cursorAt(1.2),1);assert.equal(cursorAt(2.4),0);});
