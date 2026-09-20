@@ -12,6 +12,7 @@ from verify_chibi_world import main as verify_chibi
 from build_clinic_assets import build as build_clinic
 from build_service_art import build as build_service
 from verify_service_art import main as verify_service
+from build_r6_art import main as build_r6
 ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'web-dist'
 CORE=('index.html','styles.css','r2-fixes.css','clinic-shift.css','character-art.css','workspace-art.css','chibi-world.css','rush.css','clinic-flow.css','service-polish.css','src/main.js','src/scene2d.js','src/shift-rules.js','src/clinic-shift.js','src/character-art.js','src/workspace-art.js','src/rush-rules.js','src/rush.js','src/adaptive-audio.js','src/clinic-rules.js','src/clinic-flow.js','src/service-polish.js')
 class References(HTMLParser):
@@ -21,10 +22,10 @@ class References(HTMLParser):
   if tag in ('script','img','source') and a.get('src'):self.paths.append(a['src'])
   if tag=='link' and a.get('href'):self.paths.append(a['href'])
 def main():
- build_characters();verify_characters();build_workspace();verify_workspace();build_chibi();verify_chibi();build_clinic();build_service();verify_service()
+ build_characters();verify_characters();build_workspace();verify_workspace();build_chibi();verify_chibi();build_clinic();build_service();verify_service();build_r6()
  for script in CORE:
   if script.endswith('.js'):subprocess.run(['node','--check',script],cwd=ROOT,check=True)
- subprocess.run(['node','--test','tests/shift_rules.test.cjs','tests/rush_rules.test.cjs','tests/clinic_rules.test.cjs','tests/service_rules.test.cjs'],cwd=ROOT,check=True)
+ subprocess.run(['node','--test','tests/shift_rules.test.cjs','tests/rush_rules.test.cjs','tests/clinic_rules.test.cjs','tests/service_rules.test.cjs','tests/r6_rules.test.cjs'],cwd=ROOT,check=True)
  for folder,manifest in [('characters','assets/ui/character-manifest.json'),('workspace','assets/workspace/manifest.json'),('chibi','assets/chibi/manifest.json'),('clinic','assets/clinic/manifest.json'),('service','assets/service/manifest.json')]:
   audit=ROOT/'qa/current'/folder;audit.mkdir(parents=True,exist_ok=True)
   shutil.copyfile(ROOT/manifest,audit/'asset-provenance.json')
@@ -33,6 +34,17 @@ def main():
   files.extend(p.relative_to(ROOT).as_posix() for p in (ROOT/directory).iterdir() if p.is_file() and p.suffix in ('.png','.webp'))
  for directory in ('workspace','chibi','clinic','service'):
   files.extend(e['path'] for e in json.loads((ROOT/f'assets/{directory}/manifest.json').read_text())['assets'])
+ for p in (ROOT/'assets/service').iterdir():
+  if p.is_file() and p.suffix == '.webp':
+   rel = p.relative_to(ROOT).as_posix()
+   if rel not in files:
+    files.append(rel)
+ if (ROOT/'assets/finale').exists():
+  for p in (ROOT/'assets/finale').iterdir():
+   if p.is_file() and p.suffix in ('.png', '.webp'):
+    rel = p.relative_to(ROOT).as_posix()
+    if rel not in files:
+     files.append(rel)
  assert len(files)==len(set(files))
  if OUT.is_symlink():raise ValueError('Output must not be a symlink')
  if OUT.exists():shutil.rmtree(OUT)

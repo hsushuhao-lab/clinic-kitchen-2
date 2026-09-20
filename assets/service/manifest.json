@@ -1,0 +1,1038 @@
+{
+  "version": "R5_SERVICE_POLISH",
+  "assets": [
+    {
+      "path": "assets/service/office.webp",
+      "size": [
+        346,
+        308
+      ],
+      "bytes": 47152,
+      "sha256": "17026a4df69fc7d35f201112f07a8372f9d2b33a5dfcbeafb9d7b19079ad3105",
+      "source": "assets/art_direction/approved/patient_npcs.png",
+      "source_sha256": "f30774a30821d84d3d95d45d39b4a11830a7ef1d8814b29c47ee507bb2ccad67",
+      "kind": "native original upper-body silhouette; no face/body substitution",
+      "crop": [
+        2,
+        127,
+        348,
+        435
+      ],
+      "polygon": [
+        [
+          4,
+          426
+        ],
+        [
+          9,
+          365
+        ],
+        [
+          29,
+          309
+        ],
+        [
+          53,
+          277
+        ],
+        [
+          93,
+          260
+        ],
+        [
+          125,
+          258
+        ],
+        [
+          150,
+          243
+        ],
+        [
+          155,
+          229
+        ],
+        [
+          155,
+          210
+        ],
+        [
+          160,
+          189
+        ],
+        [
+          159,
+          170
+        ],
+        [
+          171,
+          150
+        ],
+        [
+          190,
+          141
+        ],
+        [
+          213,
+          134
+        ],
+        [
+          224,
+          129
+        ],
+        [
+          248,
+          132
+        ],
+        [
+          269,
+          143
+        ],
+        [
+          286,
+          153
+        ],
+        [
+          295,
+          148
+        ],
+        [
+          306,
+          155
+        ],
+        [
+          318,
+          180
+        ],
+        [
+          322,
+          202
+        ],
+        [
+          317,
+          221
+        ],
+        [
+          342,
+          272
+        ],
+        [
+          345,
+          384
+        ],
+        [
+          309,
+          389
+        ],
+        [
+          277,
+          402
+        ],
+        [
+          272,
+          432
+        ],
+        [
+          10,
+          432
+        ]
+      ]
+    },
+    {
+      "path": "assets/service/patient-office.webp",
+      "size": [
+        448,
+        144
+      ],
+      "bytes": 24562,
+      "sha256": "86a607d4a56a2ac6bfeb4810b55882986cbb130e0e79c4d129f5248af7910a7b",
+      "source": "assets/art_direction/approved/patient_npcs.png",
+      "source_sha256": "f30774a30821d84d3d95d45d39b4a11830a7ef1d8814b29c47ee507bb2ccad67",
+      "kind": "four seated micro-motion frames using own complete torso",
+      "crop": [
+        2,
+        127,
+        348,
+        435
+      ]
+    },
+    {
+      "path": "assets/service/student.webp",
+      "size": [
+        301,
+        317
+      ],
+      "bytes": 42300,
+      "sha256": "7c5c2f33e109b52a5e29bb6df65cdf3c1051436b64a81377d0978d8f88ed51fe",
+      "source": "assets/art_direction/approved/patient_npcs.png",
+      "source_sha256": "f30774a30821d84d3d95d45d39b4a11830a7ef1d8814b29c47ee507bb2ccad67",
+      "kind": "native original upper-body silhouette; no face/body substitution",
+      "crop": [
+        508,
+        118,
+        809,
+        435
+      ],
+      "polygon": [
+        [
+          510,
+          432
+        ],
+        [
+          510,
+          339
+        ],
+        [
+          519,
+          306
+        ],
+        [
+          546,
+          283
+        ],
+        [
+          583,
+          266
+        ],
+        [
+          618,
+          260
+        ],
+        [
+          629,
+          250
+        ],
+        [
+          625,
+          239
+        ],
+        [
+          618,
+          231
+        ],
+        [
+          611,
+          214
+        ],
+        [
+          613,
+          195
+        ],
+        [
+          614,
+          176
+        ],
+        [
+          623,
+          156
+        ],
+        [
+          638,
+          140
+        ],
+        [
+          657,
+          132
+        ],
+        [
+          667,
+          123
+        ],
+        [
+          684,
+          129
+        ],
+        [
+          696,
+          120
+        ],
+        [
+          711,
+          130
+        ],
+        [
+          732,
+          136
+        ],
+        [
+          748,
+          155
+        ],
+        [
+          756,
+          183
+        ],
+        [
+          751,
+          205
+        ],
+        [
+          739,
+          225
+        ],
+        [
+          730,
+          245
+        ],
+        [
+          732,
+          259
+        ],
+        [
+          754,
+          273
+        ],
+        [
+          780,
+          291
+        ],
+        [
+          798,
+          322
+        ],
+        [
+          806,
+          364
+        ],
+        [
+          782,
+          399
+        ],
+        [
+          782,
+          432
+        ]
+      ]
+    },
+    {
+      "path": "assets/service/patient-student.webp",
+      "size": [
+        448,
+        144
+      ],
+      "bytes": 26204,
+      "sha256": "4b1cd8c88f41508d58d793e559efbd66325b543676f0ff9d46b628a1bcc4c448",
+      "source": "assets/art_direction/approved/patient_npcs.png",
+      "source_sha256": "f30774a30821d84d3d95d45d39b4a11830a7ef1d8814b29c47ee507bb2ccad67",
+      "kind": "four seated micro-motion frames using own complete torso",
+      "crop": [
+        508,
+        118,
+        809,
+        435
+      ]
+    },
+    {
+      "path": "assets/service/driver.webp",
+      "size": [
+        322,
+        292
+      ],
+      "bytes": 44706,
+      "sha256": "96b554d19728be34254d4a8564807d83a1270c7a47e17dbc3c5e18e9450eb446",
+      "source": "assets/art_direction/approved/patient_npcs.png",
+      "source_sha256": "f30774a30821d84d3d95d45d39b4a11830a7ef1d8814b29c47ee507bb2ccad67",
+      "kind": "native original upper-body silhouette; no face/body substitution",
+      "crop": [
+        987,
+        143,
+        1309,
+        435
+      ],
+      "polygon": [
+        [
+          989,
+          432
+        ],
+        [
+          992,
+          345
+        ],
+        [
+          1008,
+          329
+        ],
+        [
+          1072,
+          304
+        ],
+        [
+          1091,
+          286
+        ],
+        [
+          1094,
+          266
+        ],
+        [
+          1089,
+          253
+        ],
+        [
+          1097,
+          230
+        ],
+        [
+          1109,
+          210
+        ],
+        [
+          1109,
+          193
+        ],
+        [
+          1121,
+          177
+        ],
+        [
+          1142,
+          157
+        ],
+        [
+          1173,
+          145
+        ],
+        [
+          1201,
+          147
+        ],
+        [
+          1226,
+          158
+        ],
+        [
+          1236,
+          184
+        ],
+        [
+          1250,
+          201
+        ],
+        [
+          1258,
+          220
+        ],
+        [
+          1245,
+          231
+        ],
+        [
+          1227,
+          224
+        ],
+        [
+          1226,
+          253
+        ],
+        [
+          1215,
+          282
+        ],
+        [
+          1224,
+          295
+        ],
+        [
+          1259,
+          302
+        ],
+        [
+          1290,
+          320
+        ],
+        [
+          1305,
+          347
+        ],
+        [
+          1306,
+          402
+        ],
+        [
+          1275,
+          404
+        ],
+        [
+          1272,
+          432
+        ]
+      ]
+    },
+    {
+      "path": "assets/service/patient-driver.webp",
+      "size": [
+        448,
+        144
+      ],
+      "bytes": 23304,
+      "sha256": "e11743d406a5684a0bce1e6398b198484cd7e47ff1324135cdd7ab10cb4e4c7e",
+      "source": "assets/art_direction/approved/patient_npcs.png",
+      "source_sha256": "f30774a30821d84d3d95d45d39b4a11830a7ef1d8814b29c47ee507bb2ccad67",
+      "kind": "four seated micro-motion frames using own complete torso",
+      "crop": [
+        987,
+        143,
+        1309,
+        435
+      ]
+    },
+    {
+      "path": "assets/service/auntie.webp",
+      "size": [
+        330,
+        307
+      ],
+      "bytes": 53944,
+      "sha256": "0a3687e933b5f035791c12520d336f8306aa25615a72b964e20621793fb1ffdd",
+      "source": "assets/art_direction/approved/patient_npcs.png",
+      "source_sha256": "f30774a30821d84d3d95d45d39b4a11830a7ef1d8814b29c47ee507bb2ccad67",
+      "kind": "native original upper-body silhouette; no face/body substitution",
+      "crop": [
+        1,
+        546,
+        331,
+        853
+      ],
+      "polygon": [
+        [
+          9,
+          849
+        ],
+        [
+          3,
+          811
+        ],
+        [
+          6,
+          768
+        ],
+        [
+          26,
+          730
+        ],
+        [
+          46,
+          702
+        ],
+        [
+          80,
+          680
+        ],
+        [
+          126,
+          674
+        ],
+        [
+          155,
+          673
+        ],
+        [
+          172,
+          659
+        ],
+        [
+          164,
+          645
+        ],
+        [
+          162,
+          623
+        ],
+        [
+          169,
+          604
+        ],
+        [
+          183,
+          589
+        ],
+        [
+          189,
+          573
+        ],
+        [
+          211,
+          562
+        ],
+        [
+          230,
+          557
+        ],
+        [
+          247,
+          548
+        ],
+        [
+          272,
+          551
+        ],
+        [
+          285,
+          556
+        ],
+        [
+          296,
+          568
+        ],
+        [
+          312,
+          578
+        ],
+        [
+          319,
+          602
+        ],
+        [
+          324,
+          624
+        ],
+        [
+          327,
+          649
+        ],
+        [
+          315,
+          669
+        ],
+        [
+          298,
+          687
+        ],
+        [
+          300,
+          707
+        ],
+        [
+          319,
+          720
+        ],
+        [
+          327,
+          743
+        ],
+        [
+          328,
+          768
+        ],
+        [
+          327,
+          812
+        ],
+        [
+          306,
+          826
+        ],
+        [
+          302,
+          850
+        ]
+      ]
+    },
+    {
+      "path": "assets/service/patient-auntie.webp",
+      "size": [
+        448,
+        144
+      ],
+      "bytes": 27884,
+      "sha256": "b38d66ad427f99648d5e2d49579f296bfef25af8081e239681a73644dfa40745",
+      "source": "assets/art_direction/approved/patient_npcs.png",
+      "source_sha256": "f30774a30821d84d3d95d45d39b4a11830a7ef1d8814b29c47ee507bb2ccad67",
+      "kind": "four seated micro-motion frames using own complete torso",
+      "crop": [
+        1,
+        546,
+        331,
+        853
+      ]
+    },
+    {
+      "path": "assets/service/quiet.webp",
+      "size": [
+        292,
+        292
+      ],
+      "bytes": 41080,
+      "sha256": "ad0f7eecba1eb0b422eb5188309abd665528f23e4e7628516e22cd08f19e3456",
+      "source": "assets/art_direction/approved/patient_npcs.png",
+      "source_sha256": "f30774a30821d84d3d95d45d39b4a11830a7ef1d8814b29c47ee507bb2ccad67",
+      "kind": "native original upper-body silhouette; no face/body substitution",
+      "crop": [
+        536,
+        561,
+        828,
+        853
+      ],
+      "polygon": [
+        [
+          538,
+          850
+        ],
+        [
+          539,
+          800
+        ],
+        [
+          552,
+          751
+        ],
+        [
+          568,
+          721
+        ],
+        [
+          587,
+          701
+        ],
+        [
+          613,
+          684
+        ],
+        [
+          622,
+          653
+        ],
+        [
+          630,
+          626
+        ],
+        [
+          641,
+          600
+        ],
+        [
+          655,
+          581
+        ],
+        [
+          665,
+          573
+        ],
+        [
+          677,
+          564
+        ],
+        [
+          700,
+          563
+        ],
+        [
+          730,
+          573
+        ],
+        [
+          752,
+          596
+        ],
+        [
+          765,
+          632
+        ],
+        [
+          773,
+          667
+        ],
+        [
+          776,
+          707
+        ],
+        [
+          803,
+          733
+        ],
+        [
+          819,
+          768
+        ],
+        [
+          825,
+          808
+        ],
+        [
+          783,
+          827
+        ],
+        [
+          780,
+          850
+        ]
+      ]
+    },
+    {
+      "path": "assets/service/patient-quiet.webp",
+      "size": [
+        448,
+        144
+      ],
+      "bytes": 25140,
+      "sha256": "146f82b834cc615c1449c25187b5f017fa4a1d8daef5233ca8e0a035b669130c",
+      "source": "assets/art_direction/approved/patient_npcs.png",
+      "source_sha256": "f30774a30821d84d3d95d45d39b4a11830a7ef1d8814b29c47ee507bb2ccad67",
+      "kind": "four seated micro-motion frames using own complete torso",
+      "crop": [
+        536,
+        561,
+        828,
+        853
+      ]
+    },
+    {
+      "path": "assets/service/repeat.webp",
+      "size": [
+        283,
+        290
+      ],
+      "bytes": 46704,
+      "sha256": "5f0810698a5d2031befa089d8563380a8bfc170b021b2e5936f2dc5529402d33",
+      "source": "assets/art_direction/approved/patient_npcs.png",
+      "source_sha256": "f30774a30821d84d3d95d45d39b4a11830a7ef1d8814b29c47ee507bb2ccad67",
+      "kind": "native original upper-body silhouette; no face/body substitution",
+      "crop": [
+        992,
+        563,
+        1275,
+        853
+      ],
+      "polygon": [
+        [
+          994,
+          850
+        ],
+        [
+          1005,
+          797
+        ],
+        [
+          1016,
+          752
+        ],
+        [
+          1037,
+          716
+        ],
+        [
+          1067,
+          697
+        ],
+        [
+          1089,
+          691
+        ],
+        [
+          1111,
+          676
+        ],
+        [
+          1108,
+          658
+        ],
+        [
+          1108,
+          643
+        ],
+        [
+          1116,
+          626
+        ],
+        [
+          1121,
+          603
+        ],
+        [
+          1131,
+          587
+        ],
+        [
+          1150,
+          575
+        ],
+        [
+          1162,
+          571
+        ],
+        [
+          1170,
+          566
+        ],
+        [
+          1186,
+          565
+        ],
+        [
+          1206,
+          578
+        ],
+        [
+          1221,
+          593
+        ],
+        [
+          1228,
+          615
+        ],
+        [
+          1230,
+          640
+        ],
+        [
+          1224,
+          664
+        ],
+        [
+          1210,
+          686
+        ],
+        [
+          1232,
+          698
+        ],
+        [
+          1254,
+          711
+        ],
+        [
+          1265,
+          736
+        ],
+        [
+          1272,
+          774
+        ],
+        [
+          1263,
+          812
+        ],
+        [
+          1261,
+          850
+        ]
+      ]
+    },
+    {
+      "path": "assets/service/patient-repeat.webp",
+      "size": [
+        448,
+        144
+      ],
+      "bytes": 28528,
+      "sha256": "41e1fcac0a48aed32d4235820e96bec91094236111840555252f722b4017b73e",
+      "source": "assets/art_direction/approved/patient_npcs.png",
+      "source_sha256": "f30774a30821d84d3d95d45d39b4a11830a7ef1d8814b29c47ee507bb2ccad67",
+      "kind": "four seated micro-motion frames using own complete torso",
+      "crop": [
+        992,
+        563,
+        1275,
+        853
+      ]
+    },
+    {
+      "path": "assets/service/spicy-normal.webp",
+      "size": [
+        144,
+        120
+      ],
+      "bytes": 3856,
+      "sha256": "55b0a8588d4fc8037baa1b3e343cfcd971fd354dfd4c669e72c22eb8715bd0b3",
+      "source": null,
+      "source_sha256": null,
+      "kind": "illustrated order icon"
+    },
+    {
+      "path": "assets/service/spicy-heavy.webp",
+      "size": [
+        144,
+        120
+      ],
+      "bytes": 5404,
+      "sha256": "74218c829bff4a606ccb169c1029e0ec461bc94204915825ea4b2360d69fb04b",
+      "source": null,
+      "source_sha256": null,
+      "kind": "illustrated order icon"
+    },
+    {
+      "path": "assets/service/scallion-yes.webp",
+      "size": [
+        144,
+        120
+      ],
+      "bytes": 7214,
+      "sha256": "0c1eac3123742fe9817b423bd70acfc6e4306d2185d4cd71823573cfd3c31bd3",
+      "source": "assets/workspace/scallion-cut.webp",
+      "source_sha256": "1b9f1f378af859eff9f1e5669232ccf293aa5d50630620626a246201e9da5ad9",
+      "kind": "illustrated order icon"
+    },
+    {
+      "path": "assets/service/scallion-no.webp",
+      "size": [
+        144,
+        120
+      ],
+      "bytes": 8382,
+      "sha256": "34a34b8bcf5ab4d5d4cfd8cf32eac5aeca7cdd58f4c21b035b2a05a2de47b769",
+      "source": "assets/workspace/scallion-cut.webp",
+      "source_sha256": "1b9f1f378af859eff9f1e5669232ccf293aa5d50630620626a246201e9da5ad9",
+      "kind": "illustrated order icon"
+    },
+    {
+      "path": "assets/service/rice-full.webp",
+      "size": [
+        144,
+        120
+      ],
+      "bytes": 6682,
+      "sha256": "f2d2ded6a5e4f97772a965588139183c0de33d61e480ff90a2dbdd406f49cfb0",
+      "source": null,
+      "source_sha256": null,
+      "kind": "illustrated order icon"
+    },
+    {
+      "path": "assets/service/rice-half.webp",
+      "size": [
+        144,
+        120
+      ],
+      "bytes": 5944,
+      "sha256": "3d9f01bdc465309f8c991baafd059e7f343213fc8321545c196365b1b46d85ee",
+      "source": null,
+      "source_sha256": null,
+      "kind": "illustrated order icon"
+    },
+    {
+      "path": "assets/service/bonk-speed.webp",
+      "size": [
+        448,
+        144
+      ],
+      "bytes": 33884,
+      "sha256": "f65cd6e83e309d200ffe4651e00cc4d6d8e7f9d603e2688b95bc6c42fbbee1b0",
+      "source": "assets/chibi/speed.webp",
+      "source_sha256": "efbb27d76d520bb07363a957a9f48a36cbe1e4e934edc02ba194eef86a97fe53",
+      "kind": "four-frame comic impact/dazed/rub/recovery; no gore; not a new face"
+    },
+    {
+      "path": "assets/service/bonk-heat.webp",
+      "size": [
+        448,
+        144
+      ],
+      "bytes": 33214,
+      "sha256": "0e3a508dc57d2fd87c4af48ab1b10927ed4a48e21c160f64502aea3bec0edb8e",
+      "source": "assets/chibi/heat.webp",
+      "source_sha256": "513178642bdcb249680e9b8b1e3f02691a4d09e018160f4212e85048fae3980c",
+      "kind": "four-frame comic impact/dazed/rub/recovery; no gore; not a new face"
+    },
+    {
+      "path": "assets/service/bonk-strategy.webp",
+      "size": [
+        448,
+        144
+      ],
+      "bytes": 33284,
+      "sha256": "d8cae10f09192e86807d662861d34cd9a2845792f30f2d703c47dee46b922451",
+      "source": "assets/chibi/strategy.webp",
+      "source_sha256": "df0726b64e5ebcdcdf26ea12d88b6d3143901ce8470c56bbb74b40de8276b57a",
+      "kind": "four-frame comic impact/dazed/rub/recovery; no gore; not a new face"
+    }
+  ],
+  "notes": "New concept boards guide expression/UI; original approved NPC pixels and existing doctor atlases are production sources. No extra tofu or new recipe rules."
+}

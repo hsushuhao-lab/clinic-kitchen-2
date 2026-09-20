@@ -1,12 +1,13 @@
-/* R5: illustrated requests, E-key station actions, cumulative heat penalties,
-   and one non-graphic comic reaction per mismatched order. No second scheduler. */
+/* R6: illustrated requests with miso soup, keyboard shortcuts (1-6, Q, E, F, Space),
+   batch wok actions, flame cycle, carrying tray delivery, and dual feast/table-flip finales. */
 (function(){
  'use strict';
  const $=id=>document.getElementById(id),root='assets/service/';
  const icons=p=>[
   [p.spicy==='重辣'?'spicy-heavy':'spicy-normal',p.spicy==='重辣'?'重辣':'正常辣'],
   [p.scallion?'scallion-yes':'scallion-no',p.scallion?'要蔥':'不要蔥'],
-  [p.rice==='半碗飯'?'rice-half':'rice-full',p.rice==='半碗飯'?'半碗飯':'正常飯']
+  [p.rice==='半碗飯'?'portion_half':'portion_full',p.rice==='半碗飯'?'半碗飯':'正常飯'],
+  [p.miso?'miso_yes':'miso_no',p.miso?'要附湯':'不要湯']
  ];
  function iconRow(order){
   const row=document.createElement('div');row.className='request-icons';row.setAttribute('aria-label','病人需求圖示');
@@ -17,7 +18,7 @@
  }
  const wishes=document.createElement('div');wishes.id='requestIcons';
  $('clinicWish').after(wishes);
- const shortcut=document.createElement('p');shortcut.id='stationKeyHelp';shortcut.textContent='1–6 選材料 · E 切配／舀取 · F 開關火';
+ const shortcut=document.createElement('p');shortcut.id='stationKeyHelp';shortcut.textContent='1–6 選材料 · Q 切換份量 (0/半/1) · E 切配備妥 · F 開關火';
  $('clinicWorktabs').after(shortcut);
  document.querySelectorAll('.ingredient-tray button').forEach((b,i)=>{
   const key=document.createElement('kbd');key.textContent=String(i+1);b.prepend(key);
@@ -29,11 +30,13 @@
  $('clinicResult').querySelector('header').after(resultArt);
  let identity='',request='',lastHeat='',reactionState=null,lastResultNumber=null;
  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+
  function reaction(){
   if(!reactionState)return null;
   const elapsed=(performance.now()-reactionState.start)/1000;
   return {...reactionState,frame:reduced.matches?2:Math.min(3,Math.floor(elapsed/.55))};
  }
+
  function render(){
   const clinic=CKClinic.snapshot(),c=getCookingStatus(),s=CKShift.snapshot();
   const who=clinic.patient,id=who.id;
@@ -43,98 +46,173 @@
   const key=JSON.stringify(clinic.order);
   if(key!==request){request=key;wishes.replaceChildren(iconRow(clinic.order));}
   const at=getSceneStatus().interactiveTarget?.id;
-  const help=at==='prep'?'1 豆腐 · 2 絞肉 · 3 豆瓣 · 4 蒜 · 5 青蔥 · 6 花椒｜E 切配／舀取':
-   at==='wok'?'E 依序下料／翻炒 · F 開火／關火｜4秒收汁，繼續大火每滿1秒扣1%':
-   at==='rice'?'1 半碗飯 · 2 正常飯｜E 出餐看評價':'WASD／方向鍵移動 · Shift 跑步 · 到站 E 互動';
+  const help=c.plated?'已盛入托盤！請走回最左側診間 (X: -10.5) 按 E 交餐給病人':
+   at==='prep'?'1–6 選材料 · Q 循環份量 (0/0.5/1) · E 切配放入備料盤':
+   at==='wok'?'E 全料下鍋／翻炒／起鍋 · F 切換火力 (關/小/大)｜4等效秒收汁':
+   at==='serve'?'1 半碗飯 · 2 正常飯 · Q 味噌湯｜完成後按盛盤裝托盤':
+   'WASD／方向鍵移動 · Shift 跑步 · 到站 E 互動';
   if(shortcut.textContent!==help)shortcut.textContent=help;
-  // Core updateCooking owns button labels; add the shortcut after its update.
   if(!$('cutBtn').textContent.startsWith('E '))$('cutBtn').textContent='E '+$('cutBtn').textContent;
-  const penalty=CKClinicRules.heatPenalty(cookedDish.overheatSeconds,cookedDish.isBurnt);
-  const heatKey=[Math.floor(c.simmerTimer*10),penalty,c.heated,cookedDish.isSimmered].join('|');
+  const penalty=CKClinicRules.heatPenaltyR6(c.eqSimmerTime||c.simmerTimer,c.wok?.isBurnt);
+  const heatKey=[Math.floor((c.eqSimmerTime||c.simmerTimer)*10),penalty,c.heated,c.wok?.flame,cookedDish.isSimmered].join('|');
   if(heatKey!==lastHeat){
    lastHeat=heatKey;
-   fire.textContent=c.simmerTimer>0?`大火 ${c.simmerTimer.toFixed(1)}秒 · 火候扣分 −${penalty}%${c.heated?' · F 關火停止累積':' · 已關火，扣分保留'}`:'4秒收汁完成；不會自動關火。超過後每滿1秒扣1%，最多20%。';
+   const mode=c.wok?.flame==='high'?'大火(1.0x)':c.wok?.flame==='low'?'小火(0.5x)':'爐火已關';
+   fire.textContent=(c.eqSimmerTime||c.simmerTimer)>0?`等效收汁 ${(c.eqSimmerTime||c.simmerTimer).toFixed(1)}秒 [${mode}] · 火候扣分 −${penalty}%${c.heated?' · F 切換火力':' · 已關火，扣分保留'}`:'4等效秒收汁完成（小火8s或大火4s）；超過後每滿1秒扣1%，最多20%。';
    fire.dataset.penalty=String(penalty);
-   if(cookedDish.isSimmered)$('simmerProgressText').textContent=`收汁完成 · 大火 ${c.simmerTimer.toFixed(1)}秒 · −${penalty}%`;
+   if(cookedDish.isSimmered)$('simmerProgressText').textContent=`收汁完成 · 等效 ${(c.eqSimmerTime||c.simmerTimer).toFixed(1)}秒 · −${penalty}%`;
   }
  }
- // The existing engine calls CKShift.tick just before advancing simmerTimer.
- // Integrate only the excess portion; adding another ingredient cannot erase damage.
+
  const tick=CKShift.tick;
  CKShift.tick=function(dt,dialogOpen){
-  const c=getCookingStatus();
-  if(dt>0&&!dialogOpen&&!CKShift.isFrozen()&&CKShift.snapshot().status==='active'&&
-    [4,5].includes(c.stage)&&c.heated&&c.stirs>=3&&c.ready){
-   const over=Math.max(0,c.simmerTimer+dt-4)-Math.max(0,c.simmerTimer-4);
-   cookedDish.overheatSeconds=(cookedDish.overheatSeconds||0)+over;
-  }
   tick.call(CKShift,dt,dialogOpen);
  };
  const cook=window.updateCooking;
  window.updateCooking=function(){cook();render();};
- // Do not alter E in dialogs, a focused range input, pause or terminal results.
+
  function stationAction(key){
   if(CKShift.isFrozen()||!$('dialogModal').hidden||$('clinicResult').open)return false;
-  const c=getCookingStatus(),at=getSceneStatus().interactiveTarget?.id;
-  if(at==='prep'&&c.stage>=3){
+  const c=getCookingStatus(),at=getSceneStatus().interactiveTarget?.id,st=getSceneStatus();
+
+  // If carrying tray, delivery check
+  if(c.plated||st.carryingTray){
+   const atConsult = at==='consult' || Math.abs(st.playerPos.x - (-10.5)) <= 2.2;
+   if(key==='e'){
+    if(atConsult){
+     CKClinic.deliver();
+     return true;
+    } else {
+     $('log').textContent = '未到病人旁：請端著托盤走回最左側診間 (X: -10.5) 才能交餐！';
+     return true;
+    }
+   }
+   return false;
+  }
+
+  if(at==='consult'&&c.stage===0&&key==='e'){
+   window.handleInteraction('病人');
+   return true;
+  }
+
+  if(at==='prep'){
    if(/^[1-6]$/.test(key)){
-    document.querySelectorAll('.ingredient-tray button')[Number(key)-1].click();return true;
+    document.querySelectorAll('.ingredient-tray button')[Number(key)-1]?.click();return true;
+   }
+   if(key==='q'){
+    if(window.cyclePortion) window.cyclePortion(c.selectedFood);
+    return true;
    }
    if(key==='e'){
-    if(!c.selectedFood){document.querySelector('[data-food="tofu"]').click();}
-    if(!$('cutBtn').disabled)$('cutBtn').click();return true;
+    if(!c.selectedFood){document.querySelector('[data-food="tofu"]')?.click();}
+    if(!$('cutBtn').disabled)$('cutBtn').click();
+    return true;
    }
   }
-  if(at==='wok'&&c.stage>=4){
+
+  if(at==='wok'){
    if(key==='f'){if(!$('heatBtn').disabled)$('heatBtn').click();return true;}
-   if(key==='e'){
-    const button=!c.heated?$('heatBtn'):!$('addBtn').disabled?$('addBtn'):c.stirs<3?$('stirBtn'):null;
-    if(button&&!button.disabled)button.click();return true;
+   if(key==='e'||key===' '){
+    if(!window.wok?.hasFood && !$('addBtn').disabled){
+     $('addBtn').click();return true;
+    }
+    if(window.wok?.hasFood && window.wok.stirs < 3 && !$('stirBtn').disabled){
+     $('stirBtn').click();return true;
+    }
+    if(window.wok?.hasFood && window.wok.stirs >= 3 && (window.wok.isSimmered || window.wok.eqSimmerTime>=4.0) && !$('plateBtn').disabled){
+     $('plateBtn').click();return true;
+    }
+    if(!window.wok?.hasFood && window.wok?.flame==='off' && !$('heatBtn').disabled){
+     $('heatBtn').click();return true;
+    }
    }
   }
-  if(at==='rice'&&c.stage>=4){
-   const button=key==='1'?$('riceHalfBtn'):key==='2'?$('riceFullBtn'):key==='e'?$('clinicPlateBtn'):null;
-   if(button){if(!button.disabled)button.click();return true;}
+
+  if(at==='serve'){
+   if(key==='1'){if(!$('riceHalfBtn').disabled)$('riceHalfBtn').click();return true;}
+   if(key==='2'){if(!$('riceFullBtn').disabled)$('riceFullBtn').click();return true;}
+   if(key==='q'){if($('misoToggleBtn')&&!$('misoToggleBtn').disabled)$('misoToggleBtn').click();return true;}
+   if(key==='e'){
+    if(!$('clinicPlateBtn').disabled){$('clinicPlateBtn').click();return true;}
+    if(!$('plateBtn').disabled){$('plateBtn').click();return true;}
+   }
   }
   return false;
  }
+
  addEventListener('keydown',e=>{
   if(e.ctrlKey||e.metaKey||e.altKey||e.target.closest('input,textarea,select,[contenteditable="true"],dialog,.dialog-modal'))return;
-  const key=e.key.toLowerCase();if(!['e','f','1','2','3','4','5','6'].includes(key))return;
+  const key=e.key.toLowerCase();
+  if(!['e','f','q',' ','1','2','3','4','5','6'].includes(key))return;
   if(e.repeat){e.preventDefault();e.stopImmediatePropagation();return;}
   if(stationAction(key)){e.preventDefault();e.stopImmediatePropagation();}
  },true);
- // Mobile E button uses the same station action as the hardware keyboard.
+
  $('sceneInteractBtn').addEventListener('click',e=>{if(stationAction('e')){e.preventDefault();e.stopImmediatePropagation();}},true);
- function showReaction(){
-  const state=CKClinic.snapshot();if(!state.resultOpen||!state.result||lastResultNumber===state.number)return;
+
+ function showReaction(won, outcome){
+  const state=CKClinic.snapshot();if(!state.result||lastResultNumber===state.number)return;
   lastResultNumber=state.number;
-  const mismatch=state.result.checks.some(c=>!c.ok),doctor=CKShift.snapshot().doctorId;
-  resultArt.replaceChildren();$('clinicResult').dataset.satisfaction=mismatch?'unmet':'met';
-  const patient=document.createElement('img');patient.className='result-patient';patient.src=root+state.patient.id+'.webp';patient.alt=state.patient.name;
-  const note=document.createElement('p');note.className='reaction-caption';
-  if(mismatch){
+  const doctor=CKShift.snapshot().doctorId;
+  resultArt.replaceChildren();$('clinicResult').dataset.satisfaction=won?'met':'unmet';
+
+  const wrap=document.createElement('div');wrap.className='finale-banner-wrap';
+  const banner=document.createElement('img');banner.className='finale-banner';
+  banner.dataset.finale = won ? 'success' : 'failure';
+  banner.src=won?'assets/finale/success_clinic_meal.webp':'assets/finale/failure_table_flip.webp';
+  banner.alt=won?'醫師與病患在診間共餐，熱氣蒸騰，氣氛溫馨舒壓':'病患翻桌，麻婆豆腐與熱湯潑灑';
+  wrap.append(banner);
+
+  const note=document.createElement('p');note.className='finale-caption';
+  if(!won){
    reactionState={doctor,start:performance.now()};
-   const actor=document.createElement('img');actor.className='bonk-actor';actor.alt='Q版醫師被輕敲後頭冒星星、揉頭恢復';actor.src=root+'bonk-'+doctor+'.webp';
-   const stage=document.createElement('div');stage.className='bonk-stage';stage.append(actor);
-   const mallet=document.createElement('span');mallet.className='foam-mallet';mallet.setAttribute('aria-hidden','true');stage.append(mallet);
-   note.textContent='口味沒對上！敲一下——頭暈、揉揉頭，下次看清楚圖示。';
-   resultArt.append(patient,stage,note);CKAudio.cue('early');
-   $('clinicResultMessage').textContent='「這不是我點的口味！」以下列出需要調整的地方。';
+   const card=document.createElement('div');card.className='doctor-splashed-card';
+   const splashed=document.createElement('img');splashed.className='doctor-splashed-img';
+   splashed.dataset.type = 'splashed'; splashed.dataset.doctor = doctor;
+   splashed.src=`assets/finale/doctor_${doctor}_splashed.webp`;splashed.alt='醫師白袍濺滿紅油與熱湯';
+   const bump=document.createElement('img');bump.className='doctor-bump-img';
+   bump.dataset.type = 'bump'; bump.dataset.doctor = doctor;
+   bump.src=`assets/finale/doctor_${doctor}_bump.webp`;bump.alt='醫師頭上起腫包揉頭';
+   card.append(splashed,bump);
+   wrap.append(card);
+   note.textContent='口味嚴重不符！病患氣憤翻桌，紅油熱湯潑灑在醫師白袍上，頭上起腫包揉頭！連勝歸零。';
+   CKAudio.cue('early');
   }else{
-   reactionState=null;note.textContent='每一個需求都對上了，病人滿意！';resultArt.append(patient,note);
+   reactionState=null;
+   note.textContent='料理完全契合偏好！熱騰騰麻婆豆腐撫慰了身心，病患與醫師一同在診間共餐享受美味。';
+   CKAudio.cue('ticket');
   }
-  // Icon columns share exactly the same request mapping as the sidebar.
-  const row=$('clinicComparison').rows;
-  for(let i=0;i<3;i++){
-   for(const [column,order] of [[1,state.order],[2,state.result.actual]]){
-    const [file,label]=icons(order)[i],im=document.createElement('img');im.className='comparison-icon';im.src=root+file+'.webp';im.alt=label;row[i].cells[column].prepend(im);
+  wrap.append(note);
+  resultArt.append(wrap);
+
+  // Set icons in comparison rows for both requested and served items
+  const rows=$('clinicComparison').rows;
+  const iconLookup={
+   '辣度調味':{req:state.order.spicy==='重辣'?'spicy-heavy':'spicy-normal',act:c=>(c?.actual?.includes('重辣')||cookedDish.hasPepper)?'spicy-heavy':'spicy-normal'},
+   '蔥花偏好':{req:state.order.scallion?'scallion-yes':'scallion-no',act:c=>(c?.actual?.includes('有蔥')||cookedDish.hasScallion)?'scallion-yes':'scallion-no'},
+   '配飯份量':{req:state.order.rice==='半碗飯'?'portion_half':'portion_full',act:c=>(c?.actual==='半碗飯'||cookedDish.ricePortion==='半碗飯')?'portion_half':'portion_full'},
+   '味噌湯':{req:state.order.miso?'miso_yes':'miso_no',act:c=>(c?.actual?.includes('有湯')||cookedDish.miso)?'miso_yes':'miso_no'}
+  };
+  const checks=state.result?.checks||[];
+  for(let i=0;i<rows.length;i++){
+   const title=rows[i].cells[0]?.textContent?.trim();
+   const cfg=iconLookup[title];
+   if(cfg){
+    const chk=checks.find(x=>x.label===title);
+    if(rows[i].cells[1] && !rows[i].cells[1].querySelector('.comparison-icon')){
+     const im=document.createElement('img');im.className='comparison-icon';im.src=root+cfg.req+'.webp';im.alt='';
+     rows[i].cells[1].prepend(im);
+    }
+    if(rows[i].cells[2] && !rows[i].cells[2].querySelector('.comparison-icon')){
+     const im=document.createElement('img');im.className='comparison-icon';im.src=root+cfg.act(chk)+'.webp';im.alt='';
+     rows[i].cells[2].prepend(im);
+    }
    }
   }
  }
- $('clinicPlateBtn').addEventListener('click',showReaction);
+
  const reset=window.resetAll;
  window.resetAll=function(){reactionState=null;lastResultNumber=null;resultArt.replaceChildren();identity=request=lastHeat='';reset();render();};
- window.CKService={reaction,render,snapshot:()=>({version:'R5',reaction:reaction(),overheatSeconds:cookedDish.overheatSeconds||0,penalty:CKClinicRules.heatPenalty(cookedDish.overheatSeconds,cookedDish.isBurnt)})};
+ window.CKService={reaction,render,showReaction,snapshot:()=>({version:'R6',reaction:reaction(),overheatSeconds:cookedDish.overheatSeconds||0,penalty:CKClinicRules.heatPenaltyR6(cookedDish.eqSimmerTime||(cookedDish.overheatSeconds?4.0+cookedDish.overheatSeconds:0),cookedDish.isBurnt)})};
  render();
 })();

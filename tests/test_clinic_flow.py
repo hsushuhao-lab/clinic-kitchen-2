@@ -46,10 +46,10 @@ try:
      assert page.locator('#precisionTrack').bounding_box()['height']>=25
     if w in (1366,375):page.screenshot(path=str(out/f'{label}-{w}.png'))
    page.set_viewport_size({'width':1366,'height':768})
-  s=scene();assert [x['id'] for x in s['stations']]==['patient','desk','fridge','prep','wok','rice']
-  assert all(s['stations'][i]['x']<s['stations'][i+1]['x'] for i in range(5))
+  s=scene();assert [x['id'] for x in s['stations']]==['consult','prep','wok','serve']
+  assert all(s['stations'][i]['x']<s['stations'][i+1]['x'] for i in range(3))
   assert all(f['z']<0 for f in s['furniture']);assert not any(f['img'] in ['bed','table','cabinet'] for f in s['furniture'])
-  done('six left-to-right stations; no foreground bed, carts, table or extra cabinets')
+  done('four consolidated left-to-right stations; no foreground bed, carts, table or extra cabinets')
   assert snapshot()['number']==1;expect(page.locator('#clinicPreferences')).to_contain_text('不要蔥')
   layout('initial');done('fixed queue, large precision bar and no page overflow at five viewports')
   # Each selectable full-body doctor keeps walking/running and stops when keys release.
@@ -62,12 +62,12 @@ try:
    page.keyboard.down('Shift');page.keyboard.down('a');page.wait_for_timeout(220);assert scene()['actor']['animation']=='run';page.keyboard.up('a');page.keyboard.up('Shift')
   done('three selectable Q doctors retain animated walk/run/idle, not torso navigation')
   # Read a patient's request; cancel leaves stage zero and immutable order intact.
-  before=snapshot()['order'];go('patient');page.locator('#world').focus();page.keyboard.press('e');expect(page.locator('#dialogModal')).to_be_visible()
+  before=snapshot()['order'];go('consult');page.locator('#world').focus();page.keyboard.press('e');expect(page.locator('#dialogModal')).to_be_visible()
   assert page.locator('#prefGrid').count()==0
   page.keyboard.press('Escape');assert cook()['stage']==0 and snapshot()['order']==before
   done('patient specifies the order; closing consultation cannot replace it')
   def play_one(tag,wrong_rice=False,check_layout=False):
-   order=snapshot()['order'];confirm_station('patient');confirm_station('desk');confirm_station('fridge')
+   order=snapshot()['order'];confirm_station('consult')
    assert page.evaluate('CKShift.snapshot().status')=='active'
    # Away-from-station buttons remain blocked even when a tab is opened.
    page.locator('[data-clinic-panel="prep"]').click();page.locator('button[data-food="tofu"]').click();expect(page.locator('#cutBtn')).to_be_disabled()
@@ -80,18 +80,28 @@ try:
     for _ in range(n):page.locator('#cutBtn').click();page.wait_for_timeout(240)
    if check_layout:layout('prep')
    go('wok');page.locator('#heatBtn').click()
-   for _ in foods:page.locator('#addBtn').click()
+   page.locator('#addBtn').click()
    for _ in range(3):page.locator('#stirBtn').click();page.wait_for_timeout(280)
    page.wait_for_function('window.cookedDish.isSimmered')
-   # Take the heat off, then advance right. Never walk back for plating/settlement.
-   page.locator('#heatBtn').click();assert not cook()['heated']
+   # Take the heat off, then advance right.
+   while cook()['heated']:
+    page.locator('#heatBtn').click()
+    page.wait_for_timeout(100)
+   assert not cook()['heated']
    if check_layout:layout('wok')
-   go('rice');assert snapshot()['panel']=='serve'
+   go('serve');assert snapshot()['panel']=='serve'
    rice=order['rice']
    if wrong_rice:rice='正常飯' if rice=='半碗飯' else '半碗飯'
    page.locator('#riceHalfBtn' if rice=='半碗飯' else '#riceFullBtn').click()
+   if bool(page.evaluate('!!window.cookedDish.miso')) != bool(order.get('miso')):
+    page.locator('#misoToggleBtn').click()
    if check_layout:layout('serve')
-   before_pos=scene()['playerPos'];page.locator('#clinicPlateBtn').click();expect(page.locator('#clinicResult')).to_be_visible()
+   page.locator('#clinicPlateBtn').click()
+   page.wait_for_function('getCookingStatus().plated')
+   go('consult')
+   before_pos=scene()['playerPos']
+   page.keyboard.press('e')
+   expect(page.locator('#clinicResult')).to_be_visible()
    assert cook()['stage']==7 and snapshot()['result']['quality']==(95 if wrong_rice else 100)
    assert page.evaluate('CKShift.snapshot().status')=='won' and not cook()['heated']
    points=page.evaluate('CKShift.snapshot().points');time=page.evaluate('CKShift.snapshot().elapsed')
@@ -100,7 +110,7 @@ try:
    assert page.evaluate('CKShift.snapshot().points')==points and snapshot()['resultOpen']
    page.screenshot(path=str(out/f'{tag}-result.png'))
    if check_layout:layout('result')
-   done(tag+': real consultation/prep/cook/rice sequence; immediate stationary result; correct quality; no double score')
+   done(tag+': real consultation/prep/cook/rice sequence; physical return delivery; correct quality; no double score')
   play_one('practice-1',wrong_rice=True,check_layout=True)
   old=snapshot();page.locator('#clinicNextBtn').click();assert snapshot()['number']==2 and snapshot()['patient']['id']!=old['patient']['id']
   assert snapshot()['order']!=old['order'] and not snapshot()['resultOpen'] and cook()['stage']==0

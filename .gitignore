@@ -15,3 +15,9 @@ private-history/
 archive/
 *.bundle
 web-dist/
+CK_SingleScreen_Craving_Doctors_Update/
+assets/chibi/
+assets/clinic/
+assets/workspace/
+assets/ui/character-manifest.json
+assets/ui/*-bust.webp

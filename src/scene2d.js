@@ -6,10 +6,10 @@
  window.scene3DState=state;window.scene2DState=state;
  const stations=CKClinicRules.stations;
  const obstacles=[[-11.1,-9.9,-1.7,-1.1],[-8.1,-6.1,-2.6,-1.4],[-3.4,-1.8,-3.2,-2.4],[-.5,.9,-3.3,-2.3],[3.8,6.2,-3.1,-2.1],[8.2,10.2,-3.1,-2],[11,12,-3.1,-2.1]];
- const targetIds=['patient','desk','fridge','prep','wok','rice','rice','rice'];
- const furniture=[{img:'patientSeat',x:-10.5,z:-1.05,label:'01 病人'},{img:'desk',x:-7,z:-1.4,label:'02 電腦'},
-  {img:'sink',x:-2.6,z:-2.4,label:'洗手台'},{img:'fridge',x:.2,z:-2.3,label:'03 取材'},
-  {img:'prep',x:5,z:-2.1,label:'04 備料'},{img:'stove',x:9.2,z:-2,label:'05 炒鍋'},{img:'rice',x:11.5,z:-2.1,label:'06 出餐'}];
+ const targetIds=['consult','prep','prep','prep','wok','wok','consult','consult'];
+ const furniture=[{img:'patientSeat',x:-10.5,z:-1.05,label:'01 診間'},{img:'desk',x:-7,z:-1.4,label:''},
+  {img:'sink',x:-2.6,z:-2.4,label:''},{img:'fridge',x:.2,z:-2.3,label:''},
+  {img:'prep',x:5,z:-2.1,label:'02 備料'},{img:'stove',x:9.2,z:-2,label:'03 炒鍋'},{img:'rice',x:11.5,z:-2.1,label:'04 配餐'}];
  let clinicPatient='office';
  const CW=112,CH=144,root='assets/chibi/';
  const directions=['south','west','east','north'];
@@ -21,7 +21,13 @@
  const screenPoint=(x,z)=>{const p=worldPoint(x,z);return{x:view.x+(p.x-camera.x)*camera.scale,y:view.y+(p.y-camera.y)*camera.scale};};
  function frozen(){return !!window.CKShift?.isFrozen()||!document.getElementById('dialogModal').hidden;}
  function stand(x,z){return x>=-11.48&&x<=11.98&&z>=-2.38&&z<=2.38&&obstacles.every(([a,b,c,d])=>x+.28<=a||x-.28>=b||z+.28<=c||z-.28>=d);}
- function nearby(x,z){let best=null,dist=Infinity;for(const s of stations){const d=Math.hypot(x-s.x,z-s.z);if(d<=s.r&&d<dist){best=s;dist=d;}}return best?{...best,prompt:'E — '+best.label}:null;}
+ function nearby(x,z){
+  let best=null,dist=Infinity;
+  for(const s of stations){const d=Math.hypot(x-s.x,z-s.z);if(d<=s.r&&d<dist){best=s;dist=d;}}
+  if(!best)return null;
+  const prompt=(best.id==='consult'&&state.carryingTray)?'E — 交餐給病人':('E — '+best.label);
+  return {...best,prompt};
+ }
  function step(dx,dz,dt,speed=1){
   const p=state.playerPos,ox=p.x,oz=p.z,l=Math.hypot(dx,dz)||1,total=Math.min(dt,.1),parts=Math.max(1,Math.ceil(total/.02));
   for(let n=0;n<parts;n++){const d=4.2*speed*total/parts,nx=p.x+dx/l*d,nz=p.z+dz/l*d;if(stand(nx,p.z))p.x=nx;if(stand(p.x,nz))p.z=nz;}
@@ -36,7 +42,7 @@
   const small=width<700;
   view={x:0,y:0,w:width,h:Math.max(1,height-(small?30:28))};
   camera.scale=small?Math.min(.78,(view.h-10)/CH):Math.min(view.w/1800,view.h/350);
-  buttons.forEach(({button},i)=>{button.style.left=(i+.5)*width/6+'px';button.style.bottom='3px';button.style.top='auto';});
+  buttons.forEach(({button},i)=>{button.style.left=(i+.5)*width/stations.length+'px';button.style.bottom='3px';button.style.top='auto';});
  }
  function updateCamera(){
   const p=worldPoint(state.playerPos.x,state.playerPos.z),ex=view.w/camera.scale,ey=view.h/camera.scale;

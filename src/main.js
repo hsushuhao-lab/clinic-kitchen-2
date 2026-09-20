@@ -41,6 +41,50 @@ function cancelActionTimers() {
   actionTimers.forEach(clearTimeout); actionTimers.clear();
 }
 
+let preparedTray = { tofu: 1, pork: 1, douban: 1, garlic: 1, scallion: 0, pepper: 0 };
+window.preparedTray = preparedTray;
+
+let wok = window.CKClinicRules?.createWok ? window.CKClinicRules.createWok() : {
+  hasFood: false,
+  contents: { tofu: 0, pork: 0, douban: 0, garlic: 0, scallion: 0, pepper: 0 },
+  stirs: 0,
+  flame: 'off',
+  highHeatSeconds: 0,
+  lowHeatSeconds: 0,
+  eqSimmerTime: 0,
+  isSimmered: false,
+  isBurnt: false,
+  overheatSeconds: 0
+};
+window.wok = wok;
+
+function updatePortionUI() {
+  for (const [food, portion] of Object.entries(preparedTray)) {
+    const badge = $('portion-badge-' + food);
+    if (badge) {
+      badge.textContent = portion === 0 ? '0份' : (portion === 0.5 ? '半份' : '1份');
+      badge.dataset.zero = String(portion === 0);
+    }
+  }
+  const curFood = selectedFood || 'tofu';
+  const curP = preparedTray[curFood] !== undefined ? preparedTray[curFood] : 1;
+  if ($('portionCycleBtn')) {
+    $('portionCycleBtn').textContent = `份量：${curP === 0 ? '0份' : curP === 0.5 ? '半份' : '1份'} (Q)`;
+  }
+}
+window.updatePortionUI = updatePortionUI;
+
+function cyclePortion(food) {
+  const target = food || selectedFood || 'tofu';
+  const cur = preparedTray[target] !== undefined ? preparedTray[target] : 0;
+  const next = cur === 0 ? 0.5 : (cur === 0.5 ? 1 : 0);
+  preparedTray[target] = next;
+  updatePortionUI();
+  cookLog(`${foodNames[target] || target} 份量切換為：${next === 0 ? '不取 (0份)' : next === 0.5 ? '半份' : '1份'}`);
+  return next;
+}
+window.cyclePortion = cyclePortion;
+
 let cookedDish = {
   hasScallion: false,
   hasPepper: false,
@@ -50,10 +94,13 @@ let cookedDish = {
   hasGarlic: false,
   spicyLevel: '正常',
   ricePortion: '未盛飯',
+  miso: false,
   stirs: 0,
   simmerProgress: 0,
+  eqSimmerTime: 0,
   isSimmered: false,
-  isBurnt: false
+  isBurnt: false,
+  overheatSeconds: 0
 };
 window.cookedDish = cookedDish;
 
@@ -117,7 +164,7 @@ let dialogCallback = null;
 
 function setStage(stage) {
   currentStage = stage;
-  if (stage === STAGES.GATHER) window.CKShift?.begin();
+  if (stage === STAGES.GATHER || (stage >= STAGES.PREP && window.CKShift?.snapshot().status === 'ready')) window.CKShift?.begin();
   if (window.setMissionStage) window.setMissionStage(stage);
   if (window.setCarryingTray) window.setCarryingTray(stage === STAGES.SERVE);
   if (window.setPatientDishVisible) window.setPatientDishVisible(stage >= STAGES.FIRST_BITE);
@@ -264,18 +311,29 @@ function move(now) {
 
   window.CKShift?.tick(dt, dialogOpen);
 
-  // Keep the heat clock running after readiness; doctor tolerance affects real overcooking.
-  if ((currentStage === STAGES.COOK || currentStage === STAGES.PLATE) && !isPlating && heated && stirs >= 3 && required.every(id => inWok.has(id))) {
-    simmerTimer += dt;
-    cookedDish.simmerProgress = Math.min(100, Math.round((simmerTimer / REQUIRED_SIMMER_TIME) * 100));
-    if (simmerTimer >= REQUIRED_SIMMER_TIME && !cookedDish.isSimmered) {
+  // R6: equivalent simmer time accumulation (high = 1.0x, low = 0.5x)
+  if (wok.hasFood && wok.stirs >= 3 && wok.flame !== 'off' && !plated && !isPlating) {
+    const mult = wok.flame === 'high' ? 1.0 : 0.5;
+    wok.eqSimmerTime += dt * mult;
+    if (wok.flame === 'high') wok.highHeatSeconds += dt;
+    else wok.lowHeatSeconds += dt;
+    simmerTimer = wok.eqSimmerTime;
+    cookedDish.eqSimmerTime = wok.eqSimmerTime;
+    cookedDish.simmerProgress = Math.min(100, Math.round((wok.eqSimmerTime / REQUIRED_SIMMER_TIME) * 100));
+    if (wok.eqSimmerTime >= REQUIRED_SIMMER_TIME && !wok.isSimmered) {
+      wok.isSimmered = true;
       cookedDish.isSimmered = true;
       window.CKShift?.simmer();
       setStage(STAGES.PLATE);
-      cookLog('炒鍋：燜煮完成、紅油均勻收汁濃郁！請準備盛盤 (亦可先至電子鍋盛飯)');
+      cookLog('炒鍋：等效4秒燜煮收汁完成！請適時盛盤或按 F 關火（亦可先至配餐檯盛飯）');
     }
-    if (simmerTimer > (window.CKShift?.burnAfter ?? 15.0) && !cookedDish.isBurnt) {
-      cookedDish.isBurnt = true;
+    if (wok.eqSimmerTime > REQUIRED_SIMMER_TIME) {
+      wok.overheatSeconds = wok.eqSimmerTime - REQUIRED_SIMMER_TIME;
+      cookedDish.overheatSeconds = wok.overheatSeconds;
+      if (wok.overheatSeconds >= (window.CKShift?.burnAfter ?? 20.0) && !wok.isBurnt) {
+        wok.isBurnt = true;
+        cookedDish.isBurnt = true;
+      }
     }
   }
 
@@ -328,6 +386,18 @@ function isNearWokStation() {
   if (!window.scene3DState) return false;
   const pos = window.scene3DState.playerPos;
   return (pos.x >= 7.2 && pos.x <= 11.0 && pos.z <= -0.8 && pos.z >= -3.2);
+}
+
+function isNearServeStation() {
+  if (!window.scene3DState) return false;
+  const pos = window.scene3DState.playerPos;
+  return (pos.x >= 10.5 && pos.z <= -0.8 && pos.z >= -3.2);
+}
+
+function isNearConsultStation() {
+  if (!window.scene3DState) return false;
+  const pos = window.scene3DState.playerPos;
+  return (pos.x <= -8.0);
 }
 
 const cutStages = { tofu: 0, scallion: 0, garlic: 0, pork: 0, douban: 0, pepper: 0 };
@@ -412,6 +482,7 @@ function updateCooking() {
   const ready = required.every(id => inWok.has(id));
   const atPrep = isNearPrepStation();
   const atWok = isNearWokStation();
+  const atServe = isNearServeStation();
 
   // Station proximity badges
   if ($('prepStationBadge')) {
@@ -508,31 +579,26 @@ function updateCooking() {
   }
 
   // Wok Controls & Visuals
-  $('heatBtn').disabled = (currentStage < STAGES.COOK) || plated;
-  $('heatBtn').textContent = heated ? '關火' : '開火';
+  $('heatBtn').disabled = (currentStage < STAGES.PREP) || plated;
+  $('heatBtn').textContent = wok.flame === 'off' ? '開小火 (F)' : wok.flame === 'low' ? '轉大火 (F)' : '關火 (F)';
 
-  const nextToAdd = (selectedFood && prepped.has(selectedFood))
-    ? selectedFood
-    : ['pork', 'garlic', 'douban', 'tofu', 'scallion', 'pepper'].find(id => prepped.has(id));
+  $('addBtn').disabled = (currentStage < STAGES.PREP) || plated || isPlating || wok.hasFood || wok.flame === 'off';
+  $('addBtn').textContent = wok.hasFood ? '食材已全下鍋' : '一次全下鍋 (E)';
 
-  $('addBtn').disabled = (currentStage < STAGES.COOK) || plated || isPlating || !heated || prepped.size === 0;
-  if (nextToAdd) {
-    $('addBtn').textContent = (selectedFood && prepped.has(selectedFood)) ? `下料：${foodNames[selectedFood]}` : `下鍋：${foodNames[nextToAdd]}`;
-  } else {
-    $('addBtn').textContent = '下鍋';
-  }
+  $('stirBtn').disabled = (currentStage < STAGES.PREP) || plated || isPlating || !wok.hasFood;
+  $('stirBtn').textContent = wok.stirs >= 3 ? `翻炒完成 (${wok.stirs}次)` : `翻炒 (${wok.stirs}/3次)`;
 
-  $('stirBtn').disabled = (currentStage < STAGES.COOK) || plated || isPlating || !heated || inWok.size === 0;
-
-  const canPlate = ready && stirs >= 3 && ((currentStage === STAGES.PLATE) || (cookedDish.isSimmered || simmerTimer >= REQUIRED_SIMMER_TIME));
-  $('plateBtn').disabled = (currentStage < STAGES.COOK) || plated || isPlating || !canPlate;
-  $('plateBtn').textContent = isPlating ? '盛盤中...' : '盛盤';
-  $('flame').classList.toggle('is-on', heated);
-  document.querySelector('.wok-visual').classList.toggle('is-cooking', heated && inWok.size > 0);
+  const canPlate = (wok.hasFood || ready) && (wok.stirs >= 3 || stirs >= 3) && ((currentStage === STAGES.PLATE) || (wok.isSimmered || cookedDish.isSimmered || wok.eqSimmerTime >= REQUIRED_SIMMER_TIME));
+  $('plateBtn').disabled = plated || isPlating || !canPlate;
+  $('plateBtn').textContent = isPlating ? '盛盤中...' : (plated ? '已盛盤入托盤' : '盛盤裝托盤 (E)');
+  $('flame').classList.toggle('is-on', wok.flame !== 'off');
+  $('flame').classList.toggle('is-low', wok.flame === 'low');
+  $('flame').classList.toggle('is-high', wok.flame === 'high');
+  document.querySelector('.wok-visual').classList.toggle('is-cooking', wok.flame !== 'off' && (wok.hasFood || inWok.size > 0));
 
   // Rice Cooker Widget State
   if ($('riceHalfBtn') && $('riceFullBtn')) {
-    const riceDisabled = (currentStage < STAGES.COOK) || plated || isPlating;
+    const riceDisabled = plated || isPlating;
     $('riceHalfBtn').disabled = riceDisabled;
     $('riceFullBtn').disabled = riceDisabled;
   }
@@ -542,36 +608,45 @@ function updateCooking() {
     $('riceStatusBadge').classList.toggle('is-ready', rPortion !== '未盛飯');
   }
 
+  // Miso Soup Widget State
+  if ($('misoStatusBadge') && $('misoBtnLabel') && $('misoBtnIcon')) {
+    const hasM = !!cookedDish.miso;
+    $('misoStatusBadge').textContent = hasM ? '已附味噌湯 ✓' : '不要味噌湯';
+    $('misoStatusBadge').classList.toggle('is-ready', hasM);
+    $('misoBtnIcon').src = hasM ? 'assets/service/miso_yes.webp' : 'assets/service/miso_no.webp';
+    $('misoBtnLabel').textContent = hasM ? '要味噌湯 (Q)' : '不要味噌湯 (Q)';
+  }
+
   // Simmer Progress Bar Widget
   if ($('simmerProgressContainer')) {
-    const isSimmeringActive = currentStage >= STAGES.COOK && inWok.size >= 4 && stirs >= 3 && !plated;
+    const isSimmeringActive = (wok.hasFood || inWok.size >= 4) && (wok.stirs >= 3 || stirs >= 3) && !plated;
     $('simmerProgressContainer').hidden = !isSimmeringActive;
     if (isSimmeringActive) {
-      const pct = Math.min(100, Math.round((simmerTimer / REQUIRED_SIMMER_TIME) * 100));
+      const pct = Math.min(100, Math.round((wok.eqSimmerTime / REQUIRED_SIMMER_TIME) * 100));
       if ($('simmerProgressBarFill')) $('simmerProgressBarFill').style.width = `${pct}%`;
       if ($('simmerProgressText')) {
-        $('simmerProgressText').textContent = cookedDish.isSimmered ? '收汁完成 (可盛盤)' : `${simmerTimer.toFixed(1)} / ${REQUIRED_SIMMER_TIME} 秒`;
+        const heatMode = wok.flame === 'high' ? '🔥 大火 (1.0x)' : wok.flame === 'low' ? '🔥 小火 (0.5x)' : '爐火已關';
+        $('simmerProgressText').textContent = (wok.isSimmered || cookedDish.isSimmered)
+          ? `收汁完成 (${wok.eqSimmerTime.toFixed(1)}s / 4.0s) · ${heatMode}`
+          : `${wok.eqSimmerTime.toFixed(1)} / 4.0 等效秒 · ${heatMode}`;
       }
     }
   }
 
   if ($('wokStatusText')) {
-    if (currentStage < STAGES.COOK) {
-      $('wokStatusText').textContent = '尚未進入炒鍋階段';
-    } else if (!atWok) {
-      $('wokStatusText').textContent = '提示：請先靠近後廚炒鍋台 (X: ~9.0)';
-    } else if (!heated) {
-      $('wokStatusText').textContent = cookedDish.isSimmered ? '收汁完成並已關火，可直接盛盤。' : '點擊「開火」啟動瓦斯爐火加熱黑鐵炒鍋';
-    } else if (inWok.size === 0) {
-      $('wokStatusText').textContent = '鍋已燒熱，點擊「下鍋」倒入備妥食材';
-    } else if (stirs < 3) {
-      $('wokStatusText').textContent = `以金屬鍋鏟翻炒推勻 (${stirs} / 3 次)`;
-    } else if (!cookedDish.isSimmered && simmerTimer < REQUIRED_SIMMER_TIME) {
-      $('wokStatusText').textContent = `維持火候【燜煮收汁中】(${simmerTimer.toFixed(1)} / ${REQUIRED_SIMMER_TIME} 秒)... 期間可至電子鍋盛飯！`;
-    } else if (cookedDish.isBurnt) {
-      $('wokStatusText').textContent = '警告：火候過大、微帶焦香！請速關火並盛盤。';
+    if (!atWok && !atServe) {
+      $('wokStatusText').textContent = '提示：請靠近炒鍋爐台 (X: ~9.0) 或配餐檯 (X: ~11.5)';
+    } else if (!wok.hasFood) {
+      $('wokStatusText').textContent = wok.flame === 'off' ? '爐火已關，請按 F 或點擊「開小火」啟動爐火' : '炒鍋加熱中，點擊「一次全下鍋 (E)」投入食材';
+    } else if (wok.stirs < 3) {
+      $('wokStatusText').textContent = `以鍋鏟翻炒推勻 (${wok.stirs} / 3 次) · 快捷鍵 Space / E`;
+    } else if (!wok.isSimmered) {
+      $('wokStatusText').textContent = `火候收汁中：等效 ${wok.eqSimmerTime.toFixed(1)} / 4.0 秒，期間可至右方配飯・選湯！`;
+    } else if (wok.eqSimmerTime > 4.0) {
+      const pen = CKClinicRules.heatPenaltyR6(wok.eqSimmerTime, wok.isBurnt);
+      $('wokStatusText').textContent = `收汁達標！大火累積扣分 −${pen}%，請按 F 關火並盛盤`;
     } else {
-      $('wokStatusText').textContent = '麻婆豆腐色澤紅亮、紅油收汁完成！點擊「盛盤」';
+      $('wokStatusText').textContent = '麻婆豆腐4等效秒收汁完成！點擊「盛盤裝托盤」';
     }
   }
 
@@ -744,22 +819,46 @@ function resetAll() {
     ricePortion: '未盛飯',
     stirs: 0,
     simmerProgress: 0,
+    eqSimmerTime: 0,
+    miso: false,
     isSimmered: false,
-    isBurnt: false
+    isBurnt: false,
+    overheatSeconds: 0
   };
   window.cookedDish = cookedDish;
 
+  preparedTray = { tofu: 1, pork: 1, douban: 1, garlic: 1, scallion: 0, pepper: 0 };
+  window.preparedTray = preparedTray;
+  wok = window.CKClinicRules?.createWok ? window.CKClinicRules.createWok() : {
+    hasFood: false,
+    contents: { tofu: 0, pork: 0, douban: 0, garlic: 0, scallion: 0, pepper: 0 },
+    stirs: 0,
+    flame: 'off',
+    highHeatSeconds: 0,
+    lowHeatSeconds: 0,
+    eqSimmerTime: 0,
+    isSimmered: false,
+    isBurnt: false,
+    overheatSeconds: 0
+  };
+  window.wok = wok;
+
   x = 250; y = 470; previousTime = 0; keys.clear(); visited.clear();
   selectedFood = null; prepped.clear(); inWok.clear(); heated = false; stirs = 0;
-  currentOrder = { spicy: '正常', scallion: true, rice: '正常飯' };
+  currentOrder = { spicy: '正常', scallion: true, rice: '正常飯', miso: true };
   window.currentOrder = currentOrder;
   syncOrderTicketUI();
+  updatePortionUI();
   for (const k in cutStages) cutStages[k] = 0;
   $('boardFood').textContent = '砧板空著';
   if ($('boardFoodImg')) $('boardFoodImg').setAttribute('hidden', '');
   if ($('boardFoodPieces')) $('boardFoodPieces').innerHTML = '';
   if ($('boardKnife')) $('boardKnife').className = 'board-knife-img';
   if ($('boardSpoon')) $('boardSpoon').className = 'board-spoon-img';
+  if ($('flame')) $('flame').className = 'flame';
+  if ($('addBtn')) { $('addBtn').disabled = false; $('addBtn').textContent = '一次全下鍋 (E)'; }
+  if ($('stirBtn')) { $('stirBtn').textContent = '翻炒 (0/3次)'; }
+  if ($('heatBtn')) { $('heatBtn').textContent = '開小火 (F)'; }
   if ($('wokSimmerImg')) $('wokSimmerImg').setAttribute('hidden', '');
   if ($('wokFoodLayer')) $('wokFoodLayer').innerHTML = '';
   if ($('platedDishPreview')) $('platedDishPreview').setAttribute('hidden', '');
@@ -768,6 +867,12 @@ function resetAll() {
     $('riceStatusBadge').textContent = '未盛飯';
     $('riceStatusBadge').classList.remove('is-ready');
   }
+  if ($('misoStatusBadge')) {
+    $('misoStatusBadge').textContent = '不要味噌湯';
+    $('misoStatusBadge').classList.remove('is-ready');
+  }
+  if ($('misoBtnIcon')) $('misoBtnIcon').src = 'assets/service/miso_no.webp';
+  if ($('misoBtnLabel')) $('misoBtnLabel').textContent = '不要味噌湯 (Q)';
   $('recipeLog').innerHTML = '<li>等待開始</li>';
   $('log').textContent = '已重置：探索與料理狀態皆已清空';
   if (dialogModal && !dialogModal.hasAttribute('hidden')) dialogModal.setAttribute('hidden', '');
@@ -1167,6 +1272,10 @@ $('cutBtn').addEventListener('click', () => {
 
   window.CKRush?.action(`cut:${selectedFood}:${cutStages[selectedFood] || 1}`, selectedFood !== 'scallion' || currentOrder.scallion);
   if (selectedFood && prepped.has(selectedFood)) {
+    if ((preparedTray[selectedFood] || 0) === 0) {
+      preparedTray[selectedFood] = 1;
+      updatePortionUI();
+    }
     window.CKShift?.prep(selectedFood, selectedFood !== 'scallion' || currentOrder.scallion);
   }
   if (required.every(id => prepped.has(id) || inWok.has(id)) && currentStage <= STAGES.PREP) {
@@ -1176,75 +1285,96 @@ $('cutBtn').addEventListener('click', () => {
   updateCooking();
 });
 
+if ($('portionCycleBtn')) {
+  $('portionCycleBtn').addEventListener('click', () => {
+    cyclePortion(selectedFood);
+  });
+}
+
 $('heatBtn').addEventListener('click', () => {
   if (!isNearWokStation()) {
     $('log').textContent = '未到炒鍋爐台：Dr. Speed 必須走近炒鍋爐台 (X: ~9.0) 才能操作！';
     cookLog('提示：請先靠近後廚炒鍋爐台才能開火');
     return;
   }
-  heated = !heated;
-  cookLog(heated ? '瓦斯爐點火：藍色烈焰環繞鍋底，黑鐵炒鍋迅速升溫！' : '關閉爐火');
+  if (wok.flame === 'off') {
+    wok.flame = 'low';
+    heated = true;
+    cookLog('瓦斯爐點火：開啟小火，文火慢煨（0.5x等效收汁）！');
+  } else if (wok.flame === 'low') {
+    wok.flame = 'high';
+    heated = true;
+    cookLog('瓦斯爐轉大火：大火猛烈爆炒收汁（1.0x等效收汁）！');
+  } else {
+    wok.flame = 'off';
+    heated = false;
+    cookLog('關閉爐火：火候停止累積');
+  }
   updateCooking();
 });
 
 $('addBtn').addEventListener('click', () => {
-  if ($('addBtn').disabled) return;
+  if ($('addBtn').disabled || wok.hasFood) return;
   if (!isNearWokStation()) {
     $('log').textContent = '未到炒鍋爐台：請先走近炒鍋爐台才能下鍋！';
     return;
   }
-  if (!heated) {
-    $('log').textContent = '炒鍋尚未加熱：請先點擊「開火」！';
+  if (wok.flame === 'off') {
+    $('log').textContent = '炒鍋尚未加熱：請先按 F 或點擊「開小火」！';
     return;
   }
 
-  // Discrete batch single-item addition:
-  let toAdd = (selectedFood && prepped.has(selectedFood))
-    ? selectedFood
-    : ['pork', 'garlic', 'douban', 'tofu', 'scallion', 'pepper'].find(id => prepped.has(id));
-
-  if (!toAdd) return;
-
-  inWok.add(toAdd);
-  window.CKAudio?.cue('sizzle');
-  prepped.delete(toAdd);
-  if (selectedFood === toAdd) selectedFood = null;
-
-  // Track actual cooked dish components
-  if (toAdd === 'scallion') cookedDish.hasScallion = true;
-  if (toAdd === 'tofu') cookedDish.hasTofu = true;
-  if (toAdd === 'pork') cookedDish.hasPork = true;
-  if (toAdd === 'douban') cookedDish.hasDouban = true;
-  if (toAdd === 'garlic') cookedDish.hasGarlic = true;
-  if (toAdd === 'pepper') cookedDish.hasPepper = true;
-
-  cookLog(`炒鍋：下入【${foodNames[toAdd]}】！`);
-  $('log').textContent = `食材下鍋：【${foodNames[toAdd]}】已滑入熱鍋！${prepped.size > 0 ? `(尚有 ${prepped.size} 樣備料)` : '備料已全數下鍋'}`;
-
-  if (!selectedFood) {
-    $('boardFood').textContent = '砧板空著';
-    if ($('boardFoodImg')) $('boardFoodImg').setAttribute('hidden', '');
-    if ($('boardFoodPieces')) $('boardFoodPieces').innerHTML = '';
+  let addedCount = 0;
+  const addedNames = [];
+  for (const [id, portion] of Object.entries(preparedTray)) {
+    if (portion > 0) {
+      wok.contents[id] = portion;
+      inWok.add(id);
+      addedCount++;
+      addedNames.push((foodNames[id] || id) + (portion === 0.5 ? '半份' : '1份'));
+      if (id === 'scallion') cookedDish.hasScallion = true;
+      if (id === 'tofu') cookedDish.hasTofu = true;
+      if (id === 'pork') cookedDish.hasPork = true;
+      if (id === 'douban') cookedDish.hasDouban = true;
+      if (id === 'garlic') cookedDish.hasGarlic = true;
+      if (id === 'pepper') cookedDish.hasPepper = true;
+    }
+  }
+  if (addedCount === 0) {
+    $('log').textContent = '備料盤是空的！請先至備料檯設定材料份量。';
+    return;
   }
 
-  // Adding fresh ingredients requires stirring and cooking again
+  wok.hasFood = true;
+  cookedDish.contents = { ...wok.contents };
+  window.CKAudio?.cue('sizzle');
+  $('addBtn').disabled = true;
+  $('addBtn').textContent = '食材已全下鍋';
+
+  cookLog(`炒鍋：一次全料下鍋！【${addedNames.join('、')}】滑入熱鍋！`);
+  $('log').textContent = `全料下鍋：【${addedNames.join('、')}】！請翻炒推勻並控制火候收汁。`;
+
+  wok.stirs = 0;
   stirs = 0;
   simmerTimer = 0;
+  wok.eqSimmerTime = 0;
   cookedDish.stirs = 0;
   cookedDish.isSimmered = false;
   if (currentStage >= STAGES.COOK && currentStage < STAGES.SERVE) setStage(STAGES.COOK);
+  syncWokFoodDOM();
   updateCooking();
 });
 
 $('stirBtn').addEventListener('click', () => {
-  if ($('stirBtn').disabled) return;
+  if ($('stirBtn').disabled || !wok.hasFood) return;
   if (!isNearWokStation()) {
     $('log').textContent = '未到炒鍋爐台：請先走近炒鍋爐台才能翻炒！';
     return;
   }
-  stirs++;
-  cookedDish.stirs = stirs;
-  if (stirs <= 3 && required.every(id => inWok.has(id))) window.CKRush?.action('stir:' + stirs);
+  wok.stirs++;
+  stirs = wok.stirs;
+  cookedDish.stirs = wok.stirs;
+  if (wok.stirs <= 3) window.CKRush?.action('stir:' + wok.stirs);
 
   // Spatula sweeping animation
   if ($('wokSpatula')) {
@@ -1266,18 +1396,24 @@ $('stirBtn').addEventListener('click', () => {
     $('wokContents').animate([{ transform: 'translateX(-8px)' }, { transform: 'translateX(8px)' }, { transform: 'none' }], { duration: 250 });
   }
 
-  if (stirs === 1) {
-    cookLog('翻炒第 1 次：金屬鍋鏟推動豬絞肉與蒜末均勻受熱，肉粒變色微焦散發肉香！');
-  } else if (stirs === 2) {
+  if (wok.stirs === 1) {
+    cookLog('翻炒第 1 次：金屬鍋鏟推動食材均勻受熱，肉粒變色微焦散發肉香！');
+  } else if (wok.stirs === 2) {
     cookLog('翻炒第 2 次：豆瓣醬爆出紅油與熱氣，紅亮油光完整包覆肉末與蒜香！');
-  } else if (stirs >= 3) {
-    cookLog('翻炒第 3 次：翻炒推勻！請維持適度火候進入【燜煮收汁】階段（4秒）');
-    if (required.every(id => inWok.has(id))) {
-      cookLog('炒鍋：食材已勻，開始文火燜煮讓豆腐吸附紅油湯汁！');
-    }
+  } else if (wok.stirs >= 3) {
+    cookLog('翻炒第 3 次：翻炒推勻！請維持適度火候進入【燜煮收汁】階段（目標 4 等效秒）');
   }
   updateCooking();
 });
+
+if ($('misoToggleBtn')) {
+  $('misoToggleBtn').addEventListener('click', () => {
+    cookedDish.miso = !cookedDish.miso;
+    cookLog(cookedDish.miso ? '托盤新增：熱騰騰暖心味噌湯！' : '托盤移除味噌湯');
+    $('log').textContent = cookedDish.miso ? '配餐：已選擇附熱味噌湯！' : '配餐：不要味噌湯';
+    updateCooking();
+  });
+}
 
 // Rice Cooker lower workbench buttons
 if ($('riceHalfBtn')) {
@@ -1299,8 +1435,8 @@ if ($('riceFullBtn')) {
 
 $('plateBtn').addEventListener('click', () => {
   if ($('plateBtn').disabled || isPlating) return;
-  if (!isNearWokStation()) {
-    $('log').textContent = '未到炒鍋爐台：請先走近炒鍋爐台盛盤！';
+  if (!isNearWokStation() && !isNearServeStation()) {
+    $('log').textContent = '未到工作檯：請先走近炒鍋爐台或配餐檯盛盤！';
     return;
   }
 
@@ -1446,9 +1582,17 @@ window.stopShiftCooking = function () {
 };
 
 window.getCookingStatus = () => ({
-  stage: currentStage, selectedFood, atPrep: isNearPrepStation(), atWok: isNearWokStation(),
-  prepped: [...prepped], inWok: [...inWok], ready: required.every(id => inWok.has(id)),
-  heated, stirs, simmerTimer, plated, isPlating, rice: cookedDish.ricePortion
+  stage: currentStage, selectedFood, atPrep: isNearPrepStation(), atWok: isNearWokStation(), atServe: isNearServeStation(), atConsult: isNearConsultStation(),
+  prepped: [...prepped], inWok: [...inWok], ready: (wok.hasFood || required.every(id => inWok.has(id))),
+  heated: wok.flame !== 'off',
+  flame: wok.flame,
+  stirs: wok.stirs,
+  simmerTimer: wok.eqSimmerTime,
+  eqSimmerTime: wok.eqSimmerTime,
+  plated, isPlating,
+  rice: cookedDish.ricePortion,
+  miso: !!cookedDish.miso,
+  wok, preparedTray
 });
 
 if (window.initScene3D) window.initScene3D(world);

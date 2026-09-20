@@ -75,6 +75,26 @@
       this.bestStreak = Math.max(this.bestStreak, this.streak);
       return true;
     }
+    finishR6({ won, quality, cravingBefore, cravingAfter, bonus = 0 }) {
+      if (this.status !== 'active') return false;
+      this.quality = clamp(quality);
+      if (won) {
+        this.status = 'won';
+        this.lastEarned = 80 + Math.round(this.quality) + Math.max(0, 100 - Math.round(this.craving)) + Math.round(this.focus * 0.6) + Math.max(0, Math.round(bonus));
+        this.points += this.lastEarned;
+        this.served++;
+        this.streak++;
+        this.bestStreak = Math.max(this.bestStreak, this.streak);
+      } else {
+        this.status = 'lost';
+        this.lastEarned = 0;
+        this.streak = 0;
+      }
+      if (cravingAfter !== undefined) {
+        this.craving = clamp(cravingAfter);
+      }
+      return true;
+    }
     snapshot() {
       return { doctorId: this.doctorId, status: this.status, paused: this.paused,
         craving: this.craving, focus: this.focus, elapsed: this.elapsed,

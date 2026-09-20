@@ -16,20 +16,22 @@
 #overheatStatus{margin:0;color:#4f6258;font-size:11px;font-weight:600;text-align:center;line-height:1.4}
 #overheatStatus:not([data-penalty='0']){color:#9b4733}
 #panel-wok>.wok-stage-container{grid-template-rows:minmax(0,1fr) 34px auto auto auto;gap:3px}
-#clinicResult{width:min(820px,94vw);padding:19px 24px}
-#clinicResultMessage{margin-bottom:5px}
-#resultReaction{display:flex;align-items:center;gap:12px;min-height:0;margin:6px 0 10px;padding:5px 12px;border-radius:8px;background:#edf1e3}
+#clinicResult{width:min(820px,94vw);max-height:96dvh;padding:10px 18px;overflow:hidden}
+#clinicResult header small{font-size:10px;line-height:1.2}
+#clinicResult h2{font-size:17px;margin:2px 0 3px}
+#clinicResultMessage{margin-bottom:3px;font-size:12px;line-height:1.35}
+#resultReaction{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:0;margin:3px 0 6px;padding:4px 8px;border-radius:8px;background:#edf1e3}
 #clinicResult[data-satisfaction='unmet'] #resultReaction{background:#f6e8df}
-.result-patient{width:100px;height:114px;object-fit:contain;object-position:center bottom;align-self:end}
-.reaction-caption{margin:0;font-size:13px;line-height:1.65;color:#586555;flex:1}
-.bonk-stage{width:112px;height:144px;position:relative;flex-shrink:0;overflow:hidden}
-.bonk-actor{display:block;width:448px!important;height:144px;max-width:none;object-fit:fill;animation:bonkFrames 2.2s steps(1,end) forwards}
-@keyframes bonkFrames{0%{transform:translateX(0)}25%{transform:translateX(-112px)}50%{transform:translateX(-224px)}75%,100%{transform:translateX(-336px)}}
-.foam-mallet{position:absolute;right:5px;top:0;width:12px;height:50px;background:#ac7e4a;border:2px solid #795b41;border-radius:3px;transform-origin:50% 100%;transform:rotate(-38deg);animation:bonkTap .55s ease-out both}
-.foam-mallet:before{content:'';position:absolute;left:-17px;top:-3px;width:43px;height:22px;background:linear-gradient(#f1bbb2,#d79489);border:2px solid #855b56;border-radius:7px}
+.result-patient{width:80px;height:90px;object-fit:contain;object-position:center bottom;align-self:end}
+.reaction-caption{margin:0;font-size:12px;line-height:1.4;color:#586555;flex:1}
+.bonk-stage{width:90px;height:115px;position:relative;flex-shrink:0;overflow:hidden}
+.bonk-actor{display:block;width:360px!important;height:115px;max-width:none;object-fit:fill;animation:bonkFrames 2.2s steps(1,end) forwards}
+@keyframes bonkFrames{0%{transform:translateX(0)}25%{transform:translateX(-90px)}50%{transform:translateX(-180px)}75%,100%{transform:translateX(-270px)}}
+.foam-mallet{position:absolute;right:5px;top:0;width:10px;height:40px;background:#ac7e4a;border:2px solid #795b41;border-radius:3px;transform-origin:50% 100%;transform:rotate(-38deg);animation:bonkTap .55s ease-out both}
+.foam-mallet:before{content:'';position:absolute;left:-14px;top:-3px;width:34px;height:18px;background:linear-gradient(#f1bbb2,#d79489);border:2px solid #855b56;border-radius:6px}
 @keyframes bonkTap{0%{transform:rotate(30deg);opacity:0}35%{transform:rotate(-48deg);opacity:1}60%{transform:rotate(-30deg);opacity:1}100%{transform:rotate(0deg);opacity:0}}
-.comparison-icon{width:30px;height:27px;object-fit:contain;vertical-align:middle;margin-right:5px}
-#clinicResult th,#clinicResult td{padding:6px 7px}.clinic-result-score{padding:8px 14px;margin-bottom:8px}#clinicResult footer{margin-top:9px}#clinicBonus{padding:5px 0}
+.comparison-icon{width:22px;height:20px;object-fit:contain;vertical-align:middle;margin-right:4px}
+#clinicResult th,#clinicResult td{padding:3px 6px;line-height:1.25}#clinicResult table{font-size:12px;margin-bottom:2px}.clinic-result-score{padding:5px 12px;margin-bottom:5px;gap:12px}#clinicQuality{font-size:28px}#clinicAward{font-size:12px}#clinicResult footer{margin-top:6px}#clinicNextBtn{min-height:36px;padding:4px 20px;font-size:14px}#clinicBonus{padding:2px 0;font-size:11px;line-height:1.35}.clinic-disclaimer{font-size:9px;line-height:1.2}
 @media(max-width:699px){
  #app>#patientHUD{grid-template-columns:45px 45px minmax(0,1fr);grid-template-rows:1fr;gap:6px;padding:4px 7px;height:72px}
  .clinic-call{grid-row:1}.clinic-identity{grid-row:1;display:block;background:#e7eee6;border-radius:5px}
@@ -42,14 +44,14 @@
  #panel-prep .ingredient-tray button{padding-left:9px}.ingredient-tray kbd{font-size:8px;padding:0 2px;left:2px;top:2px}
  #panel-wok>.wok-stage-container{grid-template-rows:minmax(0,1fr) 28px auto auto auto;gap:2px}
  #overheatStatus{font-size:8px;line-height:1.25}#wokStatusText{font-size:8px}
- #clinicResult{padding:12px 11px;width:95vw}#clinicResult h2{font-size:16px;line-height:1.4;margin:4px 0}
- #clinicResultMessage{font-size:11px;line-height:1.4;margin:0}
- #resultReaction{gap:6px;margin:5px 0 7px;padding:4px 5px;min-height:96px}
- .result-patient{width:60px;height:94px}.bonk-stage{width:84px;height:108px}.bonk-actor{transform-origin:left top;scale:.75;margin-left:0}.foam-mallet{scale:.75;right:0}
- .reaction-caption{font-size:10px;line-height:1.5}
- .clinic-result-score{padding:8px 10px;gap:8px}#clinicQuality{font-size:29px}#clinicAward{font-size:10px}
- #clinicResult table{font-size:10px}#clinicResult th,#clinicResult td{padding:5px 3px}.comparison-icon{width:24px;height:23px;margin-right:2px}
- #clinicBonus{font-size:9px;line-height:1.45;padding:4px 0}.clinic-disclaimer{font-size:8px}#clinicResult footer{margin-top:7px}#clinicNextBtn{min-height:33px;font-size:12px}
+ #clinicResult{padding:6px 8px;width:96vw;max-height:96dvh;overflow:hidden}#clinicResult h2{font-size:13px;line-height:1.3;margin:2px 0}
+ #clinicResultMessage{font-size:10px;line-height:1.25;margin:0 0 2px}
+ #resultReaction{gap:3px;margin:2px 0 4px;padding:2px 4px;min-height:0}
+ .result-patient{width:50px;height:75px}.bonk-stage{width:70px;height:90px}.bonk-actor{transform-origin:left top;scale:.65;margin-left:0}.foam-mallet{scale:.65;right:0}
+ .reaction-caption{font-size:9px;line-height:1.3}
+ .clinic-result-score{padding:3px 6px;gap:6px;margin-bottom:3px}#clinicQuality{font-size:20px}#clinicAward{font-size:9px}
+ #clinicResult table{font-size:9px}#clinicResult th,#clinicResult td{padding:2px 3px;line-height:1.15}.comparison-icon{width:16px;height:15px;margin-right:2px}
+ #clinicBonus{font-size:8px;line-height:1.25;padding:1px 0}.clinic-disclaimer{font-size:7.5px}#clinicResult footer{margin-top:4px}#clinicNextBtn{min-height:28px;font-size:11px}
 }
 @media(prefers-reduced-motion:reduce){.bonk-actor{animation:none;transform:translateX(-224px)}.foam-mallet{display:none}}
 /* Keep the time-pressure meters readable on phones alongside the request icons. */
@@ -60,3 +62,27 @@
  #patientHUD .patient-status{display:grid;grid-column:3;grid-row:2;grid-template-columns:1fr 1fr;gap:7px}
  #patientHUD .meter-row{margin:0;font-size:7px;line-height:8px;gap:0}#patientHUD .meter-row b{font-size:8px}#patientHUD progress{height:4px}
 }
+
+/* R6 Portion Badges & Cycle Button */
+.portion-badge{position:absolute;right:3px;bottom:2px;padding:1px 4px;border-radius:3px;font-size:9px;background:#2d5743;color:#fff9e6;box-shadow:0 1px 0 #fff8}
+.portion-badge[data-zero='true']{background:#77827b;color:#f3efe5}
+.portion-cycle-btn{min-height:30px;padding:4px 8px;font-size:11px;background:#355c4d;color:#fff;border-radius:4px}
+.miso-soup-widget{margin-top:6px;padding:8px 10px;border:1px solid #d4cbb7;border-radius:8px;background:#fffdf6}
+
+/* R6 Dual Finale Visual Art */
+.finale-banner-wrap{width:100%;margin-bottom:4px;text-align:center}
+.finale-banner{width:100%;max-height:110px;object-fit:cover;border-radius:6px;border:1.5px solid #bba06b}
+.doctor-splashed-card{display:flex;align-items:center;justify-content:center;gap:8px;margin:4px 0;padding:4px;background:#fcf0e8;border-radius:6px;border:1px solid #e2a893}
+.doctor-splashed-img{height:55px;width:auto;object-fit:contain}
+.doctor-bump-img{height:55px;width:auto;object-fit:contain}
+.finale-caption{margin:3px 0 0;font-size:11px;line-height:1.35;color:#45594f;font-weight:600}
+@media(max-width:699px){
+ .finale-banner{max-height:65px}
+ .doctor-splashed-card{gap:4px;margin:2px 0;padding:2px}
+ .doctor-splashed-img,.doctor-bump-img{height:38px}
+ .finale-caption{font-size:9px;line-height:1.25;margin-top:2px}
+}
+
+/* R6 Flame States */
+#flame.is-low span{transform:scale(0.65);opacity:0.85}
+#flame.is-high span{transform:scale(1.18);opacity:1;filter:drop-shadow(0 0 7px #ff7b00)}

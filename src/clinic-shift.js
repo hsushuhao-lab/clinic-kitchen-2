@@ -108,6 +108,15 @@
       round.finish(quality, window.CKRush?.settle(quality) || 0);
       window.CKRush?.record(round.lastEarned); render();
     },
+    finishR6(params) {
+      if (round.status !== "active") return;
+      const bonus = window.CKRush?.settle(params.quality) || 0;
+      round.finishR6({ ...params, bonus });
+      if (params.won) {
+        window.CKRush?.record(round.lastEarned);
+      }
+      render();
+    },
     reset() { window.CKRush?.reset(); round.reset(); resultDismissed = false; resumeOnReturn = false; lastKey = ''; applyDoctor(); selectPanel('prep'); render(); el('world').focus({ preventScroll: true }); },
     render
   };

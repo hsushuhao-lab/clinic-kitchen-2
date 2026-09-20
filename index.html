@@ -100,29 +100,35 @@
 <span class="station-badge" id="prepStationBadge">未在備料檯 (需靠近)</span>
 </div>
 <div aria-label="食材清單" class="ingredient-tray">
-<button data-food="tofu" title="嫩豆腐">
+<button data-food="tofu" title="嫩豆腐 (點選後按 Q 切換份量)">
 <img alt="豆腐" class="food-art" src="assets/workspace/tofu-whole.webp"/>
 <span>豆腐</span>
+<b class="portion-badge" id="portion-badge-tofu">1份</b>
 </button>
-<button data-food="pork" title="上等豬絞肉">
+<button data-food="pork" title="上等豬絞肉 (點選後按 Q 切換份量)">
 <img alt="絞肉" class="food-art" src="assets/workspace/pork-raw.webp"/>
 <span>絞肉</span>
+<b class="portion-badge" id="portion-badge-pork">1份</b>
 </button>
-<button data-food="douban" title="川味豆瓣醬">
+<button data-food="douban" title="川味豆瓣醬 (點選後按 Q 切換份量)">
 <img alt="豆瓣醬" class="food-art" src="assets/workspace/douban-paste.webp"/>
 <span>豆瓣醬</span>
+<b class="portion-badge" id="portion-badge-douban">1份</b>
 </button>
-<button data-food="garlic" title="鮮蒜瓣">
+<button data-food="garlic" title="鮮蒜瓣 (點選後按 Q 切換份量)">
 <img alt="蒜" class="food-art" src="assets/workspace/garlic-whole.webp"/>
 <span>蒜瓣</span>
+<b class="portion-badge" id="portion-badge-garlic">1份</b>
 </button>
-<button data-food="scallion" title="鮮青蔥">
+<button data-food="scallion" title="鮮青蔥 (點選後按 Q 切換份量)">
 <img alt="青蔥" class="food-art" src="assets/workspace/scallion-whole.webp"/>
 <span>青蔥</span>
+<b class="portion-badge" id="portion-badge-scallion">0份</b>
 </button>
-<button data-food="pepper" title="大紅袍花椒">
+<button data-food="pepper" title="大紅袍花椒 (點選後按 Q 切換份量)">
 <img alt="花椒" class="food-art" src="assets/workspace/pepper.webp"/>
 <span>花椒</span>
+<b class="portion-badge" id="portion-badge-pepper">0份</b>
 </button>
 </div>
 <!-- Cutting Board Stage -->
@@ -140,6 +146,7 @@
 </div>
 <div class="board-controls">
 <button disabled="" id="cutBtn">切配</button>
+<button id="portionCycleBtn" type="button" class="shift-control portion-cycle-btn">份量：1份 (Q)</button>
 <div class="cut-progress-text" id="cutProgressText">點選食材放上砧板切配</div>
 </div>
 </div>
@@ -195,6 +202,7 @@
 <span class="ticket-badge" id="ticketSpicy">微辣</span>
 <span class="ticket-badge" id="ticketScallion">要青蔥</span>
 <span class="ticket-badge" id="ticketRice">正常飯</span>
+<span class="ticket-badge" id="ticketMiso">附味噌湯</span>
 </div><div class="bench-title-row"><h3>配飯・裝盤 SERVE</h3></div>
 <!-- Rice Cooker Parallel Interaction Widget -->
 <div class="serving-stilllife" aria-hidden="true"><img class="ready-rice" src="assets/cooking/rice_bowl.png" alt=""/><img class="ready-dish" src="assets/cooking/dish_plated.png" alt=""/></div>
@@ -205,8 +213,26 @@
 <span class="rice-status-badge" id="riceStatusBadge">未盛飯</span>
 </div>
 <div class="rice-widget-actions">
-<button class="rice-btn" id="riceHalfBtn" title="盛半碗飯 (減醣輕量)" type="button">盛半碗飯</button>
-<button class="rice-btn" id="riceFullBtn" title="盛滿碗飯 (大份量)" type="button">盛滿碗飯</button>
+<button class="rice-btn" id="riceHalfBtn" title="盛半碗飯 (減醣輕量 · 快捷鍵 1)" type="button">
+<img src="assets/service/portion_half.webp" alt="半碗飯" style="width:24px;height:20px;vertical-align:middle;object-fit:contain;margin-right:4px;"/>盛半碗飯 (1)
+</button>
+<button class="rice-btn" id="riceFullBtn" title="盛滿碗飯 (大份量 · 快捷鍵 2)" type="button">
+<img src="assets/service/portion_full.webp" alt="滿碗飯" style="width:24px;height:20px;vertical-align:middle;object-fit:contain;margin-right:4px;"/>盛滿碗飯 (2)
+</button>
+</div>
+</div>
+<!-- Miso Soup Widget -->
+<div class="miso-soup-widget" id="misoSoupWidget">
+<div class="rice-widget-header">
+<span class="rice-icon">🍲</span>
+<span class="rice-title">暖心味噌湯 (配餐附湯)</span>
+<span class="rice-status-badge" id="misoStatusBadge">未附湯</span>
+</div>
+<div class="rice-widget-actions">
+<button class="rice-btn" id="misoToggleBtn" title="切換是否附熱味噌湯 (快捷鍵 Q)" type="button">
+<img id="misoBtnIcon" src="assets/service/miso_no.webp" alt="味噌湯" style="width:24px;height:20px;vertical-align:middle;object-fit:contain;margin-right:4px;"/>
+<span id="misoBtnLabel">不要味噌湯 (Q)</span>
+</button>
 </div>
 </div>
 <!-- Plated Dish Preview on Tray -->
