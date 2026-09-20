@@ -1,25 +1,26 @@
-# Craving Kitchen — R4 診間叫號
+# Craving Kitchen — R5 圖像點餐與 E 鍵料理
 
 **[直接試玩 GitHub Pages](https://hsushuhao-lab.github.io/clinic-kitchen-2/)**
 
-左側看本號病人想吃的麻婆豆腐，操作 Q 版醫師由左到右完成：病人 → 電腦 → 冰箱 → 備料 → 炒鍋 → 配飯／出餐。清除多餘前景障礙，保留走路、跑步、碰撞與手機控制。
+保留 Q 版可動診間、病人依序叫號、左至右動線及單一料理工作區。六位病人現在以保留各自服裝的完整半身插畫呈現；辣度／蔥花／飯量改成圖像需求，結算同時比較圖示與實際出餐。
 
-下方一次顯示一個工作區；精準條更高，游標週期 2.4 秒。配飯出餐後直接停止角色及計時，呈現不需捲動的需求／成品比較與評價；按「叫下一號」換下一位病人。病人的要求不能由玩家修改，是否加蔥、花椒或哪份飯仍由玩家決定。
+## 操作
+WASD／方向鍵移動、Shift 跑步、E 互動。備料按 1–6 選材料、E 切配；炒鍋 F 開關火、E 下料／翻炒；配飯 1 半碗、2 正常、E 出餐。P 暫停、R 重來、M 靜音，Space 精準操作保留。手機方向鍵與 E 按鈕仍可用。
 
-WASD／方向鍵移動、Shift 跑步、E 互動；手機可按住方向鍵。Space 做精準操作、M 靜音、P 暫停、R 重來。三單晚班的 90／80／70 秒目標與 96／120／144 BPM 壓力配樂保留。
+4 秒收汁完成後仍能繼續大火，超時每滿 1 秒扣 1 個滿意度百分點、最多 20。F 關火停止累積，已累積的扣分不會因再加材料消失。餐點不符合需求，醫師會有一次無血腥的卡通敲頭／揉頭反應；結果不需移動或捲動，直接「叫下一號」。完全正確餐點不播放敲頭。
 
-[本輪改動、測試及素材界線](docs/R4_CLINIC_RELEASE.md) · [完整核准原稿](assets/art_direction/approved/) · [Actions／部署](https://github.com/hsushuhao-lab/clinic-kitchen-2/actions)
+三單晚班、96／120／144 BPM 原有壓力配樂與三位醫師能力保留。這仍是 2D 衍生美術遊戲；不把自動測試通過等同美術獲准。
 
-## 執行
+[本版改動、精確規則及素材界線](docs/R5_SERVICE_POLISH.md) · [R4 叫號流程](docs/R4_CLINIC_RELEASE.md) · [核准原稿](assets/art_direction/approved/) · [Actions／部署](https://github.com/hsushuhao-lab/clinic-kitchen-2/actions)
+
 ```sh
 python -m pip install -r requirements-qa.txt
 python -m playwright install chromium
 python tools/build_web_release.py
 python -m http.server 8000 --bind 127.0.0.1 --directory web-dist
-# 另一终端
+# 另一終端：
 python tests/test_clinic_flow.py --base-url http://127.0.0.1:8000/
+python tests/test_service_polish.py --base-url http://127.0.0.1:8000/
 ```
 
-`main` 為開發及發布線。只有 source SHA、HTTP 瀏覽器測試、部署與公開站驗證皆通過才算發布，不以文件或 blob 建立冒充成功。
-
-本版六種病人使用原稿肖像與共用四格坐姿身體，非六套獨立全身動畫；醫師動畫與配樂沿用上一版。2D 美術仍可持續調整。遊戲 Craving 是虛構規則，麻婆豆腐不是戒菸療法。公開 runtime 不含真人私照、完整原稿或歷史 3D 模型。
+發布由 main 的 CI 建置實際圖片，驗證 R4 與 R5 完整操作後部署，再核對公開網站 source SHA。公開 runtime 排除原稿大海報、真人私照、歷史 3D 模型與測試。遊戲設定不代表麻婆豆腐具有戒菸療效。

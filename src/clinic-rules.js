@@ -17,16 +17,21 @@
     {id:'wok',name:'炒鍋爐台',label:'05 炒鍋',x:9,z:-2.2,at:[9,-1.35],r:1.6},
     {id:'rice',name:'電子鍋',label:'06 配飯・出餐',x:11.5,z:-2.2,at:[11.5,-1.35],r:1.6}
   ]);
+  // Each complete excess second costs 1 point; neither retries nor re-heating erase it.
+  function heatPenalty(seconds=0,burnt=false){
+    return Math.max(burnt?20:0,Math.min(20,Math.floor(Math.max(0,seconds)+1e-7)));
+  }
   function evaluate(order,dish){
+    const heat=heatPenalty(dish.overheatSeconds,dish.isBurnt);
     const actual={spicy:dish.hasPepper&&dish.hasDouban?'重辣':dish.hasDouban?'正常':'微辣',scallion:!!dish.hasScallion,rice:dish.ricePortion};
     const checks=[
       {label:'辣度',expected:order.spicy,actual:actual.spicy,ok:actual.spicy===order.spicy,penalty:10},
       {label:'蔥花',expected:order.scallion?'要蔥':'不要蔥',actual:actual.scallion?'有蔥':'無蔥',ok:actual.scallion===order.scallion,penalty:order.scallion?10:15},
       {label:'飯量',expected:order.rice,actual:actual.rice,ok:actual.rice===order.rice,penalty:actual.rice==='未盛飯'?15:5},
-      {label:'火候',expected:'收汁、不焦',actual:dish.isBurnt?'過火':dish.isSimmered?'收汁完成':'未收汁',ok:!dish.isBurnt&&dish.isSimmered,penalty:dish.isBurnt?20:15}
+      {label:'火候',expected:'4秒收汁後關火',actual:!dish.isSimmered?'未收汁':heat?`大火逾時 ${(dish.overheatSeconds||0).toFixed(1)}秒${dish.isBurnt?'／焦鍋':''}`:'收汁完成',ok:dish.isSimmered&&heat===0,penalty:dish.isSimmered?heat:15}
     ];
     return {quality:Math.max(50,100-checks.reduce((n,c)=>n+(c.ok?0:c.penalty),0)),checks,actual};
   }
-  root.CKClinicRules={patients,stations,evaluate};
+  root.CKClinicRules={patients,stations,evaluate,heatPenalty};
   if(typeof module!=='undefined')module.exports=root.CKClinicRules;
 })(typeof window==='undefined'?globalThis:window);

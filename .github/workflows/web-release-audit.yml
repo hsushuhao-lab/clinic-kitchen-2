@@ -44,6 +44,7 @@ jobs:
           python -m http.server 8000 --bind 127.0.0.1 --directory web-dist > /tmp/ck-release-http.log 2>&1 &
           sleep 2
           python tests/test_clinic_flow.py --base-url http://127.0.0.1:8000/ --output qa/current/clinic
+          python tests/test_service_polish.py --base-url http://127.0.0.1:8000/ --output qa/current/service
           python - <<'PY'
           from urllib.request import urlopen
           from urllib.error import HTTPError
