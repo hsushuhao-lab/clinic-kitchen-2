@@ -110,9 +110,9 @@
     const stage=Number($('cookingDeck')?.dataset.clinicStage);
     if(!Number.isFinite(stage) || stage===routedStage) return;
     routedStage=stage;
-    if(stage===3){document.querySelector('[data-clinic-panel="prep"]')?.click();setTimeout(()=>goTo('prep'),120);}
-    if(stage===4){document.querySelector('[data-clinic-panel="wok"]')?.click();setTimeout(()=>goTo('wok'),120);}
-    if(stage===5){document.querySelector('[data-clinic-panel="serve"]')?.click();setTimeout(()=>goTo('serve'),120);}
+    if(stage===3){document.querySelector('[data-clinic-panel="prep"]')?.click();goTo('prep');}
+    if(stage===4){document.querySelector('[data-clinic-panel="wok"]')?.click();goTo('wok');}
+    if(stage===5){document.querySelector('[data-clinic-panel="serve"]')?.click();goTo('serve');}
     if(stage===6)setTimeout(autoDeliver,150);
     ensureObservation();ensureConsultCard();renderPortionPicker();
   }
@@ -140,6 +140,13 @@
     const stage=Number($('cookingDeck')?.dataset.clinicStage);
     if(stage===0){e.preventDefault();e.stopImmediatePropagation();autoConsult();}
   },true);
+
+
+  // Clicking/auto-routing to a workstation always exposes its lower interaction panel immediately.
+  document.querySelectorAll('[data-station]').forEach(btn=>btn.addEventListener('click',()=>{
+    const id=btn.dataset.station;
+    if(['prep','wok','serve'].includes(id)) document.querySelector('[data-clinic-panel="'+id+'"]')?.click();
+  }));
 
   const deck=$('cookingDeck');
   if(deck)new MutationObserver(onStage).observe(deck,{attributes:true,attributeFilter:['data-clinic-stage','data-panel']});
