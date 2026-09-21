@@ -154,6 +154,12 @@
   if(result)new MutationObserver(()=>{ensureResultRating();ensureObservation();}).observe(result,{attributes:true,attributeFilter:['open','data-satisfaction']});
 
   // Keep the left clinical values current while craving/focus change.
+  setInterval(()=>{
+    const station=window.getSceneStatus?.()?.interactiveTarget?.id;
+    if(['prep','wok','serve'].includes(station) && $('cookingDeck')?.dataset.panel!==station){
+      document.querySelector('[data-clinic-panel="'+station+'"]')?.click();
+    }
+  },100);
   setInterval(()=>{ensureObservation();if($('clinicResult')?.open)ensureResultRating();},750);
   ensureObservation();ensureConsultCard();ensurePortionPicker();onStage();
 })();
