@@ -72,9 +72,9 @@
   #app>.shift-hud{grid-row:1}
   #app>#patientHUD{grid-column:1;grid-row:2;display:grid!important;height:78px!important}
   #app>#world{grid-column:1;grid-row:3}
-  #app>#cookingDeck{grid-column:1;grid-row:4;grid-template-rows:54px 27px minmax(0,1fr) 12px;min-height:0;overflow:hidden}
+  #app>#cookingDeck{grid-column:1;grid-row:4;grid-template-rows:50px 25px minmax(0,1fr) 10px;min-height:0;overflow:hidden}
   #app>#cookingDeck>*{min-height:0}
-  #clinicWelcome{height:100%;min-height:0;padding:8px 10px;gap:5px;overflow:auto}
+  #clinicWelcome{height:100%;min-height:0;padding:6px 10px;gap:4px;overflow:auto}
   #clinicWelcome h2{font-size:15px;line-height:1.35}
   .clinical-chief-complaint{padding:8px}.clinical-chief-complaint blockquote{font-size:12px;line-height:1.45}
   .clinical-observation{display:none}
