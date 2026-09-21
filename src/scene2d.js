@@ -35,7 +35,7 @@
   if(dx||dz){state.playerFacing=Math.atan2(dx,dz);face=Math.abs(dz)>Math.abs(dx)?(dz<0?'north':'south'):(dx<0?'west':'east');}
   state.interactiveTarget=nearby(p.x,p.z);
  }
- function go(s){if(frozen())return;touch.x=touch.z=0;route=[[state.playerPos.x,0],[s.at[0],0],s.at];routeStage=state.missionStage;host.focus({preventScroll:true});}
+ function go(s){if(frozen())return;touch.x=touch.z=0;if(state.interactiveTarget?.id===s.id){route=[];state.isMoving=state.isRunning=false;host.focus({preventScroll:true});return;}route=[[state.playerPos.x,0],[s.at[0],0],s.at];routeStage=state.missionStage;host.focus({preventScroll:true});}
  function resize(){
   width=host.clientWidth;height=host.clientHeight;const dpr=Math.min(devicePixelRatio||1,2);
   canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);canvas.style.width=width+'px';canvas.style.height=height+'px';
