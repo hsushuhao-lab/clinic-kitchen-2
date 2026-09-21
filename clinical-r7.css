@@ -85,3 +85,6 @@
   #visualPortionPicker{grid-template-columns:75px repeat(3,1fr)}
   #patientSelfRating{grid-template-columns:1fr 1fr}
 }
+
+/* Checklist is informational only; never block the cutting controls on compact layouts. */
+.prep-checklist{pointer-events:none}
