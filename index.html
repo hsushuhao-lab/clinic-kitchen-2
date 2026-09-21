@@ -30,11 +30,19 @@
 </header>
 <main aria-label="平面診間、取材區與後廚" id="world" tabindex="0">
 <aside aria-label="病人狀態" class="patient-hud" data-craving-band="medium" id="patientHUD">
-<img alt="上班族病人參考立繪" class="patient-portrait" src="assets/ui/patient-office-bust.webp"/>
+<img alt="病人參考立繪" class="patient-portrait" src="assets/service/office.webp"/>
 <div class="patient-status"><div class="patient-heading"><strong>上班族病人</strong><span id="patientMood">有些坐不住</span></div>
-<label class="meter-row">CRAVING <b id="cravingText">40%</b><progress aria-label="Craving 遊戲渴求值" id="cravingMeter" max="100" value="40"></progress></label>
-<label class="meter-row focus-row">FOCUS <b id="focusText">24%</b><progress aria-label="Focus 遊戲專注值" id="focusMeter" max="100" value="24"></progress></label>
-<div class="patient-foot"><span id="roundStatus">確認料理單後計時</span><span id="shiftTime">0 秒</span></div>
+<div class="patient-complaint-box"><small>病人主訴</small><blockquote id="patientComplaintQuote"></blockquote></div>
+<div class="clinical-metrics-list" id="clinicalMetricsList">
+<label class="meter-row" id="row-craving"><span>CRAVING 渴求</span><b id="cravingText">70%</b><span class="metric-delta" id="cravingDelta"></span><progress aria-label="Craving 遊戲渴求值" id="cravingMeter" max="100" value="70"></progress></label>
+<label class="meter-row focus-row" id="row-focus"><span>FOCUS 專注</span><b id="focusText">35%</b><span class="metric-delta" id="focusDelta"></span><progress aria-label="Focus 遊戲專注值" id="focusMeter" max="100" value="35"></progress></label>
+<label class="meter-row" id="row-anxiety"><span>ANXIETY 焦慮</span><b id="anxietyText">75%</b><span class="metric-delta" id="anxietyDelta"></span><progress aria-label="Anxiety 焦慮值" id="anxietyMeter" max="100" value="75"></progress></label>
+<label class="meter-row" id="row-impulsivity"><span>IMPULSIVITY 衝動</span><b id="impulsivityText">65%</b><span class="metric-delta" id="impulsivityDelta"></span><progress aria-label="Impulsivity 衝動值" id="impulsivityMeter" max="100" value="65"></progress></label>
+<label class="meter-row" id="row-language"><span>LANGUAGE 語言</span><b id="languageText">50%</b><span class="metric-delta" id="languageDelta"></span><progress aria-label="Language 語言值" id="languageMeter" max="100" value="50"></progress></label>
+<label class="meter-row" id="row-memory"><span>MEMORY 記憶</span><b id="memoryText">45%</b><span class="metric-delta" id="memoryDelta"></span><progress aria-label="Memory 記憶值" id="memoryMeter" max="100" value="45"></progress></label>
+<label class="meter-row" id="row-sleepiness"><span>SLEEPINESS 嗜睡</span><b id="sleepinessText">60%</b><span class="metric-delta" id="sleepinessDelta"></span><progress aria-label="Sleepiness 嗜睡值" id="sleepinessMeter" max="100" value="60"></progress></label>
+</div>
+<div class="patient-foot"><span id="roundStatus">門診進行中</span><span id="shiftTime">0 秒</span></div>
 </div>
 </aside>
 <div class="control-hint">WASD / 方向鍵移動 · Shift 跑步 · E 互動</div>
@@ -105,31 +113,71 @@
 <img alt="豆腐" class="food-art" src="assets/workspace/tofu-whole.webp"/>
 <span>豆腐</span>
 <b class="portion-badge" id="portion-badge-tofu">1份</b>
+<div class="portion-pills" data-food="tofu">
+<span class="portion-pill" data-food="tofu" data-portion="0">0</span>
+<span class="portion-pill" data-food="tofu" data-portion="0.5">半</span>
+<span class="portion-pill is-active" data-food="tofu" data-portion="1">1</span>
+</div>
 </button>
 <button data-food="pork" title="上等豬絞肉 (點選後按 Q 切換份量)">
 <img alt="絞肉" class="food-art" src="assets/workspace/pork-raw.webp"/>
 <span>絞肉</span>
 <b class="portion-badge" id="portion-badge-pork">1份</b>
+<div class="portion-pills" data-food="pork">
+<span class="portion-pill" data-food="pork" data-portion="0">0</span>
+<span class="portion-pill" data-food="pork" data-portion="0.5">半</span>
+<span class="portion-pill is-active" data-food="pork" data-portion="1">1</span>
+</div>
 </button>
 <button data-food="douban" title="川味豆瓣醬 (點選後按 Q 切換份量)">
 <img alt="豆瓣醬" class="food-art" src="assets/workspace/douban-paste.webp"/>
 <span>豆瓣醬</span>
 <b class="portion-badge" id="portion-badge-douban">1份</b>
+<div class="portion-pills" data-food="douban">
+<span class="portion-pill" data-food="douban" data-portion="0">0</span>
+<span class="portion-pill" data-food="douban" data-portion="0.5">半</span>
+<span class="portion-pill is-active" data-food="douban" data-portion="1">1</span>
+</div>
 </button>
 <button data-food="garlic" title="鮮蒜瓣 (點選後按 Q 切換份量)">
 <img alt="蒜" class="food-art" src="assets/workspace/garlic-whole.webp"/>
 <span>蒜瓣</span>
 <b class="portion-badge" id="portion-badge-garlic">1份</b>
+<div class="portion-pills" data-food="garlic">
+<span class="portion-pill" data-food="garlic" data-portion="0">0</span>
+<span class="portion-pill" data-food="garlic" data-portion="0.5">半</span>
+<span class="portion-pill is-active" data-food="garlic" data-portion="1">1</span>
+</div>
 </button>
 <button data-food="scallion" title="鮮青蔥 (點選後按 Q 切換份量)">
 <img alt="青蔥" class="food-art" src="assets/workspace/scallion-whole.webp"/>
 <span>青蔥</span>
 <b class="portion-badge" id="portion-badge-scallion">0份</b>
+<div class="portion-pills" data-food="scallion">
+<span class="portion-pill is-active" data-food="scallion" data-portion="0">0</span>
+<span class="portion-pill" data-food="scallion" data-portion="0.5">半</span>
+<span class="portion-pill" data-food="scallion" data-portion="1">1</span>
+</div>
 </button>
 <button data-food="pepper" title="大紅袍花椒 (點選後按 Q 切換份量)">
 <img alt="花椒" class="food-art" src="assets/workspace/pepper.webp"/>
 <span>花椒</span>
 <b class="portion-badge" id="portion-badge-pepper">0份</b>
+<div class="portion-pills" data-food="pepper">
+<span class="portion-pill is-active" data-food="pepper" data-portion="0">0</span>
+<span class="portion-pill" data-food="pepper" data-portion="0.5">半</span>
+<span class="portion-pill" data-food="pepper" data-portion="1">1</span>
+</div>
+</button>
+<button data-food="chili" title="朝天椒 (點選後按 Q 切換份量)">
+<img alt="辣椒" class="food-art" src="assets/ingredients/mapo_tofu/chili.png"/>
+<span>辣椒</span>
+<b class="portion-badge" id="portion-badge-chili">0份</b>
+<div class="portion-pills" data-food="chili">
+<span class="portion-pill is-active" data-food="chili" data-portion="0">0</span>
+<span class="portion-pill" data-food="chili" data-portion="0.5">半</span>
+<span class="portion-pill" data-food="chili" data-portion="1">1</span>
+</div>
 </button>
 </div>
 <!-- Cutting Board Stage -->
@@ -148,6 +196,7 @@
 <div class="board-controls">
 <button disabled="" id="cutBtn">切配</button>
 <button id="portionCycleBtn" type="button" class="shift-control portion-cycle-btn">份量：1份 (Q)</button>
+<button id="prepDoneBtn" type="button" class="shift-control r7-action-btn">全料下鍋 · 前往炒鍋 (E)</button>
 <div class="cut-progress-text" id="cutProgressText">點選食材放上砧板切配</div>
 </div>
 </div>
@@ -184,6 +233,7 @@
 <button disabled="" id="addBtn">下鍋</button>
 <button disabled="" id="stirBtn">翻炒</button>
 <button disabled="" id="plateBtn">盛盤</button>
+<button disabled="" id="wokCookDoneBtn" class="shift-control r7-action-btn" type="button">出鍋盛盤 · 前往配餐 (E)</button>
 </div>
 <div class="simmer-progress-container" hidden="" id="simmerProgressContainer">
 <div class="simmer-progress-header">
@@ -237,11 +287,11 @@
 </div>
 </div>
 <!-- Plated Dish Preview on Tray -->
-<div class="plated-dish-preview" hidden="" id="platedDishPreview">
+<div class="plated-dish-preview" id="platedDishPreview">
 <img alt="麻婆豆腐青花瓷碗佐白飯" class="plated-img" src="assets/cooking/tray_served.png"/>
 <div class="plated-info">
 <strong>青花瓷碗麻婆豆腐 × 越光米飯</strong>
-<span>已盛入托盤，請端回診間病人椅</span>
+<span id="trayStatusText">已盛入托盤，請點擊送餐按鈕端回診間</span>
 </div>
 </div>
 <button class="shift-control" hidden="" id="nextOrderBtn" type="button">下一份料理</button></div>

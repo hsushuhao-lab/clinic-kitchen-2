@@ -25,7 +25,7 @@ def main():
  build_characters();verify_characters();build_workspace();verify_workspace();build_chibi();verify_chibi();build_clinic();build_service();verify_service();build_r6()
  for script in CORE:
   if script.endswith('.js'):subprocess.run(['node','--check',script],cwd=ROOT,check=True)
- subprocess.run(['node','--test','tests/shift_rules.test.cjs','tests/rush_rules.test.cjs','tests/clinic_rules.test.cjs','tests/service_rules.test.cjs','tests/r6_rules.test.cjs'],cwd=ROOT,check=True)
+ subprocess.run(['node','--test','tests/shift_rules.test.cjs','tests/rush_rules.test.cjs','tests/clinic_rules.test.cjs','tests/service_rules.test.cjs','tests/r6_rules.test.cjs','tests/r7_rules.test.cjs'],cwd=ROOT,check=True)
  for folder,manifest in [('characters','assets/ui/character-manifest.json'),('workspace','assets/workspace/manifest.json'),('chibi','assets/chibi/manifest.json'),('clinic','assets/clinic/manifest.json'),('service','assets/service/manifest.json')]:
   audit=ROOT/'qa/current'/folder;audit.mkdir(parents=True,exist_ok=True)
   shutil.copyfile(ROOT/manifest,audit/'asset-provenance.json')

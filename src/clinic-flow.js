@@ -1,15 +1,17 @@
-/* R6: consolidated clinic flow, single consultation, batch cooking,
-   physical delivery return to patient, and dual feast/table-flip outcomes. */
+/* R7: Clinical Cooking UX Redesign
+   Consolidated clinic flow, 7 clinical metrics, automated walking transitions,
+   visual ingredients with portion pills, active wok cooking, tray preview,
+   in-flow non-modal settlement, and dual feast/table-flip finales. */
 (function(){
   'use strict';
   const el=id=>document.getElementById(id),
-    {patients,stations,evaluate,evaluateR6,calculateMealOutcome}=CKClinicRules;
+    {patients,stations,evaluateR6,calculateMealOutcome,calculateClinicalMetrics,generatePatientReview}=CKClinicRules;
   let number=1,patientIndex=0,result=null,last='',previousStation='',panel='prep';
   const original={interact:window.handleInteraction,reset:window.resetAll,cook:window.updateCooking,tick:CKShift.tick};
   const person=()=>patients[patientIndex%patients.length];
   const preference=()=>CKRush.prescribedOrder()||person();
   const summary=p=>`${p.spicy==='正常'?'正常辣':p.spicy}・${p.scallion?'要蔥':'不要蔥'}・${p.rice}・${p.miso?'附味噌湯':'不要湯'}`;
-  const text=(id,value)=>{if(el(id).textContent!==String(value))el(id).textContent=value;};
+  const text=(id,value)=>{if(el(id)&&el(id).textContent!==String(value))el(id).textContent=value;};
   const numberText=n=>String(n).padStart(3,'0');
 
   // Keep existing HUD nodes so the original craving/focus renderer retains ownership.
@@ -25,35 +27,101 @@
   const tabs=document.createElement('nav');tabs.id='clinicWorktabs';tabs.setAttribute('aria-label','料理工作區');
   tabs.innerHTML='<div><button type="button" class="shift-control" data-clinic-panel="prep">1 備料</button><button type="button" class="shift-control" data-clinic-panel="wok">2 炒鍋</button><button type="button" class="shift-control" data-clinic-panel="serve">3 配飯・盛湯</button></div><span id="clinicOrderSummary"></span>';
   el('rushStrip').after(tabs);
-  const welcome=document.createElement('section');welcome.id='clinicWelcome';
-  welcome.innerHTML='<small>聽病人說口味</small><h2>照病人的口味，做一碗麻婆豆腐。</h2><p id="clinicInstruction"></p><button class="shift-control" id="clinicGo" type="button">走向病人 · E 問診</button>';
+
+  const welcome=document.createElement('section');welcome.id='clinicWelcome';welcome.className='clinic-consult-deck';
+  welcome.innerHTML=`
+    <div class="consult-banner">
+      <small>PHASE 1 · 門診主訴與臨床判斷</small>
+      <h2 id="welcomeTitle">照病人的主訴，開立舒壓料理處方</h2>
+    </div>
+    <div class="consult-content-box">
+      <strong id="welcomePatientInfo"></strong>
+      <blockquote id="welcomePatientComplaint"></blockquote>
+      <div class="consult-order-preview" id="welcomeOrderPreview"></div>
+      <p class="consult-notice">⚡ 左側已載入病人 7 項身心基準指標（無法由玩家直接更改）。料理契合度與火候將決定結算時的舒緩降幅。</p>
+    </div>
+    <div class="consult-action-row">
+      <button class="shift-control r7-action-btn primary" id="consultConfirmBtn" type="button">確認處方開單 · 前往備料檯 (E / Enter)</button>
+      <button class="shift-control" id="clinicGo" type="button" style="display:none">走向病人 · E 問診</button>
+    </div>
+  `;
   el('cookingDeck').append(welcome);
 
   // Plating button on serve panel
-  const plate=document.createElement('button');plate.id='clinicPlateBtn';plate.className='shift-control';plate.type='button';plate.textContent='盛盤裝托盤';el('panel-serve').append(plate);
+  const plate=document.createElement('button');plate.id='clinicPlateBtn';plate.className='shift-control r7-action-btn';plate.type='button';plate.textContent='盛盤裝托盤 · 送餐給病人';el('panel-serve').append(plate);
   const serveNote=document.createElement('p');serveNote.id='clinicServeNote';el('panel-serve').append(serveNote);
+
+  // In-flow non-blocking settlement dialog
   const finish=document.createElement('dialog');finish.id='clinicResult';finish.setAttribute('aria-labelledby','clinicResultTitle');
-  finish.innerHTML='<header><small>本號料理已結算</small><h2 id="clinicResultTitle"></h2><p id="clinicResultMessage"></p></header><div class="clinic-result-score"><strong id="clinicQuality"></strong><span id="clinicAward"></span></div><table><thead><tr><th>項目</th><th>病人想要</th><th>實際出餐</th><th>結果</th></tr></thead><tbody id="clinicComparison"></tbody></table><p id="clinicBonus"></p><small class="clinic-disclaimer">這是虛構料理遊戲，麻婆豆腐不是戒菸治療。</small><footer><button type="button" class="shift-control" id="clinicNextBtn">叫下一號</button></footer>';
+  finish.innerHTML=`
+    <header>
+      <small>CLINIC EVALUATION · 臨床評估結算</small>
+      <h2 id="clinicResultTitle"></h2>
+      <blockquote class="patient-review-quote" id="patientReviewQuote"></blockquote>
+      <div class="subjective-grid" id="subjectiveGrid">
+        <span class="sub-chip">麻香風味：<b id="subNumbing">-</b></span>
+        <span class="sub-chip">感官撫慰：<b id="subComfort">-</b></span>
+        <span class="sub-chip">身心飽足：<b id="subSatiety">-</b></span>
+        <span class="sub-chip">思緒放鬆：<b id="subMental">-</b></span>
+      </div>
+      <p id="clinicResultMessage" style="display:none"></p>
+    </header>
+    <div class="clinic-result-score">
+      <div><strong id="clinicQuality"></strong><small>料理契合度</small></div>
+      <div class="comfort-block">病人舒緩度：<strong id="patientComfortScore"></strong></div>
+      <span id="clinicAward"></span>
+    </div>
+    <table>
+      <thead><tr><th>項目</th><th>病人想要</th><th>實際出餐</th><th>結果</th></tr></thead>
+      <tbody id="clinicComparison"></tbody>
+    </table>
+    <p id="clinicBonus"></p>
+    <p class="clinic-disclaimer">【設定聲明】麻婆豆腐為虛構遊戲舒壓料理設定，提供感官撫慰與心理放鬆，非臨床戒菸戒斷醫療處方。</p>
+    <footer><button type="button" class="shift-control r7-action-btn primary" id="clinicNextBtn">叫下一號 (Enter / E)</button></footer>
+  `;
   document.body.append(finish);
 
   function selectPanel(value){
     panel=value;el('cookingDeck').dataset.panel=value;
     document.querySelectorAll('[data-clinic-panel]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.clinicPanel===value)));
   }
+
   function announce(){
     const p=preference(),who=person();
     currentOrder={spicy:p.spicy,scallion:p.scallion,rice:p.rice,miso:p.miso};
     syncOrderTicketUI();
     if (el('ticketMiso')) el('ticketMiso').textContent = currentOrder.miso ? '附味噌湯' : '不要湯';
-    hud.querySelector('.patient-portrait').src=`assets/clinic/${who.id}.webp`;
+    hud.querySelector('.patient-portrait').src=`assets/service/${who.id}.webp`;
     hud.querySelector('.patient-portrait').alt=who.name;
     hud.querySelector('.patient-heading strong').textContent=who.name;
     el('clinicAnnouncement').textContent=`請 ${numberText(number)} 號 ${who.name} 到診間。`;
+
+    if (el('patientComplaintQuote')) el('patientComplaintQuote').textContent = who.complaint || who.wish || '';
+    if (el('welcomePatientInfo')) el('welcomePatientInfo').textContent = `${numberText(number)} 號 ${who.name}`;
+    if (el('welcomePatientComplaint')) el('welcomePatientComplaint').textContent = `「${who.complaint || who.wish || summary(p)}」`;
+    if (el('welcomeOrderPreview')) el('welcomeOrderPreview').textContent = summary(p);
+
+    if (who.clinicalStatus) {
+      text('cravingText', `${who.clinicalStatus.craving}%`);
+      if (el('cravingMeter')) el('cravingMeter').value = who.clinicalStatus.craving;
+      ['focus', 'anxiety', 'impulsivity', 'language', 'memory', 'sleepiness'].forEach(m => {
+        text(`${m}Text`, `${who.clinicalStatus[m]}`);
+        if (el(`${m}Meter`)) el(`${m}Meter`).value = who.clinicalStatus[m];
+      });
+    }
+    ['craving', 'focus', 'anxiety', 'impulsivity', 'language', 'memory', 'sleepiness'].forEach(m => {
+      if (el(`${m}Delta`)) {
+        el(`${m}Delta`).textContent = '';
+        el(`${m}Delta`).className = 'metric-delta';
+      }
+    });
+
     window.setClinicPatient?.(who.id);
     CKAudio.cue('ticket');
     last='';
     render();
   }
+
   function render(){
     const s=CKShift.snapshot(),c=getCookingStatus(),p=preference(),who=person();
     const station=getSceneStatus().interactiveTarget?.id||'';
@@ -64,15 +132,26 @@
     // Overwrite only presentation after the engine's panel selection and guard update.
     el('cookingDeck').dataset.panel=panel;el('cookingDeck').dataset.clinicStage=String(c.stage);
     const atWokOrServe=['wok','serve'].includes(station)&&!CKShift.isFrozen();
-    const canPlateDish = atWokOrServe && (c.ready || window.wok?.hasFood) && (c.stirs>=3 || (window.wok?.stirs>=3)) && (cookedDish.isSimmered || (window.wok?.isSimmered)) && !c.plated && !window.isPlating;
+    const canPlateDish = (c.ready || window.wok?.hasFood) && (c.stirs>=3 || (window.wok?.stirs>=3)) && (cookedDish.isSimmered || (window.wok?.isSimmered)) && !c.plated && !window.isPlating;
     el('clinicPlateBtn').disabled=!canPlateDish;
-    el('clinicPlateBtn').textContent=c.plated ? '已盛盤入托盤' : (window.isPlating ? '盛盤中...' : '盛盤裝托盤');
+    el('clinicPlateBtn').textContent=c.plated ? '已盛盤入托盤' : (window.isPlating ? '盛盤中...' : '盛盤裝托盤 · 送餐給病人');
+    if (el('wokCookDoneBtn')) {
+      el('wokCookDoneBtn').disabled = !canPlateDish;
+    }
     el('riceHalfBtn').disabled=el('riceFullBtn').disabled=!(c.stage>=3&&!c.plated);
     if(el('misoToggleBtn')) el('misoToggleBtn').disabled = !(c.stage>=3&&!c.plated);
     el('heatBtn').disabled ||= !c.atWok;
     el('addBtn').disabled ||= (!c.atWok || window.wok?.hasFood);
     el('stirBtn').disabled ||= (!c.atWok || !window.wok?.hasFood);
     el('cutBtn').disabled ||= !c.atPrep;
+
+    // Update tray preview info
+    if (el('platedDishPreview')) {
+      const riceLabel = cookedDish.ricePortion === '半碗飯' ? '🍚 減醣半碗米飯' : '🍚 正常越光米飯';
+      const misoLabel = cookedDish.miso ? ' ＋ 🍲 熱味噌湯' : '';
+      text('trayStatusText', `${riceLabel}${misoLabel} · 盛盤就緒`);
+    }
+
     const key=[number,who.id,p.spicy,p.scallion,p.rice,p.miso,s.status,c.stage,station,c.rice,c.miso,c.heated,cookedDish.isSimmered,c.plated].join('|');
     if(key!==last){
       last=key;text('clinicNumber',numberText(number));text('clinicName',who.name);
@@ -81,51 +160,114 @@
       text('clinicNext',`${numberText(number+1)}　${patients[(patientIndex+1)%patients.length].name} · 候診中`);
       text('clinicOrderSummary',`${numberText(number)} ${who.name}｜${summary(p)}`);
       const instructions=[
-        '走到最左側病人椅 (X: -10.5) 按 E 問診與開單。',
+        '點擊「確認處方開單」開始備料，或走到病人椅 (X: -10.5) 按 E 問診。',
         '需求已記錄。請前往備料檯 (X: 5.0) 準備食材。',
         '前往備料檯 (X: 5.0) 選料與份量，接著到炒鍋爐台全料下鍋。',
-        '前往備料檯切配，全料下鍋並翻炒收汁。',
+        '在備料檯選定食材份量，點擊全料下鍋走向炒鍋。',
         '炒鍋翻炒與大小火收汁，完成後盛盤裝托盤。',
-        '已盛盤！請端著托盤走回最左側診間交給病人 (X: -10.5)。',
+        '已盛盤！醫師正端著托盤走回診間交給病人 (X: -10.5)。',
         '端著托盤走回診間病人椅按 E 交餐給病人品嚐。',
         '病患品嚐完成。'
       ];
       text('clinicInstruction',instructions[c.stage]||'依目前工作站製作料理。');
       text('clinicGo',c.stage===0?'走向病人 · E 問診':c.plated?'走回診間 · E 交餐':'繼續料理');
       el('clinicGo').dataset.target=c.stage===0?'consult':c.plated?'consult':'prep';
-      text('clinicServeNote',c.plated?'已盛入托盤！請端著托盤走回最左側診間 (X: -10.5) 按 E 送餐給病人。':!cookedDish.isSimmered?'請先在炒鍋完成4等效秒收汁。':c.rice==='未盛飯'?'請依病人偏好選擇白飯份量。':'完成配餐後點擊盛盤裝托盤，再端回診間。');
+      text('clinicServeNote',c.plated?'已盛入托盤！醫師自動端餐走回診間送餐給病人。':!cookedDish.isSimmered?'請先在炒鍋完成4等效秒收汁。':c.rice==='未盛飯'?'請依病人偏好選擇白飯份量。':'完成配餐後點擊盛盤裝托盤，自動端回診間。');
     }
     if(result&&s.status==='won')el('sessionOverlay').hidden=true;
   }
   window.updateCooking=function(){original.cook();render();};
   CKShift.tick=function(dt,dialogOpen){original.tick.call(CKShift,dt,dialogOpen);render();};
 
+  function onConfirmConsult() {
+    const p = preference();
+    currentOrder = { spicy: p.spicy, scallion: p.scallion, rice: p.rice, miso: p.miso };
+    syncOrderTicketUI();
+    if (el('ticketMiso')) el('ticketMiso').textContent = currentOrder.miso ? '附味噌湯' : '不要湯';
+    setStage(STAGES.PREP);
+    CKShift.begin();
+    cookLog(`已確認開立料理處方：${summary(currentOrder)}，前往備料檯 (X: 5.0) 備料`);
+    if (window.autoWalkTo) {
+      window.autoWalkTo('prep', () => selectPanel('prep'));
+    } else {
+      selectPanel('prep');
+    }
+    render();
+  }
+
+  function onPrepDone() {
+    const c = getCookingStatus();
+    if (CKShift.isFrozen()) return;
+    if ($('addBtn') && !$('addBtn').disabled) {
+      $('addBtn').click();
+    } else if (!window.wok?.hasFood) {
+      if (window.CKClinicRules?.addBatchToWok) {
+        window.CKClinicRules.addBatchToWok(window.wok, window.preparedTray);
+      } else {
+        window.wok.contents = { ...window.preparedTray };
+        window.wok.hasFood = true;
+      }
+      if (window.syncWokFoodDOM) window.syncWokFoodDOM();
+      setStage(STAGES.COOK);
+    }
+    cookLog('全料備妥一次下鍋！前往炒鍋爐台烹飪');
+    if (window.autoWalkTo) {
+      window.autoWalkTo('wok', () => selectPanel('wok'));
+    } else {
+      selectPanel('wok');
+    }
+    render();
+  }
+
+  function onWokCookDone() {
+    if (CKShift.isFrozen()) return;
+    if (getMissionStage() < STAGES.PLATE) setStage(STAGES.PLATE);
+    cookLog('翻炒收汁完成！前往配餐檯盛飯盛湯');
+    if (window.autoWalkTo) {
+      window.autoWalkTo('serve', () => selectPanel('serve'));
+    } else {
+      selectPanel('serve');
+    }
+    render();
+  }
+  let finishOpenedAt = 0;
+
   function onPlate() {
     const c=getCookingStatus();
-    if(c.plated||window.isPlating||CKShift.isFrozen()) return;
-    if($('plateBtn') && !$('plateBtn').disabled) {
-      $('plateBtn').click();
-    } else {
-      window.isPlating = true;
-      setTimeout(() => {
-        window.isPlating = false;
-        c.plated = true;
-        window.plated = true;
-        if(window.setCarryingTray) window.setCarryingTray(true);
-        setStage(STAGES.SERVE);
-        cookLog('麻婆豆腐已盛入托盤！請端著托盤走回最左側診間 (X: -10.5) 按 E 送餐給病人');
-        $('log').textContent = '盛盤完成！端著托盤走回最左側診間病人椅按 E 送餐';
-        render();
-      }, 400);
+    if(CKShift.isFrozen()||window.isPlating) return;
+    if(c.plated) {
+      // Dish already plated into tray; clicking sends doctor back to consult
+      if (window.autoWalkTo) {
+        window.autoWalkTo('consult', () => deliver());
+      }
+      return;
     }
+    window.isPlating = true;
+    if (cookedDish.ricePortion === '未盛飯') {
+      cookedDish.ricePortion = '正常飯';
+      c.rice = '正常飯';
+    }
+    setTimeout(() => {
+      window.isPlating = false;
+      c.plated = true;
+      window.plated = true;
+      if(window.setCarryingTray) window.setCarryingTray(true);
+      setStage(STAGES.SERVE);
+      cookLog('麻婆豆腐已盛入托盤！請端著托盤走回診間 (X: -10.5) 按 E 送餐給病人');
+      $('log').textContent = '盛盤完成！端著托盤走回診間病人椅按 E 送餐';
+      if (el('platedDishPreview')) el('platedDishPreview').hidden = false;
+      render();
+      if (window.autoWalkTo) {
+        window.autoWalkTo('consult', () => deliver());
+      }
+    }, 300);
   }
 
   function deliver(){
     const c=getCookingStatus(), st=getSceneStatus();
     const atConsult = st.interactiveTarget?.id==='consult' || Math.abs(st.playerPos.x - (-10.5)) <= 2.2;
     if(!atConsult){
-      $('log').textContent = '未到病人旁：請端著托盤走回最左側病人旁 (X: -10.5) 才能交餐！';
-      cookLog('提示：必須走回診間病人旁才能交餐');
+      $('log').textContent = '未到病人旁：請端著托盤走回最左側診間 (X: -10.5) 才能交餐！';
       return;
     }
     if(!c.plated || CKShift.isFrozen()) return;
@@ -136,7 +278,7 @@
     if(window.setPatientDishVisible) window.setPatientDishVisible(true);
     window.stopShiftCooking?.();
 
-    // Freeze craving before meal
+    const who = person();
     const beforeCraving = Math.round(CKShift.craving);
     const dishSnapshot = {
       contents: { ...(window.wok?.contents || {}) },
@@ -157,25 +299,60 @@
     const mealOutcome = calculateMealOutcome({ beforeCraving, afterCraving, metricMode: 'relative' });
     const won = mealOutcome.success;
 
+    const clinicalOutcome = calculateClinicalMetrics(who.clinicalStatus, quality, result.checks, currentOrder, dishSnapshot);
+    const patientReview = generatePatientReview(who, quality, result.checks, dishSnapshot, won);
+
     CKShift.finishR6({ won, quality, cravingBefore: beforeCraving, cravingAfter: afterCraving });
     setStage(STAGES.FIRST_BITE);
 
-    const who = person();
+    // Update left HUD deltas and meters
+    text('cravingText', `${clinicalOutcome.metrics.craving.after}%`);
+    if (el('cravingMeter')) el('cravingMeter').value = clinicalOutcome.metrics.craving.after;
+    if (el('cravingDelta')) {
+      const d = clinicalOutcome.metrics.craving.delta;
+      el('cravingDelta').textContent = `${d >= 0 ? '+' : ''}${d.toFixed(1)}%`;
+      el('cravingDelta').className = `metric-delta ${d <= 0 ? 'good' : 'bad'}`;
+    }
+    ['focus', 'anxiety', 'impulsivity', 'language', 'memory', 'sleepiness'].forEach(m => {
+      const met = clinicalOutcome.metrics[m];
+      if (!met) return;
+      text(`${m}Text`, `${met.after}`);
+      if (el(`${m}Meter`)) el(`${m}Meter`).value = met.after;
+      if (el(`${m}Delta`)) {
+        const isGood = (m === 'focus' || m === 'language' || m === 'memory') ? (met.delta >= 0) : (met.delta <= 0);
+        el(`${m}Delta`).textContent = `${met.delta >= 0 ? '+' : ''}${met.delta}`;
+        el(`${m}Delta`).className = `metric-delta ${isGood ? 'good' : 'bad'}`;
+      }
+    });
+
+    // Top scene dual finale
+    if (window.setTopFinale) {
+      window.setTopFinale(won ? 'feast' : 'flip');
+    }
+
     text('clinicResultTitle', won ? `${numberText(number)} 號 ${who.name} · 舒壓共餐成功！` : `${numberText(number)} 號 ${who.name} · 料理翻桌失敗！`);
+    text('patientReviewQuote', patientReview.quote || (patientReview.review ? `「${patientReview.review}」` : ''));
     text('clinicResultMessage', won
       ? '「就是我想吃的口味！熱騰騰的麻婆豆腐，搭配剛好的米飯與味噌湯，肩膀的緊繃感全都散開了！」'
       : '「這根本不是我想吃的口味！」病人憤怒翻桌，盤碗與紅油熱湯直接濺到醫師白袍上！');
+    text('subNumbing', patientReview.numbing || '-');
+    text('subComfort', patientReview.comfort || '-');
+    text('subSatiety', patientReview.satiety || '-');
+    text('subMental', patientReview.mental || '-');
     text('clinicQuality', `${quality}%`);
+    text('patientComfortScore', `${clinicalOutcome.comfortScore} 分`);
+
     const s = CKShift.snapshot();
     text('clinicAward', won
-      ? `舒壓達標（降幅 ${(mealOutcome.relativeReduction * 100).toFixed(1)}% ≥ 25%）· +${s.lastEarned} 分 · 連勝 ${s.streak}`
-      : `未達舒壓門檻（降幅 ${(mealOutcome.relativeReduction * 100).toFixed(1)}% < 25%）· 連勝歸零`);
+      ? `舒壓達標（降幅 ${(clinicalOutcome.relativeReduction * 100).toFixed(1)}% ≥ 25%）· +${s.lastEarned} 分 · 連勝 ${s.streak}`
+      : `未達舒壓門檻（降幅 ${(clinicalOutcome.relativeReduction * 100).toFixed(1)}% < 25%）· 連勝歸零`);
 
     el('clinicComparison').innerHTML = result.checks.map(c => `<tr><th>${c.label}</th><td>${c.expected}</td><td>${c.actual}</td><td class="${c.ok ? 'match' : 'mismatch'}">${c.ok ? '符合' : '−' + c.penalty + '%'}</td></tr>`).join('');
     text('clinicBonus', CKRush.resultText() + (CKRush.snapshot().mode === 'rush' ? ` · 本班 ${CKRush.snapshot().sessionPoints} 分` : ''));
     text('clinicNextBtn', CKRush.snapshot().complete ? '三單完成 · 再開一班' : '叫下一號');
 
     el('sessionOverlay').hidden = true;
+    finishOpenedAt = performance.now();
     finish.showModal();
     if (window.CKService?.showReaction) {
       window.CKService.showReaction(won, mealOutcome);
@@ -197,7 +374,7 @@
           badge:'CLINIC EMR — 門診處方開單',
           title:`${numberText(number)} 號 · ${who.name}`,
           content:`
-            <p class="clinic-consult-wish">「${who.wish||summary(p)}」</p>
+            <p class="clinic-consult-wish">「${who.complaint||who.wish||summary(p)}」</p>
             <p><strong>問診主訴與處方明細：</strong></p>
             <ul>
               <li>辣度偏好：【${p.spicy==='正常'?'正宗川味（正常辣）':p.spicy}】</li>
@@ -205,16 +382,11 @@
               <li>越光米飯：【${p.rice}】</li>
               <li>暖心湯品：【${p.miso?'附熱味噌湯':'免附湯品'}】</li>
             </ul>
-            <p><em>請至右側備料檯 (X: 5.0) 準備食材，全料下鍋並翻炒收汁。</em></p>
+            <p><em>左側已鎖定 7 項臨床身心基準指標，點擊確認處方後醫師將自動走往備料檯。</em></p>
           `,
-          confirmText:'確認處方開單並開始備料 (Enter / E)',
+          confirmText:'確認處方開單並前往備料 (Enter / E)',
           onConfirm:()=>{
-            currentOrder={spicy:p.spicy,scallion:p.scallion,rice:p.rice,miso:p.miso};
-            syncOrderTicketUI();
-            if (el('ticketMiso')) el('ticketMiso').textContent = currentOrder.miso ? '附味噌湯' : '不要湯';
-            setStage(STAGES.PREP);
-            CKShift.begin();
-            cookLog(`已確認開立料理處方：${summary(currentOrder)}，前往備料檯 (X: 5.0) 備料`);
+            onConfirmConsult();
           }
         });
         return;
@@ -233,24 +405,48 @@
     const status=CKShift.snapshot().status;
     if(status==='won'){number++;patientIndex++;}
     if(finish.open)finish.close();result=null;
+    if(window.setTopFinale)window.setTopFinale(null);
     original.reset();last='';previousStation='';selectPanel('prep');announce();
   };
 
   el('clinicPlateBtn').addEventListener('click', onPlate);
   el('clinicNextBtn').addEventListener('click',()=>window.resetAll());
   finish.addEventListener('cancel',e=>e.preventDefault());
-  finish.addEventListener('keydown',e=>{if(['Enter','e','E'].includes(e.key)&&!e.repeat){e.preventDefault();e.stopPropagation();el('clinicNextBtn').click();}});
+  finish.addEventListener('keydown',e=>{
+    if(['Enter','e','E'].includes(e.key)&&!e.repeat){
+      if(performance.now()-finishOpenedAt < 500){
+        e.preventDefault();
+        return;
+      }
+      e.preventDefault();e.stopPropagation();el('clinicNextBtn').click();
+    }
+  });
   document.querySelectorAll('[data-clinic-panel]').forEach(b=>b.addEventListener('click',()=>{selectPanel(b.dataset.clinicPanel);render();}));
   el('clinicGo').addEventListener('click',()=>{
     const t=el('clinicGo').dataset.target;
     document.querySelector(`[data-station="${t}"]`)?.click();
   });
+  el('consultConfirmBtn').addEventListener('click', onConfirmConsult);
+  if (el('prepDoneBtn')) el('prepDoneBtn').addEventListener('click', onPrepDone);
+  if (el('wokCookDoneBtn')) el('wokCookDoneBtn').addEventListener('click', onWokCookDone);
+
+  // Wire portion pills in tray
+  document.querySelectorAll('.portion-pill').forEach(pill => {
+    pill.addEventListener('click', e => {
+      e.stopPropagation();
+      const food = pill.dataset.food;
+      const portion = Number(pill.dataset.portion);
+      if (window.setPortion) window.setPortion(food, portion);
+    });
+  });
+
   el('rushMode').addEventListener('click',()=>announce());
   el('doctorDialog').addEventListener('close',()=>el('world').focus({preventScroll:true}));
   window.CKClinic={
     snapshot:()=>({number,patient:{...person()},order:{...currentOrder},panel,result:result&&JSON.parse(JSON.stringify(result)),resultOpen:finish.open}),
     deliver,
-    render
+    render,
+    onConfirmConsult
   };
   selectPanel('prep');announce();
 })();

@@ -2,12 +2,72 @@
 (function(root){
   'use strict';
   const patients = Object.freeze([
-    {id:'office',name:'上班族',wish:'今天想吃正常辣，不要蔥，半碗飯就好，附熱味噌湯。',spicy:'正常',scallion:false,rice:'半碗飯',miso:true},
-    {id:'student',name:'大學生',wish:'想吃正常辣、加蔥花，配一整碗飯，要味噌湯。',spicy:'正常',scallion:true,rice:'正常飯',miso:true},
-    {id:'driver',name:'司機',wish:'給我重辣、蔥花多香一點，飯要正常份量，不要湯。',spicy:'重辣',scallion:true,rice:'正常飯',miso:false},
-    {id:'auntie',name:'阿姨',wish:'正常辣、要蔥花，今天飯只要半碗，要一碗味噌湯。',spicy:'正常',scallion:true,rice:'半碗飯',miso:true},
-    {id:'quiet',name:'安靜的訪客',wish:'我想吃正常辣，不要蔥，飯要一碗，不要味噌湯。',spicy:'正常',scallion:false,rice:'正常飯',miso:false},
-    {id:'repeat',name:'熟客',wish:'這次試試重辣，不放蔥，再配半碗飯，附熱味噌湯。',spicy:'重辣',scallion:false,rice:'半碗飯',miso:true}
+    {
+      id: 'office',
+      name: '上班族',
+      wish: '今天想吃正常辣，不要蔥，半碗飯就好，附熱味噌湯。',
+      complaint: '工作壓力繁重，下午總渴望重口味刺激與抽菸，胃口差又容易焦慮。',
+      spicy: '正常',
+      scallion: false,
+      rice: '半碗飯',
+      miso: true,
+      clinicalStatus: { craving: 70, focus: 35, anxiety: 75, impulsivity: 65, language: 50, memory: 45, sleepiness: 60 }
+    },
+    {
+      id: 'student',
+      name: '大學生',
+      wish: '想吃正常辣、加蔥花，配一整碗飯，要味噌湯。',
+      complaint: '準備期末考熬夜念書，注意力渙散又容易衝動分心，想吃熱呼呼的宵夜。',
+      spicy: '正常',
+      scallion: true,
+      rice: '正常飯',
+      miso: true,
+      clinicalStatus: { craving: 65, focus: 25, anxiety: 70, impulsivity: 75, language: 60, memory: 40, sleepiness: 80 }
+    },
+    {
+      id: 'driver',
+      name: '司機',
+      wish: '給我重辣、蔥花多香一點，飯要正常份量，不要湯。',
+      complaint: '整天在市區開車精神高度緊繃，嗜睡疲累又常有菸癮衝動，需要重辣提神。',
+      spicy: '重辣',
+      scallion: true,
+      rice: '正常飯',
+      miso: false,
+      clinicalStatus: { craving: 80, focus: 40, anxiety: 60, impulsivity: 70, language: 45, memory: 50, sleepiness: 75 }
+    },
+    {
+      id: 'auntie',
+      name: '阿姨',
+      wish: '正常辣、要蔥花，今天飯只要半碗，要一碗味噌湯。',
+      complaint: '最近心神不寧、健忘丟三落四，心情鬱悶時總想找點熟悉的熱食舒緩安神。',
+      spicy: '正常',
+      scallion: true,
+      rice: '半碗飯',
+      miso: true,
+      clinicalStatus: { craving: 60, focus: 45, anxiety: 80, impulsivity: 55, language: 70, memory: 35, sleepiness: 50 }
+    },
+    {
+      id: 'quiet',
+      name: '安靜的訪客',
+      wish: '我想吃正常辣，不要蔥，飯要一碗，不要味噌湯。',
+      complaint: '胸口堵著悶悶的，不太想開口說話，只想靜靜吃一頓暖胃舒壓的家常便飯。',
+      spicy: '正常',
+      scallion: false,
+      rice: '正常飯',
+      miso: false,
+      clinicalStatus: { craving: 55, focus: 50, anxiety: 65, impulsivity: 40, language: 30, memory: 60, sleepiness: 55 }
+    },
+    {
+      id: 'repeat',
+      name: '熟客',
+      wish: '這次試試重辣，不放蔥，再配半碗飯，附熱味噌湯。',
+      complaint: '剛換新工作適應不良，焦慮暴躁、衝動難耐，渴望正宗重辣麻婆豆腐壓壓驚。',
+      spicy: '重辣',
+      scallion: false,
+      rice: '半碗飯',
+      miso: true,
+      clinicalStatus: { craving: 75, focus: 30, anxiety: 70, impulsivity: 80, language: 55, memory: 50, sleepiness: 65 }
+    }
   ]);
 
   // R6 Consolidated Stations: Consult (X: -10.5), Prep (X: 5.0), Wok (X: 9.0), Serve (X: 11.5)
@@ -24,7 +84,8 @@
     douban: { id: 'douban', name: '豆瓣醬', key: '3', defaultPortion: 1 },
     garlic: { id: 'garlic', name: '蒜', key: '4', defaultPortion: 1 },
     scallion: { id: 'scallion', name: '青蔥', key: '5', defaultPortion: 1 },
-    pepper: { id: 'pepper', name: '花椒', key: '6', defaultPortion: 1 }
+    chili: { id: 'chili', name: '辣椒', key: '6', defaultPortion: 0 },
+    pepper: { id: 'pepper', name: '花椒', key: '7', defaultPortion: 0 }
   });
 
   const VALID_PORTIONS = Object.freeze([0, 0.5, 1]);
@@ -190,6 +251,109 @@
     };
   }
 
+  function calculateClinicalMetrics(beforeMetrics, quality, checks = [], order = {}, dish = {}) {
+    const b = beforeMetrics || { craving: 70, focus: 35, anxiety: 75, impulsivity: 65, language: 50, memory: 45, sleepiness: 60 };
+    const qRatio = Math.max(0, Math.min(100, Number(quality) || 0)) / 100;
+    
+    // Primary outcome: Craving relative reduction preserved strictly
+    const cBefore = Math.max(0, Number(b.craving) || 0);
+    const cAfter = Math.max(0, Number((cBefore * (1 - 0.5 * qRatio)).toFixed(1)));
+    const cReduction = cBefore > 0 ? (cBefore - cAfter) / cBefore : 0;
+    const won = cReduction >= 0.25 - 1e-9;
+    
+    // Secondary metrics (0 - 100)
+    const anxietyDrop = won ? Math.round(35 * qRatio + 5) : Math.round(10 * qRatio);
+    const aAfter = Math.max(10, Math.min(100, b.anxiety - anxietyDrop));
+    
+    const focusGain = won ? Math.round(35 * qRatio + 5) : Math.round(5 * qRatio);
+    const fAfter = Math.max(0, Math.min(100, b.focus + focusGain));
+    
+    const impulsivityDrop = won ? Math.round(30 * qRatio + 5) : Math.round(8 * qRatio);
+    const iAfter = Math.max(10, Math.min(100, b.impulsivity - impulsivityDrop));
+    
+    const languageGain = won ? Math.round(25 * qRatio + 5) : Math.round(5 * qRatio);
+    const lAfter = Math.max(0, Math.min(100, b.language + languageGain));
+    
+    const memoryGain = won ? Math.round(20 * qRatio + 5) : Math.round(4 * qRatio);
+    const mAfter = Math.max(0, Math.min(100, b.memory + memoryGain));
+    
+    const sleepinessDrop = won ? Math.round(25 * qRatio + 5) : Math.round(5 * qRatio);
+    const sAfter = Math.max(10, Math.min(100, b.sleepiness - sleepinessDrop));
+    
+    const afterMetrics = {
+      craving: cAfter,
+      focus: fAfter,
+      anxiety: aAfter,
+      impulsivity: iAfter,
+      language: lAfter,
+      memory: mAfter,
+      sleepiness: sAfter
+    };
+
+    const deltaMetrics = {
+      craving: Number((cAfter - cBefore).toFixed(1)),
+      focus: fAfter - b.focus,
+      anxiety: aAfter - b.anxiety,
+      impulsivity: iAfter - b.impulsivity,
+      language: lAfter - b.language,
+      memory: mAfter - b.memory,
+      sleepiness: sAfter - b.sleepiness
+    };
+
+    const comfortScore = Math.max(0, Math.min(100, Math.round(
+      0.4 * quality +
+      0.2 * (anxietyDrop / 40 * 100) +
+      0.15 * (focusGain / 40 * 100) +
+      0.15 * (impulsivityDrop / 35 * 100) +
+      0.1 * (languageGain / 30 * 100)
+    )));
+
+    const metrics = {
+      craving: { before: cBefore, after: cAfter, delta: deltaMetrics.craving },
+      focus: { before: b.focus, after: fAfter, delta: deltaMetrics.focus },
+      anxiety: { before: b.anxiety, after: aAfter, delta: deltaMetrics.anxiety },
+      impulsivity: { before: b.impulsivity, after: iAfter, delta: deltaMetrics.impulsivity },
+      language: { before: b.language, after: lAfter, delta: deltaMetrics.language },
+      memory: { before: b.memory, after: mAfter, delta: deltaMetrics.memory },
+      sleepiness: { before: b.sleepiness, after: sAfter, delta: deltaMetrics.sleepiness }
+    };
+
+    return {
+      before: b,
+      after: afterMetrics,
+      delta: deltaMetrics,
+      metrics,
+      cravingBefore: cBefore,
+      cravingAfter: cAfter,
+      relativeReduction: Number(cReduction.toFixed(6)),
+      success: won,
+      comfortScore
+    };
+  }
+
+  function generatePatientReview(patient, quality, checks = [], dish = {}, won = true) {
+    const numbingOk = checks.some(c => c.label.includes('辣度') && c.ok);
+    const scallionOk = checks.some(c => c.label.includes('蔥') && c.ok);
+    const riceOk = checks.some(c => c.label.includes('飯') && c.ok);
+
+    const numbingText = numbingOk ? '花椒麻香酥在舌尖，香氣醇厚又溫暖。' : '調味稍微失衡，麻辣感不如預期合胃口。';
+    const comfortText = won ? '溫熱滑嫩的豆腐下肚，緊繃一整天的肩膀和焦慮完全放鬆了。' : '吃完肚子有些燥熱，原本煩悶的情緒沒有得到紓解。';
+    const satietyText = riceOk ? `搭配剛好的${dish.rice || dish.ricePortion || '米飯'}，飽足感十分舒服踏實。` : '米飯份量不太習慣，整體飽足感欠缺。';
+    const mentalText = won ? '腦袋清爽許多，午後的注意力與精神都重新回來了！' : '心情很糟，吃完還是感覺坐立難安！';
+
+    const quote = won
+      ? `「這就是我想吃的麻婆豆腐！${numbingText}${comfortText}吃完整個人平靜踏實，太感謝了！」`
+      : `「這完全不是我想吃的口味！${numbingText}本來就心煩，現在更煩躁了！」`;
+
+    return {
+      numbing: numbingText,
+      comfort: comfortText,
+      satiety: satietyText,
+      mental: mentalText,
+      quote
+    };
+  }
+
   // Legacy evaluate function for backwards compatibility with R5 tests
   function evaluate(order, dish) {
     const heat = heatPenalty(dish.overheatSeconds, dish.isBurnt);
@@ -219,6 +383,8 @@
     heatPenaltyR6,
     evaluateR6,
     calculateMealOutcome,
+    calculateClinicalMetrics,
+    generatePatientReview,
     heatPenalty,
     evaluate
   };

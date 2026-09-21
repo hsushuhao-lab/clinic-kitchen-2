@@ -18,7 +18,7 @@
  }
  const wishes=document.createElement('div');wishes.id='requestIcons';
  $('clinicWish').after(wishes);
- const shortcut=document.createElement('p');shortcut.id='stationKeyHelp';shortcut.textContent='1–6 選材料 · Q 切換份量 (0/半/1) · E 切配備妥 · F 開關火';
+ const shortcut=document.createElement('p');shortcut.id='stationKeyHelp';shortcut.textContent='1–7 選材料 · Q 切換份量 (0/半/1) · E 切配備妥 · F 開關火';
  $('clinicWorktabs').after(shortcut);
  document.querySelectorAll('.ingredient-tray button').forEach((b,i)=>{
   const key=document.createElement('kbd');key.textContent=String(i+1);b.prepend(key);
@@ -46,8 +46,8 @@
   const key=JSON.stringify(clinic.order);
   if(key!==request){request=key;wishes.replaceChildren(iconRow(clinic.order));}
   const at=getSceneStatus().interactiveTarget?.id;
-  const help=c.plated?'已盛入托盤！請走回最左側診間 (X: -10.5) 按 E 交餐給病人':
-   at==='prep'?'1–6 選材料 · Q 循環份量 (0/0.5/1) · E 切配放入備料盤':
+  const help=c.plated?'已盛入托盤！醫師自動端餐送回診間給病人':
+   at==='prep'?'1–7 選材料 · Q 循環份量 (0/0.5/1) · E 切配放入備料盤':
    at==='wok'?'E 全料下鍋／翻炒／起鍋 · F 切換火力 (關/小/大)｜4等效秒收汁':
    at==='serve'?'1 半碗飯 · 2 正常飯 · Q 味噌湯｜完成後按盛盤裝托盤':
    'WASD／方向鍵移動 · Shift 跑步 · 到站 E 互動';
@@ -96,7 +96,7 @@
   }
 
   if(at==='prep'){
-   if(/^[1-6]$/.test(key)){
+   if(/^[1-7]$/.test(key)){
     document.querySelectorAll('.ingredient-tray button')[Number(key)-1]?.click();return true;
    }
    if(key==='q'){
@@ -143,7 +143,7 @@
  addEventListener('keydown',e=>{
   if(e.ctrlKey||e.metaKey||e.altKey||e.target.closest('input,textarea,select,[contenteditable="true"],dialog,.dialog-modal'))return;
   const key=e.key.toLowerCase();
-  if(!['e','f','q',' ','1','2','3','4','5','6'].includes(key))return;
+  if(!['e','f','q',' ','1','2','3','4','5','6','7'].includes(key))return;
   if(e.repeat){e.preventDefault();e.stopImmediatePropagation();return;}
   if(stationAction(key)){e.preventDefault();e.stopImmediatePropagation();}
  },true);

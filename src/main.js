@@ -22,7 +22,7 @@ const world = $('world'), camera = $('camera'), player = $('player');
 const keys = new Set(), visited = new Set();
 const props = [...document.querySelectorAll('.prop')];
 const foodButtons = [...document.querySelectorAll('[data-food]')];
-const foodNames = { tofu: '豆腐', pork: '絞肉', douban: '豆瓣醬', garlic: '蒜', pepper: '花椒', scallion: '青蔥' };
+const foodNames = { tofu: '豆腐', pork: '絞肉', douban: '豆瓣醬', garlic: '蒜', scallion: '青蔥', chili: '辣椒', pepper: '花椒' };
 const required = ['tofu', 'pork', 'douban', 'garlic'];
 const prepped = new Set(), inWok = new Set();
 let x = 250, y = 470, previousTime = 0;
@@ -41,12 +41,12 @@ function cancelActionTimers() {
   actionTimers.forEach(clearTimeout); actionTimers.clear();
 }
 
-let preparedTray = { tofu: 1, pork: 1, douban: 1, garlic: 1, scallion: 0, pepper: 0 };
+let preparedTray = { tofu: 1, pork: 1, douban: 1, garlic: 1, scallion: 0, chili: 0, pepper: 0 };
 window.preparedTray = preparedTray;
 
 let wok = window.CKClinicRules?.createWok ? window.CKClinicRules.createWok() : {
   hasFood: false,
-  contents: { tofu: 0, pork: 0, douban: 0, garlic: 0, scallion: 0, pepper: 0 },
+  contents: { tofu: 0, pork: 0, douban: 0, garlic: 0, scallion: 0, chili: 0, pepper: 0 },
   stirs: 0,
   flame: 'off',
   highHeatSeconds: 0,
@@ -65,6 +65,11 @@ function updatePortionUI() {
       badge.textContent = portion === 0 ? '0份' : (portion === 0.5 ? '半份' : '1份');
       badge.dataset.zero = String(portion === 0);
     }
+    // Update visual pills if present
+    document.querySelectorAll(`.portion-pill[data-food="${food}"]`).forEach(btn => {
+      const pVal = Number(btn.dataset.portion);
+      btn.classList.toggle('is-active', pVal === portion);
+    });
   }
   const curFood = selectedFood || 'tofu';
   const curP = preparedTray[curFood] !== undefined ? preparedTray[curFood] : 1;
@@ -74,6 +79,18 @@ function updatePortionUI() {
 }
 window.updatePortionUI = updatePortionUI;
 
+function setPortion(food, portion) {
+  const target = food || selectedFood || 'tofu';
+  const p = Number(portion);
+  if ([0, 0.5, 1].includes(p)) {
+    preparedTray[target] = p;
+    updatePortionUI();
+    cookLog(`${foodNames[target] || target} 份量設定為：${p === 0 ? '不取 (0份)' : p === 0.5 ? '半份' : '1份'}`);
+    if (window.updateCooking) window.updateCooking();
+  }
+}
+window.setPortion = setPortion;
+
 function cyclePortion(food) {
   const target = food || selectedFood || 'tofu';
   const cur = preparedTray[target] !== undefined ? preparedTray[target] : 0;
@@ -81,6 +98,7 @@ function cyclePortion(food) {
   preparedTray[target] = next;
   updatePortionUI();
   cookLog(`${foodNames[target] || target} 份量切換為：${next === 0 ? '不取 (0份)' : next === 0.5 ? '半份' : '1份'}`);
+  if (window.updateCooking) window.updateCooking();
   return next;
 }
 window.cyclePortion = cyclePortion;
@@ -775,7 +793,35 @@ function syncWokFoodDOM() {
     scallionEl.remove();
   }
 
-  // 7. Simmer bubbles
+  // 7. Chili element
+  let chiliEl = container.querySelector('.wok-food-chili');
+  if (inWok.has('chili')) {
+    if (!chiliEl) {
+      chiliEl = document.createElement('img');
+      chiliEl.className = 'wok-food-item wok-food-chili';
+      chiliEl.src = 'assets/ingredients/mapo_tofu/chili.png';
+      chiliEl.alt = '辣椒碎';
+      container.appendChild(chiliEl);
+    }
+  } else if (chiliEl) {
+    chiliEl.remove();
+  }
+
+  // 8. Sichuan Pepper element
+  let pepperEl = container.querySelector('.wok-food-pepper');
+  if (inWok.has('pepper')) {
+    if (!pepperEl) {
+      pepperEl = document.createElement('img');
+      pepperEl.className = 'wok-food-item wok-food-pepper';
+      pepperEl.src = 'assets/workspace/pepper.webp';
+      pepperEl.alt = '花椒粉';
+      container.appendChild(pepperEl);
+    }
+  } else if (pepperEl) {
+    pepperEl.remove();
+  }
+
+  // 9. Simmer bubbles
   let bubblesEl = container.querySelector('.simmer-bubbles');
   if (stirs >= 2 && inWok.size >= 4) {
     if (!bubblesEl) {
@@ -827,11 +873,11 @@ function resetAll() {
   };
   window.cookedDish = cookedDish;
 
-  preparedTray = { tofu: 1, pork: 1, douban: 1, garlic: 1, scallion: 0, pepper: 0 };
+  preparedTray = { tofu: 1, pork: 1, douban: 1, garlic: 1, scallion: 0, chili: 0, pepper: 0 };
   window.preparedTray = preparedTray;
   wok = window.CKClinicRules?.createWok ? window.CKClinicRules.createWok() : {
     hasFood: false,
-    contents: { tofu: 0, pork: 0, douban: 0, garlic: 0, scallion: 0, pepper: 0 },
+    contents: { tofu: 0, pork: 0, douban: 0, garlic: 0, scallion: 0, chili: 0, pepper: 0 },
     stirs: 0,
     flame: 'off',
     highHeatSeconds: 0,
@@ -1337,6 +1383,7 @@ $('addBtn').addEventListener('click', () => {
       if (id === 'pork') cookedDish.hasPork = true;
       if (id === 'douban') cookedDish.hasDouban = true;
       if (id === 'garlic') cookedDish.hasGarlic = true;
+      if (id === 'chili') cookedDish.hasChili = true;
       if (id === 'pepper') cookedDish.hasPepper = true;
     }
   }
