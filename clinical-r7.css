@@ -103,3 +103,38 @@
 
 /* Checklist is informational only; never block the cutting controls on compact layouts. */
 .prep-checklist{pointer-events:none}
+
+/* ===== R8: Nicotine Dependence–Informed Clinical Gameplay ===== */
+
+/* FTND baseline card — read-only, never modified by meal */
+.ftnd-card{padding:7px 9px;border:1.5px solid #c5a87b;border-radius:8px;background:#fff9ed;margin-bottom:5px}
+.ftnd-title{font-size:9px;font-weight:700;letter-spacing:.05em;color:#7a5c30;text-transform:uppercase;margin-bottom:3px}
+.ftnd-score-row{display:flex;align-items:baseline;gap:6px;margin-bottom:3px}
+.ftnd-score-row span{font-size:10px;color:#8c6840;font-weight:600}
+.ftnd-score-row strong{font-size:18px;color:#5a3a0e;line-height:1}
+.ftnd-score-row small{font-size:10px;color:#a07840}
+.ftnd-questions{display:grid;grid-template-columns:repeat(6,1fr);gap:2px}
+.ftnd-questions span{font-size:8px;color:#7a6040;text-align:center;background:#fdf4e0;border-radius:4px;padding:1px 2px}
+.ftnd-questions span b{display:block;font-size:11px;color:#4a2c0a;font-weight:700}
+
+/* R8 metric meters have max=4 — adjust label size */
+.clinical-metrics-list .meter-row small{font-size:9px;color:#8a8a7a;margin-left:1px}
+
+/* Fixed ingredient indicator */
+.ingredient-tray .ingredient-fixed{opacity:0.82;cursor:default!important}
+.ingredient-tray .ingredient-fixed:hover{transform:none!important;box-shadow:none!important}
+.portion-badge.is-fixed{background:#d6cebd!important;color:#5a5040!important;font-style:italic}
+
+/* clinicResultMessage visible in R8 (hardFail mode) */
+#clinicResultMessage{display:block!important;font-size:10px!important;margin:3px 0!important;padding:3px 6px!important;border-radius:4px!important;background:#f4ece2!important;color:#5c3a20!important;line-height:1.35!important}
+#clinicResult[data-won='true'] #clinicResultMessage{background:#edf5ea!important;color:#2a4f2a!important}
+
+/* Prescription fidelity and Gate B in award line */
+#clinicAward{font-size:9.5px!important;white-space:normal!important;word-break:break-word!important}
+
+@media(max-width:699px){
+  .ftnd-card{padding:4px 6px;margin-bottom:3px}
+  .ftnd-questions{grid-template-columns:repeat(6,1fr)}
+  .ftnd-score-row strong{font-size:14px}
+  #clinicResultMessage{font-size:9px!important}
+}

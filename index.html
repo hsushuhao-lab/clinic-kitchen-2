@@ -33,14 +33,22 @@
 <img alt="病人參考立繪" class="patient-portrait" src="assets/service/office.webp"/>
 <div class="patient-status"><div class="patient-heading"><strong>上班族病人</strong><span id="patientMood">有些坐不住</span></div>
 <div class="patient-complaint-box"><small>病人主訴</small><blockquote id="patientComplaintQuote"></blockquote></div>
+<div class="ftnd-card" id="ftndCard">
+<div class="ftnd-title">FTND 尼古丁依賴基準 <small>（不因用餐改變）</small></div>
+<div class="ftnd-score-row"><span id="ftndSeverity">中度依賴</span><strong id="ftndTotal">4</strong><small>/ 10</small></div>
+<div class="ftnd-questions" id="ftndQuestions">
+<span>Q1 <b id="ftnd-q1">1</b></span><span>Q2 <b id="ftnd-q2">0</b></span><span>Q3 <b id="ftnd-q3">1</b></span>
+<span>Q4 <b id="ftnd-q4">1</b></span><span>Q5 <b id="ftnd-q5">0</b></span><span>Q6 <b id="ftnd-q6">1</b></span>
+</div>
+</div>
 <div class="clinical-metrics-list" id="clinicalMetricsList">
-<label class="meter-row" id="row-craving"><span>CRAVING 渴求</span><b id="cravingText">70%</b><span class="metric-delta" id="cravingDelta"></span><progress aria-label="Craving 遊戲渴求值" id="cravingMeter" max="100" value="70"></progress></label>
-<label class="meter-row focus-row" id="row-focus"><span>FOCUS 專注</span><b id="focusText">35%</b><span class="metric-delta" id="focusDelta"></span><progress aria-label="Focus 遊戲專注值" id="focusMeter" max="100" value="35"></progress></label>
-<label class="meter-row" id="row-anxiety"><span>ANXIETY 焦慮</span><b id="anxietyText">75%</b><span class="metric-delta" id="anxietyDelta"></span><progress aria-label="Anxiety 焦慮值" id="anxietyMeter" max="100" value="75"></progress></label>
-<label class="meter-row" id="row-impulsivity"><span>IMPULSIVITY 衝動</span><b id="impulsivityText">65%</b><span class="metric-delta" id="impulsivityDelta"></span><progress aria-label="Impulsivity 衝動值" id="impulsivityMeter" max="100" value="65"></progress></label>
-<label class="meter-row" id="row-language"><span>LANGUAGE 語言</span><b id="languageText">50%</b><span class="metric-delta" id="languageDelta"></span><progress aria-label="Language 語言值" id="languageMeter" max="100" value="50"></progress></label>
-<label class="meter-row" id="row-memory"><span>MEMORY 記憶</span><b id="memoryText">45%</b><span class="metric-delta" id="memoryDelta"></span><progress aria-label="Memory 記憶值" id="memoryMeter" max="100" value="45"></progress></label>
-<label class="meter-row" id="row-sleepiness"><span>SLEEPINESS 嗜睡</span><b id="sleepinessText">60%</b><span class="metric-delta" id="sleepinessDelta"></span><progress aria-label="Sleepiness 嗜睡值" id="sleepinessMeter" max="100" value="60"></progress></label>
+<label class="meter-row" id="row-craving"><span>CRAVING 渴求</span><b id="cravingText">3</b><small>/4</small><span class="metric-delta" id="cravingDelta"></span><progress aria-label="Craving 戒斷渴求" id="cravingMeter" max="4" value="3"></progress></label>
+<label class="meter-row" id="row-irritability"><span>IRRITABILITY 煩躁</span><b id="irritabilityText">3</b><small>/4</small><span class="metric-delta" id="irritabilityDelta"></span><progress aria-label="Irritability 煩躁值" id="irritabilityMeter" max="4" value="3"></progress></label>
+<label class="meter-row" id="row-anxiety"><span>ANXIETY 焦慮</span><b id="anxietyText">3</b><small>/4</small><span class="metric-delta" id="anxietyDelta"></span><progress aria-label="Anxiety 焦慮值" id="anxietyMeter" max="4" value="3"></progress></label>
+<label class="meter-row" id="row-concentration"><span>CONCENTRATION 集中困難</span><b id="concentrationText">2</b><small>/4</small><span class="metric-delta" id="concentrationDelta"></span><progress aria-label="Concentration difficulty" id="concentrationMeter" max="4" value="2"></progress></label>
+<label class="meter-row" id="row-restlessness"><span>RESTLESSNESS 坐立難安</span><b id="restlessnessText">2</b><small>/4</small><span class="metric-delta" id="restlessnessDelta"></span><progress aria-label="Restlessness 坐立難安" id="restlessnessMeter" max="4" value="2"></progress></label>
+<label class="meter-row" id="row-appetite"><span>APPETITE 食慾不振</span><b id="appetiteText">3</b><small>/4</small><span class="metric-delta" id="appetiteDelta"></span><progress aria-label="Appetite difficulty" id="appetiteMeter" max="4" value="3"></progress></label>
+<label class="meter-row" id="row-sleep"><span>SLEEP 睡眠困擾</span><b id="sleepText">2</b><small>/4</small><span class="metric-delta" id="sleepDelta"></span><progress aria-label="Sleep disturbance" id="sleepMeter" max="4" value="2"></progress></label>
 </div>
 <div class="patient-foot"><span id="roundStatus">門診進行中</span><span id="shiftTime">0 秒</span></div>
 </div>
@@ -109,25 +117,15 @@
 <span class="station-badge" id="prepStationBadge">未在備料檯 (需靠近)</span>
 </div>
 <div aria-label="食材清單" class="ingredient-tray">
-<button data-food="tofu" title="嫩豆腐 (點選後按 Q 切換份量)">
+<button data-food="tofu" title="嫩豆腐（固定1份）" class="ingredient-fixed" disabled>
 <img alt="豆腐" class="food-art" src="assets/workspace/tofu-whole.webp"/>
 <span>豆腐</span>
-<b class="portion-badge" id="portion-badge-tofu">1份</b>
-<div class="portion-pills" data-food="tofu">
-<span class="portion-pill" data-food="tofu" data-portion="0">0</span>
-<span class="portion-pill" data-food="tofu" data-portion="0.5">半</span>
-<span class="portion-pill is-active" data-food="tofu" data-portion="1">1</span>
-</div>
+<b class="portion-badge is-fixed" id="portion-badge-tofu">1份 固定</b>
 </button>
-<button data-food="pork" title="上等豬絞肉 (點選後按 Q 切換份量)">
+<button data-food="pork" title="上等豬絞肉（固定1份）" class="ingredient-fixed" disabled>
 <img alt="絞肉" class="food-art" src="assets/workspace/pork-raw.webp"/>
 <span>絞肉</span>
-<b class="portion-badge" id="portion-badge-pork">1份</b>
-<div class="portion-pills" data-food="pork">
-<span class="portion-pill" data-food="pork" data-portion="0">0</span>
-<span class="portion-pill" data-food="pork" data-portion="0.5">半</span>
-<span class="portion-pill is-active" data-food="pork" data-portion="1">1</span>
-</div>
+<b class="portion-badge is-fixed" id="portion-badge-pork">1份 固定</b>
 </button>
 <button data-food="douban" title="川味豆瓣醬 (點選後按 Q 切換份量)">
 <img alt="豆瓣醬" class="food-art" src="assets/workspace/douban-paste.webp"/>

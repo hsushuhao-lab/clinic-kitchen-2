@@ -25,7 +25,7 @@ def main():
  build_characters();verify_characters();build_workspace();verify_workspace();build_chibi();verify_chibi();build_clinic();build_service();verify_service();build_r6()
  for script in CORE:
   if script.endswith('.js'):subprocess.run(['node','--check',script],cwd=ROOT,check=True)
- subprocess.run(['node','--test','tests/shift_rules.test.cjs','tests/rush_rules.test.cjs','tests/clinic_rules.test.cjs','tests/service_rules.test.cjs','tests/r6_rules.test.cjs','tests/r7_rules.test.cjs'],cwd=ROOT,check=True)
+ subprocess.run(['node','--test','tests/shift_rules.test.cjs','tests/rush_rules.test.cjs','tests/clinic_rules.test.cjs','tests/service_rules.test.cjs','tests/r6_rules.test.cjs','tests/r7_rules.test.cjs','tests/r8_rules.test.cjs'],cwd=ROOT,check=True)
  for folder,manifest in [('characters','assets/ui/character-manifest.json'),('workspace','assets/workspace/manifest.json'),('chibi','assets/chibi/manifest.json'),('clinic','assets/clinic/manifest.json'),('service','assets/service/manifest.json')]:
   audit=ROOT/'qa/current'/folder;audit.mkdir(parents=True,exist_ok=True)
   shutil.copyfile(ROOT/manifest,audit/'asset-provenance.json')
@@ -63,7 +63,7 @@ def main():
  for rel in CORE:
   if rel.endswith('.css'):
    for ref in re.findall(r'url\(([^)]+)\)',(OUT/rel).read_text(encoding='utf-8')):check(rel,ref)
- manifest={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'renderer':'canvas2d','release_status':'BUILD_VERIFIED_PENDING_DEPLOYMENT','art_status':'CHIBI_WORLD_R2_FULL_BODY_PLAYABLE','gameplay_version':'R7_CLINICAL_WORKFLOW_AUTO_ROUTE_VISUAL_PORTIONS','files':[]}
+ manifest={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'renderer':'canvas2d','release_status':'BUILD_VERIFIED_PENDING_DEPLOYMENT','art_status':'CHIBI_WORLD_R2_FULL_BODY_PLAYABLE','gameplay_version':'R8_NICOTINE_DEPENDENCE_CLINICAL_GAMEPLAY','files':[]}
  for rel in sorted(files):
   raw=(OUT/rel).read_bytes();manifest['files'].append({'path':rel,'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()})
  (OUT/'build-info.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

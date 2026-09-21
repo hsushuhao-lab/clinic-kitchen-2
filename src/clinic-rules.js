@@ -1,72 +1,80 @@
-/* R6 clinic order, consolidated routes, batch cooking, flame equivalence, and craving outcome rules. */
+/* R8: Nicotine Dependence–Informed Clinical Gameplay.
+   Three-layer model: Baseline dependence (FTND), Acute withdrawal symptoms, Meal prescription + cooking execution. */
 (function(root){
   'use strict';
+  // R8 patients: FTND baseline card + acute withdrawal symptom profile (0-4 scale)
   const patients = Object.freeze([
     {
       id: 'office',
       name: '上班族',
       wish: '今天想吃正常辣，不要蔥，半碗飯就好，附熱味噌湯。',
-      complaint: '工作壓力繁重，下午總渴望重口味刺激與抽菸，胃口差又容易焦慮。',
+      complaint: '工作壓力繁重，戒菸第三天，下午強烈菸癮難耐，胃口差又焦慮坐不住。',
       spicy: '正常',
       scallion: false,
       rice: '半碗飯',
       miso: true,
-      clinicalStatus: { craving: 70, focus: 35, anxiety: 75, impulsivity: 65, language: 50, memory: 45, sleepiness: 60 }
+      ftnd: Object.freeze({ q1: 1, q2: 0, q3: 1, q4: 1, q5: 0, q6: 1, total: 4, severity: '中度依賴' }),
+      clinicalStatus: Object.freeze({ craving: 3, irritability: 3, anxiety: 3, concentration: 2, restlessness: 2, appetite: 3, sleep: 2 })
     },
     {
       id: 'student',
       name: '大學生',
       wish: '想吃正常辣、加蔥花，配一整碗飯，要味噌湯。',
-      complaint: '準備期末考熬夜念書，注意力渙散又容易衝動分心，想吃熱呼呼的宵夜。',
+      complaint: '準備期末考熬夜念書，戒菸後注意力渙散又煩躁，熬夜後食慾差睡不好，急需安撫。',
       spicy: '正常',
       scallion: true,
       rice: '正常飯',
       miso: true,
-      clinicalStatus: { craving: 65, focus: 25, anxiety: 70, impulsivity: 75, language: 60, memory: 40, sleepiness: 80 }
+      ftnd: Object.freeze({ q1: 2, q2: 1, q3: 1, q4: 1, q5: 0, q6: 1, total: 6, severity: '中度依賴' }),
+      clinicalStatus: Object.freeze({ craving: 3, irritability: 2, anxiety: 3, concentration: 4, restlessness: 2, appetite: 2, sleep: 3 })
     },
     {
       id: 'driver',
       name: '司機',
       wish: '給我重辣、蔥花多香一點，飯要正常份量，不要湯。',
-      complaint: '整天在市區開車精神高度緊繃，嗜睡疲累又常有菸癮衝動，需要重辣提神。',
+      complaint: '整天市區開車精神高度緊繃，戒菸後菸癮衝動特別難耐，情緒暴躁、坐立難安。',
       spicy: '重辣',
       scallion: true,
       rice: '正常飯',
       miso: false,
-      clinicalStatus: { craving: 80, focus: 40, anxiety: 60, impulsivity: 70, language: 45, memory: 50, sleepiness: 75 }
+      ftnd: Object.freeze({ q1: 2, q2: 1, q3: 2, q4: 1, q5: 1, q6: 1, total: 8, severity: '重度依賴' }),
+      clinicalStatus: Object.freeze({ craving: 4, irritability: 4, anxiety: 2, concentration: 2, restlessness: 4, appetite: 1, sleep: 2 })
     },
     {
       id: 'auntie',
       name: '阿姨',
       wish: '正常辣、要蔥花，今天飯只要半碗，要一碗味噌湯。',
-      complaint: '最近心神不寧、健忘丟三落四，心情鬱悶時總想找點熟悉的熱食舒緩安神。',
+      complaint: '最近心神不寧、戒菸後焦慮加重，入夜難以入眠，心情鬱悶時總想找熱食舒緩。',
       spicy: '正常',
       scallion: true,
       rice: '半碗飯',
       miso: true,
-      clinicalStatus: { craving: 60, focus: 45, anxiety: 80, impulsivity: 55, language: 70, memory: 35, sleepiness: 50 }
+      ftnd: Object.freeze({ q1: 1, q2: 0, q3: 1, q4: 0, q5: 0, q6: 1, total: 3, severity: '輕度依賴' }),
+      clinicalStatus: Object.freeze({ craving: 2, irritability: 2, anxiety: 4, concentration: 2, restlessness: 1, appetite: 2, sleep: 4 })
     },
     {
       id: 'quiet',
       name: '安靜的訪客',
       wish: '我想吃正常辣，不要蔥，飯要一碗，不要味噌湯。',
-      complaint: '胸口堵著悶悶的，不太想開口說話，只想靜靜吃一頓暖胃舒壓的家常便飯。',
+      complaint: '胸口堵著悶悶的，戒菸後嘴裡空空的，食慾減退又難以集中精神，只想靜靜吃一頓。',
       spicy: '正常',
       scallion: false,
       rice: '正常飯',
       miso: false,
-      clinicalStatus: { craving: 55, focus: 50, anxiety: 65, impulsivity: 40, language: 30, memory: 60, sleepiness: 55 }
+      ftnd: Object.freeze({ q1: 1, q2: 0, q3: 1, q4: 1, q5: 0, q6: 0, total: 3, severity: '輕度依賴' }),
+      clinicalStatus: Object.freeze({ craving: 2, irritability: 1, anxiety: 2, concentration: 3, restlessness: 1, appetite: 3, sleep: 2 })
     },
     {
       id: 'repeat',
       name: '熟客',
       wish: '這次試試重辣，不放蔥，再配半碗飯，附熱味噌湯。',
-      complaint: '剛換新工作適應不良，焦慮暴躁、衝動難耐，渴望正宗重辣麻婆豆腐壓壓驚。',
+      complaint: '剛換新工作適應不良，戒菸後焦慮暴躁雙重夾擊、衝動難耐，渴望重辣麻婆豆腐壓壓驚。',
       spicy: '重辣',
       scallion: false,
       rice: '半碗飯',
       miso: true,
-      clinicalStatus: { craving: 75, focus: 30, anxiety: 70, impulsivity: 80, language: 55, memory: 50, sleepiness: 65 }
+      ftnd: Object.freeze({ q1: 2, q2: 1, q3: 2, q4: 1, q5: 1, q6: 2, total: 9, severity: '重度依賴' }),
+      clinicalStatus: Object.freeze({ craving: 4, irritability: 4, anxiety: 4, concentration: 3, restlessness: 4, appetite: 1, sleep: 3 })
     }
   ]);
 
@@ -78,23 +86,48 @@
     {id:'serve',name:'配餐檯',label:'04 配飯味噌湯',x:11.5,z:-2.2,at:[11.5,-1.35],r:1.6}
   ]);
 
+  // R8 ingredients: tofu and pork are FIXED at 1 (no portion selection)
+  // Adjustable: douban→Craving, garlic→Irritability, chili→Restlessness, pepper→Anxiety, scallion→Concentration
   const INGREDIENTS = Object.freeze({
-    tofu: { id: 'tofu', name: '豆腐', key: '1', defaultPortion: 1 },
-    pork: { id: 'pork', name: '絞肉', key: '2', defaultPortion: 1 },
-    douban: { id: 'douban', name: '豆瓣醬', key: '3', defaultPortion: 1 },
-    garlic: { id: 'garlic', name: '蒜', key: '4', defaultPortion: 1 },
-    scallion: { id: 'scallion', name: '青蔥', key: '5', defaultPortion: 1 },
-    chili: { id: 'chili', name: '辣椒', key: '6', defaultPortion: 0 },
-    pepper: { id: 'pepper', name: '花椒', key: '7', defaultPortion: 0 }
+    tofu:    { id: 'tofu',    name: '豆腐',   key: '1', defaultPortion: 1, fixed: true },
+    pork:    { id: 'pork',   name: '絞肉',   key: '2', defaultPortion: 1, fixed: true },
+    douban:  { id: 'douban', name: '豆瓣醬', key: '3', defaultPortion: 1, fixed: false, targets: 'craving' },
+    garlic:  { id: 'garlic', name: '蒜',     key: '4', defaultPortion: 1, fixed: false, targets: 'irritability' },
+    scallion:{ id: 'scallion',name: '青蔥',  key: '5', defaultPortion: 1, fixed: false, targets: 'concentration' },
+    chili:   { id: 'chili',  name: '辣椒',   key: '6', defaultPortion: 0, fixed: false, targets: 'restlessness' },
+    pepper:  { id: 'pepper', name: '花椒',   key: '7', defaultPortion: 0, fixed: false, targets: 'anxiety' }
   });
 
   const VALID_PORTIONS = Object.freeze([0, 0.5, 1]);
   function isValidPortion(p) { return VALID_PORTIONS.includes(p); }
 
+  // R8 symptom → expected portion mapping
+  // symptom value 0-1 → portion 0; 2 → portion 0.5; 3-4 → portion 1
+  function symptomToTargetPortion(symptomValue) {
+    const v = Number(symptomValue) || 0;
+    if (v <= 1) return 0;
+    if (v === 2) return 0.5;
+    return 1;
+  }
+
+  // Build expected portions for a patient's adjustable ingredients
+  function buildExpectedPortions(patient) {
+    const s = patient.clinicalStatus;
+    return {
+      douban:   symptomToTargetPortion(s.craving),
+      garlic:   symptomToTargetPortion(s.irritability),
+      chili:    symptomToTargetPortion(s.restlessness),
+      pepper:   symptomToTargetPortion(s.anxiety),
+      scallion: symptomToTargetPortion(s.concentration),
+      tofu: 1,
+      pork: 1
+    };
+  }
+
   function createWok() {
     return {
       hasFood: false,
-      contents: { tofu: 0, pork: 0, douban: 0, garlic: 0, scallion: 0, pepper: 0 },
+      contents: { tofu: 0, pork: 0, douban: 0, garlic: 0, scallion: 0, pepper: 0, chili: 0 },
       stirs: 0,
       flame: 'off', // 'off' | 'low' | 'high'
       highHeatSeconds: 0,
@@ -140,6 +173,106 @@
     return Math.max(burnt ? 20 : 0, Math.min(20, Math.floor(Math.max(0, seconds) + 1e-7)));
   }
 
+  // R8 evaluation function: stricter prescription mapping and Gate B
+  function evaluateR8(order, dish, patient) {
+    const contents = dish.contents || {};
+    const eqSimmer = dish.eqSimmerTime !== undefined ? dish.eqSimmerTime : equivalentSimmerTime(dish.highHeatSeconds || 0, dish.lowHeatSeconds || 0);
+    const heatPen = heatPenaltyR6(eqSimmer, dish.isBurnt);
+    const stirs = dish.stirs || 0;
+    const rice = dish.rice || dish.ricePortion || '未盛飯';
+    const miso = dish.miso !== undefined ? dish.miso : false;
+
+    let score = 100;
+    const checks = [];
+
+    // R8: tofu and pork are fixed at 1 — penalize if missing or < 1
+    const tofuOk = (contents.tofu || 0) >= 1;
+    const porkOk = (contents.pork || 0) >= 1;
+    if (!tofuOk || !porkOk) {
+      const pen = (!tofuOk ? 20 : 0) + (!porkOk ? 20 : 0);
+      score -= pen;
+      const missing = [!tofuOk && '豆腐', !porkOk && '絞肉'].filter(Boolean).join('、');
+      checks.push({ label: '基底食材', expected: '豆腐+絞肉各1份', actual: `缺 ${missing}`, ok: false, penalty: pen });
+    } else {
+      checks.push({ label: '基底食材', expected: '豆腐+絞肉各1份', actual: '齊備', ok: true, penalty: 0 });
+    }
+
+    // R8 prescription fidelity: adjustable ingredients must match symptom→portion mapping
+    const expected = patient ? buildExpectedPortions(patient) : { douban: 1, garlic: 1, scallion: 0, chili: 0, pepper: 0 };
+    const adjustable = ['douban', 'garlic', 'scallion', 'chili', 'pepper'];
+    const labelMap = { douban: '豆瓣醬→Craving', garlic: '蒜→Irritability', scallion: '蔥→Concentration', chili: '辣椒→Restlessness', pepper: '花椒→Anxiety' };
+    let totalPrescriptionPenalty = 0;
+
+    for (const ing of adjustable) {
+      const actual = contents[ing] || 0;
+      const exp = expected[ing];
+      const diff = Math.abs(actual - exp);
+      let pen = 0;
+      if (diff >= 1.0) pen = 25;
+      else if (diff >= 0.5) pen = 12;
+      if (pen > 0) {
+        score -= pen;
+        totalPrescriptionPenalty += pen;
+        checks.push({ label: labelMap[ing], expected: `${exp === 0 ? '0份' : exp === 0.5 ? '半份' : '1份'}`, actual: `${actual === 0 ? '0份' : actual === 0.5 ? '半份' : '1份'}`, ok: false, penalty: pen });
+      } else {
+        checks.push({ label: labelMap[ing], expected: `${exp === 0 ? '0份' : exp === 0.5 ? '半份' : '1份'}`, actual: `${actual === 0 ? '0份' : actual === 0.5 ? '半份' : '1份'}`, ok: true, penalty: 0 });
+      }
+    }
+
+    // Prescription fidelity gate: max possible penalty from 5 ingredients is 125; 
+    // fidelity score = (125 - totalPrescriptionPenalty) / 125 * 100
+    const prescriptionFidelity = Math.max(0, Math.round((125 - totalPrescriptionPenalty) / 125 * 100));
+    const gateB_pass = prescriptionFidelity >= 70;
+
+    // 3. Stirring technique (20 points)
+    if (stirs < 3) {
+      const pen = (3 - stirs) * 7;
+      score -= pen;
+      checks.push({ label: '翻炒手法', expected: '推翻勻炒3次', actual: `翻炒 ${stirs} 次`, ok: false, penalty: pen });
+    } else {
+      checks.push({ label: '翻炒手法', expected: '推翻勻炒3次', actual: `翻炒 ${stirs} 次`, ok: true, penalty: 0 });
+    }
+
+    // 4. Flame & Simmering Reduction
+    if (eqSimmer < 3.5) {
+      const pen = Math.min(20, Math.round((4.0 - eqSimmer) * 5));
+      score -= pen;
+      checks.push({ label: '收汁火候', expected: '4等效秒濃郁收汁', actual: `收汁不足 (${eqSimmer.toFixed(1)}s)`, ok: false, penalty: pen });
+    } else if (heatPen > 0) {
+      score -= heatPen;
+      checks.push({ label: '收汁火候', expected: '4等效秒收汁後關火', actual: `逾時 ${(eqSimmer - 4).toFixed(1)}s (-${heatPen}%)`, ok: false, penalty: heatPen });
+    } else {
+      checks.push({ label: '收汁火候', expected: '4等效秒濃郁收汁', actual: '火候極佳', ok: true, penalty: 0 });
+    }
+
+    // 5. Rice portion — R8 penalty: 25 for mismatch
+    const expectedRice = order.rice || '正常飯';
+    if (rice !== expectedRice) {
+      score -= 25;
+      checks.push({ label: '配飯份量', expected: expectedRice, actual: rice, ok: false, penalty: 25 });
+    } else {
+      checks.push({ label: '配飯份量', expected: expectedRice, actual: rice, ok: true, penalty: 0 });
+    }
+
+    // 6. Miso soup — R8 penalty: 18 for mismatch
+    const expectedMiso = !!order.miso;
+    if (miso !== expectedMiso) {
+      score -= 18;
+      checks.push({ label: '味噌湯', expected: expectedMiso ? '要附湯' : '不要湯', actual: miso ? '有湯' : '無湯', ok: false, penalty: 18 });
+    } else {
+      checks.push({ label: '味噌湯', expected: expectedMiso ? '要附湯' : '不要湯', actual: miso ? '有湯' : '無湯', ok: true, penalty: 0 });
+    }
+
+    const finalQuality = Math.max(0, Math.min(100, score));
+
+    // Hard fail conditions: Gate B (prescription fidelity < 70)
+    const hardFail = !gateB_pass;
+    const hardFailReason = hardFail ? `處方符合度 ${prescriptionFidelity}% < 70%（Gate B 未通過）` : null;
+
+    return { quality: finalQuality, checks, prescriptionFidelity, gateB_pass, hardFail, hardFailReason };
+  }
+
+  // R6 evaluator kept for backwards compatibility
   function evaluateR6(order, dish) {
     const contents = dish.contents || {};
     const eqSimmer = dish.eqSimmerTime !== undefined ? dish.eqSimmerTime : equivalentSimmerTime(dish.highHeatSeconds || 0, dish.lowHeatSeconds || 0);
@@ -148,11 +281,9 @@
     const rice = dish.rice || dish.ricePortion || '未盛飯';
     const miso = dish.miso !== undefined ? dish.miso : false;
 
-    // Checks & penalties (out of 100)
     let score = 100;
     const checks = [];
 
-    // 1. Core ingredients presence (15 points: tofu, pork, douban, garlic)
     const core = ['tofu', 'pork', 'douban', 'garlic'];
     const missingCore = core.filter(id => !contents[id] || contents[id] <= 0);
     if (missingCore.length > 0) {
@@ -163,7 +294,6 @@
       checks.push({ label: '必備食材', expected: '齊全4項', actual: '齊備', ok: true, penalty: 0 });
     }
 
-    // 2. Scallion & Pepper matching (15 points)
     const hasScallion = (contents.scallion || 0) > 0;
     const expectedScallion = !!order.scallion;
     if (hasScallion !== expectedScallion) {
@@ -184,7 +314,6 @@
       checks.push({ label: '辣度調味', expected: order.spicy, actual: hasPepper ? '重辣' : '正常', ok: true, penalty: 0 });
     }
 
-    // 3. Stirring technique (25 points)
     if (stirs < 3) {
       const pen = (3 - stirs) * 8;
       score -= pen;
@@ -193,7 +322,6 @@
       checks.push({ label: '翻炒手法', expected: '推翻勻炒3次', actual: `翻炒 ${stirs} 次`, ok: true, penalty: 0 });
     }
 
-    // 4. Flame & Simmering Reduction (35 points)
     if (eqSimmer < 3.5) {
       const pen = Math.min(20, Math.round((4.0 - eqSimmer) * 5));
       score -= pen;
@@ -205,7 +333,6 @@
       checks.push({ label: '收汁火候', expected: '4等效秒濃郁收汁', actual: '火候極佳', ok: true, penalty: 0 });
     }
 
-    // 5. Rice portion (5 points)
     const expectedRice = order.rice || '正常飯';
     if (rice !== expectedRice) {
       score -= 5;
@@ -214,7 +341,6 @@
       checks.push({ label: '配飯份量', expected: expectedRice, actual: rice, ok: true, penalty: 0 });
     }
 
-    // 6. Miso soup (5 points)
     const expectedMiso = !!order.miso;
     if (miso !== expectedMiso) {
       score -= 5;
@@ -251,71 +377,83 @@
     };
   }
 
+  // R8 calculateClinicalMetrics: operates on 0-4 withdrawal symptom scale
+  // FTND is immutable — never modified here
   function calculateClinicalMetrics(beforeMetrics, quality, checks = [], order = {}, dish = {}) {
-    const b = beforeMetrics || { craving: 70, focus: 35, anxiety: 75, impulsivity: 65, language: 50, memory: 45, sleepiness: 60 };
+    const defaultMetrics = { craving: 3, irritability: 2, anxiety: 2, concentration: 2, restlessness: 2, appetite: 2, sleep: 2 };
+    const b = beforeMetrics || defaultMetrics;
     const qRatio = Math.max(0, Math.min(100, Number(quality) || 0)) / 100;
-    
-    // Primary outcome: Craving relative reduction preserved strictly
+
+    // Primary: Craving on 0-4 scale; success = 25% relative reduction
     const cBefore = Math.max(0, Number(b.craving) || 0);
-    const cAfter = Math.max(0, Number((cBefore * (1 - 0.5 * qRatio)).toFixed(1)));
+    // R8: craving mapped to 0-4; reduction proportional to quality
+    const cAfter = Math.max(0, Number((cBefore * (1 - 0.5 * qRatio)).toFixed(2)));
     const cReduction = cBefore > 0 ? (cBefore - cAfter) / cBefore : 0;
     const won = cReduction >= 0.25 - 1e-9;
-    
-    // Secondary metrics (0 - 100)
-    const anxietyDrop = won ? Math.round(35 * qRatio + 5) : Math.round(10 * qRatio);
-    const aAfter = Math.max(10, Math.min(100, b.anxiety - anxietyDrop));
-    
-    const focusGain = won ? Math.round(35 * qRatio + 5) : Math.round(5 * qRatio);
-    const fAfter = Math.max(0, Math.min(100, b.focus + focusGain));
-    
-    const impulsivityDrop = won ? Math.round(30 * qRatio + 5) : Math.round(8 * qRatio);
-    const iAfter = Math.max(10, Math.min(100, b.impulsivity - impulsivityDrop));
-    
-    const languageGain = won ? Math.round(25 * qRatio + 5) : Math.round(5 * qRatio);
-    const lAfter = Math.max(0, Math.min(100, b.language + languageGain));
-    
-    const memoryGain = won ? Math.round(20 * qRatio + 5) : Math.round(4 * qRatio);
-    const mAfter = Math.max(0, Math.min(100, b.memory + memoryGain));
-    
-    const sleepinessDrop = won ? Math.round(25 * qRatio + 5) : Math.round(5 * qRatio);
-    const sAfter = Math.max(10, Math.min(100, b.sleepiness - sleepinessDrop));
-    
+
+    // Secondary withdrawal symptoms (0-4 scale, lower is better for most)
+    const irritBefore = Math.max(0, Number(b.irritability) || 0);
+    const irritDrop = won ? Number((irritBefore * 0.4 * qRatio).toFixed(2)) : Number((irritBefore * 0.1 * qRatio).toFixed(2));
+    const irritAfter = Math.max(0, irritBefore - irritDrop);
+
+    const anxBefore = Math.max(0, Number(b.anxiety) || 0);
+    const anxDrop = won ? Number((anxBefore * 0.4 * qRatio).toFixed(2)) : Number((anxBefore * 0.1 * qRatio).toFixed(2));
+    const anxAfter = Math.max(0, anxBefore - anxDrop);
+
+    const concBefore = Math.max(0, Number(b.concentration) || 0);
+    // concentration difficulty = higher is worse; cooking helps reduce it
+    const concDrop = won ? Number((concBefore * 0.35 * qRatio).toFixed(2)) : Number((concBefore * 0.08 * qRatio).toFixed(2));
+    const concAfter = Math.max(0, concBefore - concDrop);
+
+    const restBefore = Math.max(0, Number(b.restlessness) || 0);
+    const restDrop = won ? Number((restBefore * 0.4 * qRatio).toFixed(2)) : Number((restBefore * 0.08 * qRatio).toFixed(2));
+    const restAfter = Math.max(0, restBefore - restDrop);
+
+    const appBefore = Math.max(0, Number(b.appetite) || 0);
+    // appetite difficulty = higher means lower appetite; good meal improves appetite
+    const appDrop = won ? Number((appBefore * 0.35 * qRatio).toFixed(2)) : Number((appBefore * 0.05 * qRatio).toFixed(2));
+    const appAfter = Math.max(0, appBefore - appDrop);
+
+    const sleepBefore = Math.max(0, Number(b.sleep) || 0);
+    const sleepDrop = won ? Number((sleepBefore * 0.3 * qRatio).toFixed(2)) : Number((sleepBefore * 0.05 * qRatio).toFixed(2));
+    const sleepAfter = Math.max(0, sleepBefore - sleepDrop);
+
     const afterMetrics = {
-      craving: cAfter,
-      focus: fAfter,
-      anxiety: aAfter,
-      impulsivity: iAfter,
-      language: lAfter,
-      memory: mAfter,
-      sleepiness: sAfter
+      craving: Number(cAfter.toFixed(2)),
+      irritability: Number(irritAfter.toFixed(2)),
+      anxiety: Number(anxAfter.toFixed(2)),
+      concentration: Number(concAfter.toFixed(2)),
+      restlessness: Number(restAfter.toFixed(2)),
+      appetite: Number(appAfter.toFixed(2)),
+      sleep: Number(sleepAfter.toFixed(2))
     };
 
     const deltaMetrics = {
-      craving: Number((cAfter - cBefore).toFixed(1)),
-      focus: fAfter - b.focus,
-      anxiety: aAfter - b.anxiety,
-      impulsivity: iAfter - b.impulsivity,
-      language: lAfter - b.language,
-      memory: mAfter - b.memory,
-      sleepiness: sAfter - b.sleepiness
+      craving:       Number((afterMetrics.craving - cBefore).toFixed(2)),
+      irritability:  Number((afterMetrics.irritability - irritBefore).toFixed(2)),
+      anxiety:       Number((afterMetrics.anxiety - anxBefore).toFixed(2)),
+      concentration: Number((afterMetrics.concentration - concBefore).toFixed(2)),
+      restlessness:  Number((afterMetrics.restlessness - restBefore).toFixed(2)),
+      appetite:      Number((afterMetrics.appetite - appBefore).toFixed(2)),
+      sleep:         Number((afterMetrics.sleep - sleepBefore).toFixed(2))
     };
 
     const comfortScore = Math.max(0, Math.min(100, Math.round(
-      0.4 * quality +
-      0.2 * (anxietyDrop / 40 * 100) +
-      0.15 * (focusGain / 40 * 100) +
-      0.15 * (impulsivityDrop / 35 * 100) +
-      0.1 * (languageGain / 30 * 100)
+      40 * qRatio +
+      15 * (won ? 1 : 0.3) +
+      20 * (1 - cAfter / Math.max(1, cBefore)) +
+      15 * (1 - irritAfter / Math.max(1, irritBefore)) +
+      10 * (1 - anxAfter / Math.max(1, anxBefore))
     )));
 
     const metrics = {
-      craving: { before: cBefore, after: cAfter, delta: deltaMetrics.craving },
-      focus: { before: b.focus, after: fAfter, delta: deltaMetrics.focus },
-      anxiety: { before: b.anxiety, after: aAfter, delta: deltaMetrics.anxiety },
-      impulsivity: { before: b.impulsivity, after: iAfter, delta: deltaMetrics.impulsivity },
-      language: { before: b.language, after: lAfter, delta: deltaMetrics.language },
-      memory: { before: b.memory, after: mAfter, delta: deltaMetrics.memory },
-      sleepiness: { before: b.sleepiness, after: sAfter, delta: deltaMetrics.sleepiness }
+      craving:       { before: cBefore,      after: afterMetrics.craving,       delta: deltaMetrics.craving },
+      irritability:  { before: irritBefore,  after: afterMetrics.irritability,  delta: deltaMetrics.irritability },
+      anxiety:       { before: anxBefore,    after: afterMetrics.anxiety,       delta: deltaMetrics.anxiety },
+      concentration: { before: concBefore,   after: afterMetrics.concentration, delta: deltaMetrics.concentration },
+      restlessness:  { before: restBefore,   after: afterMetrics.restlessness,  delta: deltaMetrics.restlessness },
+      appetite:      { before: appBefore,    after: afterMetrics.appetite,      delta: deltaMetrics.appetite },
+      sleep:         { before: sleepBefore,  after: afterMetrics.sleep,         delta: deltaMetrics.sleep }
     };
 
     return {
@@ -324,32 +462,44 @@
       delta: deltaMetrics,
       metrics,
       cravingBefore: cBefore,
-      cravingAfter: cAfter,
+      cravingAfter: afterMetrics.craving,
       relativeReduction: Number(cReduction.toFixed(6)),
       success: won,
       comfortScore
     };
   }
 
+  // R8 patient review: withdrawal-focused language
   function generatePatientReview(patient, quality, checks = [], dish = {}, won = true) {
-    const numbingOk = checks.some(c => c.label.includes('辣度') && c.ok);
-    const scallionOk = checks.some(c => c.label.includes('蔥') && c.ok);
     const riceOk = checks.some(c => c.label.includes('飯') && c.ok);
+    const misoOk = checks.some(c => c.label.includes('味噌') && c.ok);
+    const prescOk = checks.filter(c => ['豆瓣醬→Craving','蒜→Irritability','辣椒→Restlessness','花椒→Anxiety','蔥→Concentration'].includes(c.label)).every(c => c.ok);
 
-    const numbingText = numbingOk ? '花椒麻香酥在舌尖，香氣醇厚又溫暖。' : '調味稍微失衡，麻辣感不如預期合胃口。';
-    const comfortText = won ? '溫熱滑嫩的豆腐下肚，緊繃一整天的肩膀和焦慮完全放鬆了。' : '吃完肚子有些燥熱，原本煩悶的情緒沒有得到紓解。';
-    const satietyText = riceOk ? `搭配剛好的${dish.rice || dish.ricePortion || '米飯'}，飽足感十分舒服踏實。` : '米飯份量不太習慣，整體飽足感欠缺。';
-    const mentalText = won ? '腦袋清爽許多，午後的注意力與精神都重新回來了！' : '心情很糟，吃完還是感覺坐立難安！';
+    const cravingRelief = won
+      ? (prescOk ? '吃了這碗飯，嘴裡對菸的渴望平靜下來了。' : '菸癮還在，但吃完肚子有點安慰。')
+      : '吃完胸口還是堵著，菸癮根本沒有緩解。';
+
+    const irritabilityRelief = won
+      ? '緊繃的情緒舒緩許多，煩躁感明顯減輕了。'
+      : '心情更煩躁了，感覺什麼都不對。';
+
+    const comfortText = won
+      ? `熱騰騰的麻婆豆腐下肚，${riceOk ? '配著剛好的米飯，' : ''}整個人放鬆了。`
+      : '吃完還是坐立難安，完全沒有被舒緩的感覺。';
+
+    const tasteAcceptance = prescOk
+      ? '口味調配剛剛好，吃得很順口，剛好符合今天的需求。'
+      : '調味有些偏差，和我想要的口感有落差。';
 
     const quote = won
-      ? `「這就是我想吃的麻婆豆腐！${numbingText}${comfortText}吃完整個人平靜踏實，太感謝了！」`
-      : `「這完全不是我想吃的口味！${numbingText}本來就心煩，現在更煩躁了！」`;
+      ? `「這正是我需要的！${cravingRelief}謝謝你的用心調配！」`
+      : `「這根本不對我的症狀！${cravingRelief}下次請按照症狀來調味！」`;
 
     return {
-      numbing: numbingText,
+      numbing: cravingRelief,
       comfort: comfortText,
-      satiety: satietyText,
-      mental: mentalText,
+      satiety: tasteAcceptance,
+      mental: irritabilityRelief,
       quote
     };
   }
@@ -377,11 +527,14 @@
     INGREDIENTS,
     VALID_PORTIONS,
     isValidPortion,
+    symptomToTargetPortion,
+    buildExpectedPortions,
     createWok,
     addBatchToWok,
     equivalentSimmerTime,
     heatPenaltyR6,
     evaluateR6,
+    evaluateR8,
     calculateMealOutcome,
     calculateClinicalMetrics,
     generatePatientReview,

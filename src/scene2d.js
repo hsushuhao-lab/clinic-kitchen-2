@@ -79,9 +79,13 @@
   const target=stations.find(s=>s.id===targetIds[state.missionStage]);if(target){const p=worldPoint(...target.at);ctx.fillStyle='#d5bc6c40';ctx.beginPath();ctx.ellipse(p.x,p.y,34,12,0,0,Math.PI*2);ctx.fill();}
   const objects=furniture.map(f=>({z:f.z,draw:()=>drawFurniture(f)}));objects.push({z:state.playerPos.z,draw:drawDoctor});objects.sort((a,b)=>a.z-b.z).forEach(o=>o.draw());
   if(state.activeFinale==='feast'&&images['finale-feast']?.naturalWidth){
-   const fp=worldPoint(-8.5,-0.6);ctx.drawImage(images['finale-feast'],fp.x-80,fp.y-100,160,90);
+   const fp=worldPoint(-8,-0.5);const iw=images['finale-feast'].naturalWidth,ih=images['finale-feast'].naturalHeight;
+   const scale=Math.min(320/iw,200/ih);const dw=iw*scale,dh=ih*scale;
+   ctx.save();ctx.globalAlpha=0.96;ctx.drawImage(images['finale-feast'],fp.x-dw/2,fp.y-dh-20,dw,dh);ctx.restore();
   }else if(state.activeFinale==='flip'&&images['finale-flip']?.naturalWidth){
-   const fp=worldPoint(-8.5,-0.6);ctx.drawImage(images['finale-flip'],fp.x-80,fp.y-100,160,90);
+   const fp=worldPoint(-8,-0.5);const iw=images['finale-flip'].naturalWidth,ih=images['finale-flip'].naturalHeight;
+   const scale=Math.min(320/iw,200/ih);const dw=iw*scale,dh=ih*scale;
+   ctx.save();ctx.globalAlpha=0.96;ctx.drawImage(images['finale-flip'],fp.x-dw/2,fp.y-dh-20,dw,dh);ctx.restore();
   }
   if(document.getElementById('flame').classList.contains('is-on')){const p=worldPoint(9.2,-2);ctx.strokeStyle='#f09f47';ctx.lineWidth=3;for(let i=0;i<4;i++){const lift=reduced.matches?4:4+Math.sin(clock*8+i)*3;ctx.beginPath();ctx.moveTo(p.x-18+i*11,p.y-91);ctx.quadraticCurveTo(p.x-20+i*11,p.y-95-lift,p.x-14+i*11,p.y-99-lift);ctx.stroke();}}
   ctx.restore();

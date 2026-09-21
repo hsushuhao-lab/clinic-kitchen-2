@@ -5,7 +5,7 @@
 (function(){
   'use strict';
   const el=id=>document.getElementById(id),
-    {patients,stations,evaluateR6,calculateMealOutcome,calculateClinicalMetrics,generatePatientReview}=CKClinicRules;
+    {patients,stations,evaluateR6,evaluateR8,buildExpectedPortions,calculateMealOutcome,calculateClinicalMetrics,generatePatientReview}=CKClinicRules;
   let number=1,patientIndex=0,result=null,last='',previousStation='',panel='prep';
   const original={interact:window.handleInteraction,reset:window.resetAll,cook:window.updateCooking,tick:CKShift.tick};
   const person=()=>patients[patientIndex%patients.length];
@@ -64,7 +64,7 @@
         <span class="sub-chip">身心飽足：<b id="subSatiety">-</b></span>
         <span class="sub-chip">思緒放鬆：<b id="subMental">-</b></span>
       </div>
-      <p id="clinicResultMessage" style="display:none"></p>
+      <p id="clinicResultMessage" class="clinic-result-message"></p>
     </header>
     <div class="clinic-result-score">
       <div><strong id="clinicQuality"></strong><small>料理契合度</small></div>
@@ -101,15 +101,27 @@
     if (el('welcomePatientComplaint')) el('welcomePatientComplaint').textContent = `「${who.complaint || who.wish || summary(p)}」`;
     if (el('welcomeOrderPreview')) el('welcomeOrderPreview').textContent = summary(p);
 
-    if (who.clinicalStatus) {
-      text('cravingText', `${who.clinicalStatus.craving}%`);
-      if (el('cravingMeter')) el('cravingMeter').value = who.clinicalStatus.craving;
-      ['focus', 'anxiety', 'impulsivity', 'language', 'memory', 'sleepiness'].forEach(m => {
-        text(`${m}Text`, `${who.clinicalStatus[m]}`);
-        if (el(`${m}Meter`)) el(`${m}Meter`).value = who.clinicalStatus[m];
+    if (who.ftnd) {
+      if (el('ftndTotal')) el('ftndTotal').textContent = who.ftnd.total;
+      if (el('ftndSeverity')) el('ftndSeverity').textContent = who.ftnd.severity;
+      ['q1','q2','q3','q4','q5','q6'].forEach(q => {
+        if (el(`ftnd-${q}`)) el(`ftnd-${q}`).textContent = who.ftnd[q];
       });
     }
-    ['craving', 'focus', 'anxiety', 'impulsivity', 'language', 'memory', 'sleepiness'].forEach(m => {
+    if (who.clinicalStatus) {
+      const s = who.clinicalStatus;
+      const r8Metrics = ['craving','irritability','anxiety','concentration','restlessness','appetite','sleep'];
+      r8Metrics.forEach(m => {
+        if (s[m] !== undefined) {
+          const val = s[m];
+          const textEl = el(`${m}Text`);
+          const meterEl = el(`${m}Meter`);
+          if (textEl) textEl.textContent = val;
+          if (meterEl) meterEl.value = val;
+        }
+      });
+    }
+    ['craving','irritability','anxiety','concentration','restlessness','appetite','sleep'].forEach(m => {
       if (el(`${m}Delta`)) {
         el(`${m}Delta`).textContent = '';
         el(`${m}Delta`).className = 'metric-delta';
@@ -184,6 +196,9 @@
     currentOrder = { spicy: p.spicy, scallion: p.scallion, rice: p.rice, miso: p.miso };
     syncOrderTicketUI();
     if (el('ticketMiso')) el('ticketMiso').textContent = currentOrder.miso ? '附味噌湯' : '不要湯';
+    // R8: lock tofu and pork at 1 (fixed ingredients)
+    if (window.setPortion) { window.setPortion('tofu', 1); window.setPortion('pork', 1); }
+    if (window.preparedTray) { window.preparedTray.tofu = 1; window.preparedTray.pork = 1; }
     setStage(STAGES.PREP);
     CKShift.begin();
     cookLog(`已確認開立料理處方：${summary(currentOrder)}，前往備料檯 (X: 5.0) 備料`);
@@ -293,11 +308,12 @@
       miso: !!cookedDish.miso
     };
 
-    result = evaluateR6(currentOrder, dishSnapshot);
+    result = evaluateR8 ? evaluateR8(currentOrder, dishSnapshot, who) : evaluateR6(currentOrder, dishSnapshot);
     const quality = result.quality;
+    const hardFail = result.hardFail || false;
     const afterCraving = Math.max(0, Number((beforeCraving * (1 - 0.5 * quality / 100)).toFixed(1)));
     const mealOutcome = calculateMealOutcome({ beforeCraving, afterCraving, metricMode: 'relative' });
-    const won = mealOutcome.success;
+    const won = hardFail ? false : mealOutcome.success;
 
     const clinicalOutcome = calculateClinicalMetrics(who.clinicalStatus, quality, result.checks, currentOrder, dishSnapshot);
     const patientReview = generatePatientReview(who, quality, result.checks, dishSnapshot, won);
@@ -305,23 +321,26 @@
     CKShift.finishR6({ won, quality, cravingBefore: beforeCraving, cravingAfter: afterCraving });
     setStage(STAGES.FIRST_BITE);
 
-    // Update left HUD deltas and meters
-    text('cravingText', `${clinicalOutcome.metrics.craving.after}%`);
-    if (el('cravingMeter')) el('cravingMeter').value = clinicalOutcome.metrics.craving.after;
-    if (el('cravingDelta')) {
-      const d = clinicalOutcome.metrics.craving.delta;
-      el('cravingDelta').textContent = `${d >= 0 ? '+' : ''}${d.toFixed(1)}%`;
-      el('cravingDelta').className = `metric-delta ${d <= 0 ? 'good' : 'bad'}`;
-    }
-    ['focus', 'anxiety', 'impulsivity', 'language', 'memory', 'sleepiness'].forEach(m => {
+    // Update left HUD FTND (read-only, never modified by meal)
+    // FTND stays unchanged — intentional by design
+    // Update left HUD: R8 withdrawal symptoms before→after
+    const r8Before = clinicalOutcome.before;
+    const r8After = clinicalOutcome.after;
+    const r8Metrics = ['craving','irritability','anxiety','concentration','restlessness','appetite','sleep'];
+    r8Metrics.forEach(m => {
       const met = clinicalOutcome.metrics[m];
       if (!met) return;
-      text(`${m}Text`, `${met.after}`);
-      if (el(`${m}Meter`)) el(`${m}Meter`).value = met.after;
-      if (el(`${m}Delta`)) {
-        const isGood = (m === 'focus' || m === 'language' || m === 'memory') ? (met.delta >= 0) : (met.delta <= 0);
-        el(`${m}Delta`).textContent = `${met.delta >= 0 ? '+' : ''}${met.delta}`;
-        el(`${m}Delta`).className = `metric-delta ${isGood ? 'good' : 'bad'}`;
+      const textEl = el(`${m}Text`);
+      const meterEl = el(`${m}Meter`);
+      const deltaEl = el(`${m}Delta`);
+      if (textEl) textEl.textContent = met.after.toFixed(1);
+      if (meterEl) meterEl.value = met.after;
+      if (deltaEl) {
+        // All R8 symptoms: lower is better, so negative delta = improvement
+        const isGood = met.delta <= 0;
+        const sign = met.delta > 0 ? '+' : '';
+        deltaEl.textContent = `${sign}${met.delta.toFixed(1)}`;
+        deltaEl.className = `metric-delta ${isGood ? 'good' : 'bad'}`;
       }
     });
 
@@ -330,11 +349,13 @@
       window.setTopFinale(won ? 'feast' : 'flip');
     }
 
-    text('clinicResultTitle', won ? `${numberText(number)} 號 ${who.name} · 舒壓共餐成功！` : `${numberText(number)} 號 ${who.name} · 料理翻桌失敗！`);
+    text('clinicResultTitle', won ? `${numberText(number)} 號 ${who.name} · 菸癮舒緩成功！` : `${numberText(number)} 號 ${who.name} · 料理未達標！`);
     text('patientReviewQuote', patientReview.quote || (patientReview.review ? `「${patientReview.review}」` : ''));
-    text('clinicResultMessage', won
-      ? '「就是我想吃的口味！熱騰騰的麻婆豆腐，搭配剛好的米飯與味噌湯，肩膀的緊繃感全都散開了！」'
-      : '「這根本不是我想吃的口味！」病人憤怒翻桌，盤碗與紅油熱湯直接濺到醫師白袍上！');
+    text('clinicResultMessage', hardFail
+      ? `【Gate B 未通過】${result.hardFailReason || '處方符合度不足 70%'}，藥膳調味與症狀嚴重度不符，無法有效舒緩戒斷反應！`
+      : won
+        ? '「菸癮被壓住了！熱騰騰的麻婆豆腐與精準的症狀調味，讓緊繃的戒斷感平靜下來！」'
+        : '「這根本沒有對到我的症狀！調味完全不符合我的戒斷狀況！」病人憤怒翻桌！');
     text('subNumbing', patientReview.numbing || '-');
     text('subComfort', patientReview.comfort || '-');
     text('subSatiety', patientReview.satiety || '-');
@@ -342,10 +363,24 @@
     text('clinicQuality', `${quality}%`);
     text('patientComfortScore', `${clinicalOutcome.comfortScore} 分`);
 
+    // Update subjective chip labels to R8 withdrawal-focused
+    const subChips = document.querySelectorAll('.subjective-grid .sub-chip');
+    const r8Labels = ['菸癮緩解：', '身心舒緩：', '口感接受：', '煩躁緩解：'];
+    subChips.forEach((chip, i) => {
+      if (r8Labels[i]) {
+        const b = chip.querySelector('b');
+        const label = r8Labels[i];
+        const existingB = b ? b.outerHTML : '';
+        chip.innerHTML = label + existingB;
+      }
+    });
+
     const s = CKShift.snapshot();
+    const fidText = result.prescriptionFidelity !== undefined ? ` · 處方符合度 ${result.prescriptionFidelity}%` : '';
+    const gateText = result.gateB_pass === false ? ' · Gate B ❌' : (result.gateB_pass === true ? ' · Gate B ✓' : '');
     text('clinicAward', won
-      ? `舒壓達標（降幅 ${(clinicalOutcome.relativeReduction * 100).toFixed(1)}% ≥ 25%）· +${s.lastEarned} 分 · 連勝 ${s.streak}`
-      : `未達舒壓門檻（降幅 ${(clinicalOutcome.relativeReduction * 100).toFixed(1)}% < 25%）· 連勝歸零`);
+      ? `舒壓達標（降幅 ${(clinicalOutcome.relativeReduction * 100).toFixed(1)}% ≥ 25%）${fidText}${gateText} · +${s.lastEarned} 分 · 連勝 ${s.streak}`
+      : `未達舒壓門檻（降幅 ${(clinicalOutcome.relativeReduction * 100).toFixed(1)}% < 25%）${fidText}${gateText} · 連勝歸零`);
 
     el('clinicComparison').innerHTML = result.checks.map(c => `<tr><th>${c.label}</th><td>${c.expected}</td><td>${c.actual}</td><td class="${c.ok ? 'match' : 'mismatch'}">${c.ok ? '符合' : '−' + c.penalty + '%'}</td></tr>`).join('');
     text('clinicBonus', CKRush.resultText() + (CKRush.snapshot().mode === 'rush' ? ` · 本班 ${CKRush.snapshot().sessionPoints} 分` : ''));
