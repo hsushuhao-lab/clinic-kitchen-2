@@ -34,20 +34,31 @@
     return Object.entries(v).map(([k,n])=>'<div class="clinical-metric" data-burden="'+String(burden.has(k))+'"><b>'+k+'</b><span class="clinical-bar"><i style="--value:'+n+'%"></i></span><output>'+n+'</output></div>').join('');
   }
   function ensureObservation(){
-    if(!$('clinicalObservation')){
+    if(!$('clinicalObservation') && $('patientHUD')){
       const box=document.createElement('section');
       box.id='clinicalObservation';box.className='clinical-observation';
       box.innerHTML='<header><strong>個案狀態觀察</strong><small>遊戲指標 0–100</small></header><div id="clinicalMetricRows"></div>';
       const anchor=document.querySelector('#patientHUD .clinic-next') || $('patientHUD').lastElementChild;
-      $('patientHUD').insertBefore(box,anchor);
+      if (anchor && anchor.parentNode === $('patientHUD')) {
+        $('patientHUD').insertBefore(box,anchor);
+      } else {
+        $('patientHUD').appendChild(box);
+      }
     }
-    $('clinicalMetricRows').innerHTML=metricMarkup(values());
+    if ($('clinicalMetricRows')) $('clinicalMetricRows').innerHTML=metricMarkup(values());
   }
   function ensureConsultCard(){
-    if(!$('clinicalConsultCard')){
+    if(!$('clinicalConsultCard') && $('clinicWelcome')){
       const card=document.createElement('div');card.id='clinicalConsultCard';
       card.innerHTML='<section class="clinical-chief-complaint"><small>主訴 CHIEF COMPLAINT</small><blockquote id="clinicalComplaint"></blockquote></section><section class="clinical-snapshot-card"><small>OBSERVATION SNAPSHOT</small><div class="clinical-observation"><div id="clinicalConsultMetrics"></div></div></section>';
-      $('clinicWelcome').insertBefore(card,$('clinicGo'));
+      const target = ($('clinicGo') && $('clinicGo').parentNode === $('clinicWelcome'))
+        ? $('clinicGo')
+        : ($('clinicGo')?.closest('.consult-action-row') || $('clinicWelcome').lastElementChild);
+      if (target && target.parentNode === $('clinicWelcome')) {
+        $('clinicWelcome').insertBefore(card, target);
+      } else {
+        $('clinicWelcome').appendChild(card);
+      }
     }
     const p=profiles[patientId()]||profiles.office;
     $('clinicalComplaint').textContent='「'+p.complaint+'」';
@@ -111,8 +122,8 @@
     if(!Number.isFinite(stage) || stage===routedStage) return;
     routedStage=stage;
     if(stage===3){document.querySelector('[data-clinic-panel="prep"]')?.click();goTo('prep');}
-    if(stage===4){document.querySelector('[data-clinic-panel="wok"]')?.click();goTo('wok');}
-    if(stage===5){document.querySelector('[data-clinic-panel="serve"]')?.click();goTo('serve');}
+    if(stage===4 && !window.getCookingStatus?.()?.atPrep){document.querySelector('[data-clinic-panel="wok"]')?.click();goTo('wok');}
+    if(stage===5 && !window.getCookingStatus?.()?.atWok){document.querySelector('[data-clinic-panel="serve"]')?.click();goTo('serve');}
     if(stage===6)setTimeout(autoDeliver,150);
     ensureObservation();ensureConsultCard();renderPortionPicker();
   }

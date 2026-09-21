@@ -397,25 +397,25 @@ function cookLog(text) {
 function isNearPrepStation() {
   if (!window.scene3DState) return false;
   const pos = window.scene3DState.playerPos;
-  return (pos.x >= 3.2 && pos.x <= 6.8 && pos.z <= -0.8 && pos.z >= -3.2);
+  return (window.scene3DState.interactiveTarget?.id === 'prep') || (pos.x >= 3.0 && pos.x <= 7.0 && pos.z <= -0.5 && pos.z >= -3.5);
 }
 
 function isNearWokStation() {
   if (!window.scene3DState) return false;
   const pos = window.scene3DState.playerPos;
-  return (pos.x >= 7.2 && pos.x <= 11.0 && pos.z <= -0.8 && pos.z >= -3.2);
+  return (window.scene3DState.interactiveTarget?.id === 'wok') || (pos.x >= 7.0 && pos.x <= 11.0 && pos.z <= -0.5 && pos.z >= -3.5);
 }
 
 function isNearServeStation() {
   if (!window.scene3DState) return false;
   const pos = window.scene3DState.playerPos;
-  return (pos.x >= 10.5 && pos.z <= -0.8 && pos.z >= -3.2);
+  return (window.scene3DState.interactiveTarget?.id === 'serve') || (pos.x >= 10.2 && pos.z <= -0.5 && pos.z >= -3.5);
 }
 
 function isNearConsultStation() {
   if (!window.scene3DState) return false;
   const pos = window.scene3DState.playerPos;
-  return (pos.x <= -8.0);
+  return (window.scene3DState.interactiveTarget?.id === 'consult') || (pos.x <= -7.5);
 }
 
 const cutStages = { tofu: 0, scallion: 0, garlic: 0, pork: 0, douban: 0, pepper: 0 };
