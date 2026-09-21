@@ -54,8 +54,8 @@
   const p=worldPoint(f.x,f.z);
   if(f.img==='patientSeat'){
    image('chair',p.x-45,p.y-130,90,135);
-   const frame=window.CKShift?.craving>=70?Math.floor(clock*4)%4:Math.floor(clock)%2,im=images['patient-'+clinicPatient];
-   if(im?.naturalWidth)ctx.drawImage(im,frame*CW,0,CW,CH,p.x-53,p.y-130,CW*.95,CH*.95);
+   // R7: the patient is represented in the persistent left clinical rail; keep the
+   // upper world as a compact doctor/workstation progress strip without a duplicate chibi patient.
    if(state.patientDishVisible)image('meal',p.x-32,p.y-39,64,27);
   }else{const im=images[f.img];if(!im?.naturalWidth)return;image(f.img,p.x-im.naturalWidth/2,p.y-im.naturalHeight+8);}
   if(f.label){ctx.font='600 14px system-ui';ctx.textAlign='center';ctx.fillStyle='#2e5362';ctx.fillText(f.label,p.x,p.y+18);}
