@@ -14,7 +14,7 @@ from build_service_art import build as build_service
 from verify_service_art import main as verify_service
 from build_r6_art import main as build_r6
 ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'web-dist'
-CORE=('index.html','styles.css','r2-fixes.css','clinic-shift.css','character-art.css','workspace-art.css','chibi-world.css','rush.css','clinic-flow.css','service-polish.css','src/main.js','src/scene2d.js','src/shift-rules.js','src/clinic-shift.js','src/character-art.js','src/workspace-art.js','src/rush-rules.js','src/rush.js','src/adaptive-audio.js','src/clinic-rules.js','src/clinic-flow.js','src/service-polish.js')
+CORE=('index.html','styles.css','r2-fixes.css','clinic-shift.css','character-art.css','workspace-art.css','chibi-world.css','rush.css','clinic-flow.css','service-polish.css','clinical-r7.css','src/main.js','src/scene2d.js','src/shift-rules.js','src/clinic-shift.js','src/character-art.js','src/workspace-art.js','src/rush-rules.js','src/rush.js','src/adaptive-audio.js','src/clinic-rules.js','src/clinic-flow.js','src/service-polish.js','src/clinical-r7.js')
 class References(HTMLParser):
  def __init__(self):super().__init__();self.paths=[]
  def handle_starttag(self,tag,attrs):
@@ -63,7 +63,7 @@ def main():
  for rel in CORE:
   if rel.endswith('.css'):
    for ref in re.findall(r'url\(([^)]+)\)',(OUT/rel).read_text(encoding='utf-8')):check(rel,ref)
- manifest={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'renderer':'canvas2d','release_status':'BUILD_VERIFIED_PENDING_DEPLOYMENT','art_status':'CHIBI_WORLD_R2_FULL_BODY_PLAYABLE','gameplay_version':'R5_VISUAL_ORDERS_KEYBOARD_HEAT_REACTIONS','files':[]}
+ manifest={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'renderer':'canvas2d','release_status':'BUILD_VERIFIED_PENDING_DEPLOYMENT','art_status':'CHIBI_WORLD_R2_FULL_BODY_PLAYABLE','gameplay_version':'R7_CLINICAL_WORKFLOW_AUTO_ROUTE_VISUAL_PORTIONS','files':[]}
  for rel in sorted(files):
   raw=(OUT/rel).read_bytes();manifest['files'].append({'path':rel,'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()})
  (OUT/'build-info.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
