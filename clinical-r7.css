@@ -12,7 +12,7 @@
 #scene2dCanvas{filter:saturate(.9)}
 #clinicWorktabs button{min-height:32px;font-size:12px}
 #rushStrip{padding:5px 10px}
-#precisionTrack{height:24px}
+#precisionTrack{height:26px}
 
 /* Left-side clinical observation rail. Values are fictional game-state indicators,
    not validated clinical scales. */
