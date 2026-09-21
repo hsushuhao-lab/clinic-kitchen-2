@@ -8,13 +8,13 @@
       id: 'office',
       name: '上班族',
       wish: '今天想吃正常辣，不要蔥，半碗飯就好，附熱味噌湯。',
-      complaint: '工作壓力繁重，戒菸第三天，下午強烈菸癮難耐，胃口差又焦慮坐不住。',
+      complaint: '工作壓力繁重，戒菸第三天，下午強烈菸癮難耐、煩躁不安，胃口差又難以入睡。',
       spicy: '正常',
       scallion: false,
       rice: '半碗飯',
       miso: true,
       ftnd: Object.freeze({ q1: 1, q2: 0, q3: 1, q4: 1, q5: 0, q6: 1, total: 4, severity: '中度依賴' }),
-      clinicalStatus: Object.freeze({ craving: 3, irritability: 3, anxiety: 3, concentration: 2, restlessness: 2, appetite: 3, sleep: 2 })
+      clinicalStatus: Object.freeze({ craving: 3, irritability: 3, anxiety: 0, concentration: 0, restlessness: 0, appetite: 1, sleep: 3 })
     },
     {
       id: 'student',
@@ -26,7 +26,7 @@
       rice: '正常飯',
       miso: true,
       ftnd: Object.freeze({ q1: 2, q2: 1, q3: 1, q4: 1, q5: 0, q6: 1, total: 6, severity: '中度依賴' }),
-      clinicalStatus: Object.freeze({ craving: 3, irritability: 2, anxiety: 3, concentration: 4, restlessness: 2, appetite: 2, sleep: 3 })
+      clinicalStatus: Object.freeze({ craving: 3, irritability: 3, anxiety: 0, concentration: 3, restlessness: 0, appetite: 3, sleep: 3 })
     },
     {
       id: 'driver',
@@ -38,7 +38,7 @@
       rice: '正常飯',
       miso: false,
       ftnd: Object.freeze({ q1: 2, q2: 1, q3: 2, q4: 1, q5: 1, q6: 1, total: 8, severity: '重度依賴' }),
-      clinicalStatus: Object.freeze({ craving: 4, irritability: 4, anxiety: 2, concentration: 2, restlessness: 4, appetite: 1, sleep: 2 })
+      clinicalStatus: Object.freeze({ craving: 4, irritability: 4, anxiety: 4, concentration: 3, restlessness: 4, appetite: 3, sleep: 0 })
     },
     {
       id: 'auntie',
@@ -50,7 +50,7 @@
       rice: '半碗飯',
       miso: true,
       ftnd: Object.freeze({ q1: 1, q2: 0, q3: 1, q4: 0, q5: 0, q6: 1, total: 3, severity: '輕度依賴' }),
-      clinicalStatus: Object.freeze({ craving: 2, irritability: 2, anxiety: 4, concentration: 2, restlessness: 1, appetite: 2, sleep: 4 })
+      clinicalStatus: Object.freeze({ craving: 3, irritability: 3, anxiety: 0, concentration: 3, restlessness: 0, appetite: 2, sleep: 4 })
     },
     {
       id: 'quiet',
@@ -62,7 +62,7 @@
       rice: '正常飯',
       miso: false,
       ftnd: Object.freeze({ q1: 1, q2: 0, q3: 1, q4: 1, q5: 0, q6: 0, total: 3, severity: '輕度依賴' }),
-      clinicalStatus: Object.freeze({ craving: 2, irritability: 1, anxiety: 2, concentration: 3, restlessness: 1, appetite: 3, sleep: 2 })
+      clinicalStatus: Object.freeze({ craving: 3, irritability: 3, anxiety: 0, concentration: 0, restlessness: 0, appetite: 3, sleep: 1 })
     },
     {
       id: 'repeat',
@@ -74,7 +74,7 @@
       rice: '半碗飯',
       miso: true,
       ftnd: Object.freeze({ q1: 2, q2: 1, q3: 2, q4: 1, q5: 1, q6: 2, total: 9, severity: '重度依賴' }),
-      clinicalStatus: Object.freeze({ craving: 4, irritability: 4, anxiety: 4, concentration: 3, restlessness: 4, appetite: 1, sleep: 3 })
+      clinicalStatus: Object.freeze({ craving: 4, irritability: 4, anxiety: 4, concentration: 0, restlessness: 4, appetite: 1, sleep: 3 })
     }
   ]);
 
@@ -101,12 +101,14 @@
   const VALID_PORTIONS = Object.freeze([0, 0.5, 1]);
   function isValidPortion(p) { return VALID_PORTIONS.includes(p); }
 
-  // R8 symptom → expected portion mapping
-  // symptom value 0-1 → portion 0; 2 → portion 0.5; 3-4 → portion 1
+  // R8 symptom → expected portion mapping per spec 5.4:
+  // symptom = 0 → 0 份
+  // symptom = 1 or 2 → 0.5 份
+  // symptom = 3 or 4 → 1 份
   function symptomToTargetPortion(symptomValue) {
     const v = Number(symptomValue) || 0;
-    if (v <= 1) return 0;
-    if (v === 2) return 0.5;
+    if (v === 0) return 0;
+    if (v <= 2) return 0.5;
     return 1;
   }
 
@@ -197,8 +199,17 @@
       checks.push({ label: '基底食材', expected: '豆腐+絞肉各1份', actual: '齊備', ok: true, penalty: 0 });
     }
 
+    // Check if this is a Rush ticket (night shift) where ticket requirements define the prescription
+    const isRush = (order && order.target !== undefined) || (typeof window !== 'undefined' && window.CKRush && window.CKRush.snapshot && window.CKRush.snapshot().mode === 'rush');
+
     // R8 prescription fidelity: adjustable ingredients must match symptom→portion mapping
-    const expected = patient ? buildExpectedPortions(patient) : { douban: 1, garlic: 1, scallion: 0, chili: 0, pepper: 0 };
+    const expected = (patient && !isRush) ? buildExpectedPortions(patient) : {
+      douban: 1,
+      garlic: 1,
+      scallion: order && order.scallion ? 1 : 0,
+      pepper: order && order.spicy === '重辣' ? 1 : 0,
+      chili: 0
+    };
     const adjustable = ['douban', 'garlic', 'scallion', 'chili', 'pepper'];
     const labelMap = { douban: '豆瓣醬→Craving', garlic: '蒜→Irritability', scallion: '蔥→Concentration', chili: '辣椒→Restlessness', pepper: '花椒→Anxiety' };
     let totalPrescriptionPenalty = 0;

@@ -14,7 +14,7 @@
   function frozen() {
     return round.paused || picker.open || document.hidden || round.status === 'lost' || round.status === 'won';
   }
-  function setText(id, text) { if (el(id).textContent !== String(text)) el(id).textContent = text; }
+  function setText(id, text) { const n = el(id); if (n && n.textContent !== String(text)) n.textContent = text; }
   function selectPanel(panel) {
     el('cookingDeck').dataset.panel = panel;
   }
@@ -43,9 +43,11 @@
       setText('cravingText', value + '%');
       setText('focusText', focus + '%');
       setText('patientMood', labels[band]);
-      el('cravingMeter').value = value;
-      el('focusMeter').value = focus;
-      el('cravingMeter').setAttribute('aria-valuetext', value + '%，' + labels[band]);
+      if (el('cravingMeter')) {
+        el('cravingMeter').value = value;
+        el('cravingMeter').setAttribute('aria-valuetext', value + '%，' + labels[band]);
+      }
+      if (el('focusMeter')) el('focusMeter').value = focus;
       setText('shiftPoints', round.points);
       setText('shiftServed', round.served);
       setText('shiftStreak', round.streak);

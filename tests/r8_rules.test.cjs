@@ -41,10 +41,10 @@ test('R8: patients have R8 withdrawal symptom profile (0-4 scale, 7 metrics)', (
 
 // ===== symptomToTargetPortion mapping =====
 
-test('R8: symptomToTargetPortion maps 0-1→0, 2→0.5, 3-4→1', () => {
+test('R8: symptomToTargetPortion maps 0→0, 1 or 2→0.5, 3-4→1', () => {
   const { symptomToTargetPortion } = rules;
   assert.equal(symptomToTargetPortion(0), 0);
-  assert.equal(symptomToTargetPortion(1), 0);
+  assert.equal(symptomToTargetPortion(1), 0.5);
   assert.equal(symptomToTargetPortion(2), 0.5);
   assert.equal(symptomToTargetPortion(3), 1);
   assert.equal(symptomToTargetPortion(4), 1);
@@ -52,15 +52,15 @@ test('R8: symptomToTargetPortion maps 0-1→0, 2→0.5, 3-4→1', () => {
 
 test('R8: buildExpectedPortions generates correct portions from patient clinicalStatus', () => {
   const { patients, buildExpectedPortions } = rules;
-  // driver: craving=4, irritability=4, anxiety=2, concentration=2, restlessness=4
+  // driver: craving=4, irritability=4, anxiety=4, concentration=3, restlessness=4
   const driver = patients.find(p => p.id === 'driver');
   const exp = buildExpectedPortions(driver);
   assert.equal(exp.tofu, 1, 'tofu always 1');
   assert.equal(exp.pork, 1, 'pork always 1');
   assert.equal(exp.douban, 1, 'douban for craving=4 should be 1');
   assert.equal(exp.garlic, 1, 'garlic for irritability=4 should be 1');
-  assert.equal(exp.pepper, 0.5, 'pepper for anxiety=2 should be 0.5');
-  assert.equal(exp.scallion, 0.5, 'scallion for concentration=2 should be 0.5');
+  assert.equal(exp.pepper, 1, 'pepper for anxiety=4 should be 1');
+  assert.equal(exp.scallion, 1, 'scallion for concentration=3 should be 1');
   assert.equal(exp.chili, 1, 'chili for restlessness=4 should be 1');
 });
 

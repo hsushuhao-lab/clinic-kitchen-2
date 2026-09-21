@@ -57,28 +57,28 @@
 
 /* Result: prioritize the patient's own subjective feedback, keep the detailed
    recipe audit available below, and allow the dialog to scroll instead of crop. */
-#clinicResult{overflow:auto!important;max-height:calc(100dvh - 56px - 20dvh - 16px)!important;padding:6px 10px!important;box-sizing:border-box!important}
-#clinicResult header{margin-bottom:2px!important}
-#clinicResult header small{font-size:9.5px!important}
-#clinicResult h2{font-size:14px!important;margin:1px 0 2px!important}
-#clinicResult .patient-review-quote{font-size:10px!important;padding:2px 6px!important;margin:2px 0!important;line-height:1.25!important}
-#clinicResult .subjective-grid{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:2px!important;margin:2px 0!important}
-#clinicResult .sub-chip{padding:1px 4px!important;font-size:8.5px!important}
-#clinicResult .clinic-result-score{padding:2px 6px!important;margin:2px 0!important;gap:6px!important}
-#clinicResult .clinic-result-score strong{font-size:14px!important}
-#clinicResult .clinic-result-score small{font-size:8.5px!important}
-#clinicResult table{font-size:9.5px!important;margin:2px 0!important}
-#clinicResult th,#clinicResult td{padding:1.5px 4px!important;line-height:1.2!important}
-#patientSelfRating{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;margin:2px 0}
-.patient-rating-card{padding:2px 3px;border:1px solid #d8d1bb;border-radius:5px;background:#fffdf6;text-align:center}
-.patient-rating-card small{display:block;font-size:8px;color:#718086}
-.patient-rating-card strong{display:block;margin-top:0;font-size:12px;color:#2e5362}
-#patientReliefNote{grid-column:1/-1;margin:0;padding:2px 5px;border-radius:4px;background:#edf2e9;font-size:9px;line-height:1.25;text-align:left}
+#clinicResult{overflow:auto!important;max-height:calc(100dvh - 56px - 17vh - 12px)!important;padding:4px 8px!important;box-sizing:border-box!important}
+#clinicResult header{margin-bottom:1px!important}
+#clinicResult header small{font-size:9px!important}
+#clinicResult h2{font-size:13px!important;margin:0 0 1px!important}
+#clinicResult .patient-review-quote{font-size:9.5px!important;padding:1px 5px!important;margin:1px 0!important;line-height:1.2!important}
+#clinicResult .subjective-grid{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:2px!important;margin:1px 0!important}
+#clinicResult .sub-chip{padding:1px 3px!important;font-size:8px!important}
+#clinicResult .clinic-result-score{padding:1px 5px!important;margin:1px 0!important;gap:5px!important}
+#clinicResult .clinic-result-score strong{font-size:13px!important}
+#clinicResult .clinic-result-score small{font-size:8px!important}
+#clinicResult table{font-size:9px!important;margin:1px 0!important}
+#clinicResult th,#clinicResult td{padding:1px 3px!important;line-height:1.15!important}
+#patientSelfRating{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px;margin:1px 0}
+.patient-rating-card{padding:1px 2px;border:1px solid #d8d1bb;border-radius:4px;background:#fffdf6;text-align:center}
+.patient-rating-card small{display:block;font-size:7.5px;color:#718086}
+.patient-rating-card strong{display:block;margin-top:0;font-size:11px;color:#2e5362}
+#patientReliefNote{grid-column:1/-1;margin:0;padding:1px 4px;border-radius:3px;background:#edf2e9;font-size:8.5px;line-height:1.2;text-align:left}
 #clinicResult[data-satisfaction='unmet'] #patientReliefNote{background:#f4e8df}
-#clinicBonus{margin:1px 0!important;font-size:9.5px!important;line-height:1.2!important}
-.clinic-disclaimer{margin:1px 0 2px!important;font-size:8px!important;line-height:1.2!important}
-#clinicResult footer{margin-top:2px!important}
-#clinicNextBtn{padding:3px 12px!important;font-size:11.5px!important;min-height:26px!important}
+#clinicBonus{margin:0!important;font-size:8.5px!important;line-height:1.15!important}
+.clinic-disclaimer{margin:1px 0!important;font-size:7.5px!important;line-height:1.15!important}
+#clinicResult footer{margin-top:1px!important}
+#clinicNextBtn{padding:2px 10px!important;font-size:11px!important;min-height:24px!important}
 
 @media(max-width:699px){
   #app{grid-template-columns:1fr;grid-template-rows:48px 78px 88px minmax(0,1fr)}
@@ -126,11 +126,11 @@
 .portion-badge.is-fixed{background:#d6cebd!important;color:#5a5040!important;font-style:italic}
 
 /* clinicResultMessage visible in R8 (hardFail mode) */
-#clinicResultMessage{display:block!important;font-size:10px!important;margin:3px 0!important;padding:3px 6px!important;border-radius:4px!important;background:#f4ece2!important;color:#5c3a20!important;line-height:1.35!important}
+#clinicResultMessage{display:block!important;font-size:9px!important;margin:1px 0 2px!important;padding:2px 5px!important;border-radius:4px!important;background:#f4ece2!important;color:#5c3a20!important;line-height:1.25!important}
 #clinicResult[data-won='true'] #clinicResultMessage{background:#edf5ea!important;color:#2a4f2a!important}
 
 /* Prescription fidelity and Gate B in award line */
-#clinicAward{font-size:9.5px!important;white-space:normal!important;word-break:break-word!important}
+#clinicAward{font-size:9px!important;white-space:normal!important;word-break:break-word!important;margin:1px 0!important}
 
 @media(max-width:699px){
   .ftnd-card{padding:4px 6px;margin-bottom:3px}

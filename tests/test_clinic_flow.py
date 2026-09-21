@@ -102,7 +102,7 @@ try:
    before_pos=scene()['playerPos']
    page.keyboard.press('e')
    expect(page.locator('#clinicResult')).to_be_visible()
-   assert cook()['stage']==7 and snapshot()['result']['quality']==(95 if wrong_rice else 100)
+   assert cook()['stage']==7 and snapshot()['result']['quality']==(75 if wrong_rice else 100)
    assert page.evaluate('CKShift.snapshot().status')=='won' and not cook()['heated']
    points=page.evaluate('CKShift.snapshot().points');time=page.evaluate('CKShift.snapshot().elapsed')
    page.keyboard.down('d');page.wait_for_timeout(220);page.keyboard.up('d');page.keyboard.press('Escape');page.wait_for_timeout(100)

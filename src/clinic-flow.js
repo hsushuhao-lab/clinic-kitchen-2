@@ -151,11 +151,11 @@
       el('wokCookDoneBtn').disabled = !canPlateDish;
     }
     el('riceHalfBtn').disabled=el('riceFullBtn').disabled=!(c.stage>=3&&!c.plated);
-    if(el('misoToggleBtn')) el('misoToggleBtn').disabled = !(c.stage>=3&&!c.plated);
-    el('heatBtn').disabled ||= !c.atWok;
-    el('addBtn').disabled ||= (!c.atWok || window.wok?.hasFood);
-    el('stirBtn').disabled ||= (!c.atWok || !window.wok?.hasFood);
-    el('cutBtn').disabled ||= !c.atPrep;
+    el('heatBtn').disabled = !c.atWok || (c.stage < 3) || !!c.plated;
+    el('addBtn').disabled = !c.atWok || (c.stage < 3) || !!c.plated || !!window.isPlating || !!window.wok?.hasFood || window.wok?.flame === 'off';
+    el('stirBtn').disabled = !c.atWok || (c.stage < 3) || !!c.plated || !!window.isPlating || !window.wok?.hasFood;
+    const canCut = c.selectedFood && !window.prepped?.has(c.selectedFood) && !window.inWok?.has(c.selectedFood);
+    el('cutBtn').disabled = !c.atPrep || (c.stage < 3) || !!c.plated || !canCut;
 
     // Update tray preview info
     if (el('platedDishPreview')) {
@@ -189,7 +189,7 @@
     if(result&&s.status==='won')el('sessionOverlay').hidden=true;
   }
   window.updateCooking=function(){original.cook();render();};
-  CKShift.tick=function(dt,dialogOpen){original.tick.call(CKShift,dt,dialogOpen);render();};
+  CKShift.tick=function(dt,dialogOpen){original.tick.call(CKShift,dt,dialogOpen);original.cook();render();};
 
   function onConfirmConsult() {
     const p = preference();

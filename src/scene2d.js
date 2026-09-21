@@ -101,6 +101,7 @@
     route.shift();
     if(!route.length){
      state.isMoving=state.isRunning=false;p.x=tx;p.z=tz;state.interactiveTarget=nearby(tx,tz);
+     if(window.updateCooking) window.updateCooking();
      if(state.onArrivalCallback){const cb=state.onArrivalCallback;state.onArrivalCallback=null;cb();}
     }
    }else step(dx,dz,Math.min(dt,Math.hypot(dx,dz)/4.2),1.65);

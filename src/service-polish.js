@@ -189,7 +189,9 @@
   const rows=$('clinicComparison').rows;
   const iconLookup={
    '辣度調味':{req:state.order.spicy==='重辣'?'spicy-heavy':'spicy-normal',act:c=>(c?.actual?.includes('重辣')||cookedDish.hasPepper)?'spicy-heavy':'spicy-normal'},
+   '花椒→Anxiety':{req:state.order.spicy==='重辣'?'spicy-heavy':'spicy-normal',act:c=>(c?.actual!=='0份'||cookedDish.hasPepper||(window.wok?.contents?.pepper||0)>0)?'spicy-heavy':'spicy-normal'},
    '蔥花偏好':{req:state.order.scallion?'scallion-yes':'scallion-no',act:c=>(c?.actual?.includes('有蔥')||cookedDish.hasScallion)?'scallion-yes':'scallion-no'},
+   '蔥→Concentration':{req:state.order.scallion?'scallion-yes':'scallion-no',act:c=>(c?.actual!=='0份'||cookedDish.hasScallion||(window.wok?.contents?.scallion||0)>0)?'scallion-yes':'scallion-no'},
    '配飯份量':{req:state.order.rice==='半碗飯'?'portion_half':'portion_full',act:c=>(c?.actual==='半碗飯'||cookedDish.ricePortion==='半碗飯')?'portion_half':'portion_full'},
    '味噌湯':{req:state.order.miso?'miso_yes':'miso_no',act:c=>(c?.actual?.includes('有湯')||cookedDish.miso)?'miso_yes':'miso_no'}
   };
