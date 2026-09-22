@@ -39,7 +39,7 @@
   hud.prepend(heading,identity,wishes);hud.append(next);
 
   const tabs=document.createElement('nav');tabs.id='clinicWorktabs';tabs.setAttribute('aria-label','料理工作區');
-  tabs.innerHTML='<div><button type="button" class="shift-control" data-clinic-panel="prep">1 備料</button><button type="button" class="shift-control" data-clinic-panel="wok">2 炒鍋</button><button type="button" class="shift-control" data-clinic-panel="serve">3 配飯・盛湯</button></div><span id="clinicOrderSummary"></span>';
+  tabs.innerHTML='<div><button type="button" class="shift-control" data-clinic-panel="prep" disabled>1 備料</button><button type="button" class="shift-control" data-clinic-panel="wok" disabled>2 炒鍋</button><button type="button" class="shift-control" data-clinic-panel="serve" disabled>3 配餐</button></div><span id="clinicOrderSummary"></span>';
   el('rushStrip').after(tabs);
 
   const welcome=document.createElement('section');welcome.id='clinicWelcome';welcome.className='clinic-consult-deck';
@@ -289,8 +289,11 @@
     if (window.syncWokFoodStateFromContents) {
       window.syncWokFoodStateFromContents();
     }
+    if (window.wok && window.wok.flame === 'off') {
+      window.wok.flame = 'low';
+    }
     setStage(STAGES.COOK);
-    cookLog('全料備妥一次下鍋！前往炒鍋爐台烹飪');
+    cookLog('備料完成：食材已自動下鍋並以小火預熱，前往炒鍋翻炒。');
     if (window.autoWalkTo) {
       window.autoWalkTo('wok', () => selectPanel('wok'));
     } else {
@@ -301,8 +304,14 @@
 
   function onWokCookDone() {
     if (CKShift.isFrozen()) return;
+    let guard = 0;
+    while (window.wok?.flame !== 'off' && guard < 3) {
+      if (!el('heatBtn')?.disabled) el('heatBtn').click();
+      else break;
+      guard++;
+    }
     if (getMissionStage() < STAGES.PLATE) setStage(STAGES.PLATE);
-    cookLog('翻炒收汁完成！前往配餐檯盛飯盛湯');
+    cookLog('收汁完成並關火：前往配餐檯選擇白飯與味噌湯。');
     if (window.autoWalkTo) {
       window.autoWalkTo('serve', () => selectPanel('serve'));
     } else {
@@ -543,7 +552,6 @@
       e.preventDefault();e.stopPropagation();el('clinicNextBtn').click();
     }
   });
-  document.querySelectorAll('[data-clinic-panel]').forEach(b=>b.addEventListener('click',()=>{selectPanel(b.dataset.clinicPanel);render();}));
   el('clinicGo').addEventListener('click',()=>{
     const t=el('clinicGo').dataset.target;
     document.querySelector(`[data-station="${t}"]`)?.click();

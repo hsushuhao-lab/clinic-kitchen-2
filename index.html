@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="workspace-art.css?v=r8.2-wok-visual-hotfix-4"/>
 <link rel="stylesheet" href="chibi-world.css?v=service-r5"/>
 <link rel="stylesheet" href="rush.css?v=service-r5"/>
-<link rel="stylesheet" href="clinic-flow.css?v=r8.2-serve-wok-hotfix-3"/>
+<link rel="stylesheet" href="clinic-flow.css?v=r8.3-smooth-flow-1"/>
 <link rel="stylesheet" href="service-polish.css?v=service-r5"/>
 <link rel="stylesheet" href="clinical-r7.css?v=r8.2-wok-icons-hotfix-2"/>
 </head>
@@ -194,7 +194,7 @@
 <div class="board-controls">
 <button disabled="" id="cutBtn">切配</button>
 <button id="portionCycleBtn" type="button" class="shift-control portion-cycle-btn">份量：1份 (Q)</button>
-<button id="prepDoneBtn" type="button" class="shift-control r7-action-btn">全料下鍋 · 前往炒鍋 (E)</button>
+<button id="prepDoneBtn" type="button" class="shift-control r7-action-btn">備料完成 → 前往炒鍋</button>
 <div class="cut-progress-text" id="cutProgressText">點選食材放上砧板切配</div>
 </div>
 </div>
@@ -228,10 +228,10 @@
 </div>
 <div class="wok-actions">
 <button id="heatBtn">開火</button>
-<button disabled="" id="addBtn">下鍋</button>
+<button disabled="" hidden="" id="addBtn">下鍋</button>
 <button disabled="" id="stirBtn">翻炒</button>
 <button disabled="" id="plateBtn">盛盤</button>
-<button disabled="" id="wokCookDoneBtn" class="shift-control r7-action-btn" type="button">出鍋盛盤 · 前往配餐 (E)</button>
+<button disabled="" id="wokCookDoneBtn" class="shift-control r7-action-btn" type="button">收汁完成 → 前往配餐</button>
 </div>
 <div class="simmer-progress-container" hidden="" id="simmerProgressContainer">
 <div class="simmer-progress-header">
@@ -363,8 +363,8 @@ Clinical meal target loading...
 <script src="src/workspace-art.js?v=service-r5"></script>
 <script src="src/clinic-shift.js?v=service-r5"></script>
 <script src="src/rush.js?v=service-r5"></script>
-<script src="src/clinic-flow.js?v=r8.2-serve-wok-hotfix-3"></script>
-<script src="src/service-polish.js?v=r8.2-wok-icons-hotfix-2"></script>
+<script src="src/clinic-flow.js?v=r8.3-smooth-flow-1"></script>
+<script src="src/service-polish.js?v=r8.3-smooth-flow-1"></script>
 <script src="src/clinical-r7.js?v=clinical-r7"></script>
 </body>
 </html>

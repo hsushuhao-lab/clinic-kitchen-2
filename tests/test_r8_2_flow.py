@@ -202,12 +202,11 @@ try:
                     state="visible"
                 )
 
+            expect(page.locator("#addBtn")).to_be_hidden()
             expect(page.locator("#heatBtn")).to_be_enabled()
+            assert page.evaluate("window.wok.flame === 'low'")
 
-            # off -> low -> high
             page.locator("#heatBtn").click()
-            page.locator("#heatBtn").click()
-
             assert page.evaluate(
                 "window.wok.flame === 'high'"
             )
@@ -223,17 +222,6 @@ try:
                 timeout=10000
             )
 
-            # high -> off
-            for _ in range(3):
-                if page.evaluate("window.wok.flame === 'off'"):
-                    break
-                page.locator("#heatBtn").click()
-                page.wait_for_timeout(80)
-
-            assert page.evaluate(
-                "window.wok.flame === 'off'"
-            )
-
             expect(
                 page.locator("#wokCookDoneBtn")
             ).to_be_enabled()
@@ -241,6 +229,7 @@ try:
             page.locator("#wokCookDoneBtn").click()
 
             wait_station("serve")
+            assert page.evaluate("window.wok.flame === 'off'")
             expect(page.locator("#panel-serve")).to_be_visible()
             assert_fixed_track()
 
@@ -375,6 +364,9 @@ try:
         assert station_buttons.evaluate_all(
             "(xs) => xs.every(x => x.disabled)"
         )
+        workflow_tabs = page.locator("#clinicWorktabs [data-clinic-panel]")
+        assert workflow_tabs.count() == 3
+        assert workflow_tabs.evaluate_all("(xs) => xs.every(x => x.disabled)")
 
         lefts = station_buttons.evaluate_all(
             "(xs) => xs.map(x => parseFloat(x.style.left))"

@@ -97,10 +97,10 @@
   }
   const at=getSceneStatus().interactiveTarget?.id;
   const help=c.plated?'已盛入托盤！醫師自動端餐送回診間給病人':
-   at==='prep'?'1–7 選材料 · Q 循環份量 (0/0.5/1) · E 切配放入備料盤':
-   at==='wok'?'E 全料下鍋／翻炒／起鍋 · F 切換火力 (關/小/大)｜4等效秒收汁':
-   at==='serve'?'1 半碗飯 · 2 正常飯 · Q 味噌湯｜完成後按盛盤裝托盤':
-   'WASD／方向鍵移動 · Shift 跑步 · 到站 E 互動';
+   at==='prep'?'設定食材份量 → 點「備料完成」前往炒鍋':
+   at==='wok'?'食材已自動下鍋 · E/Space 翻炒 3 次 · F 調火力 · 收汁後 E 前往配餐':
+   at==='serve'?'1 半碗飯 · 2 正常飯 · Q 切換味噌湯 · E 完成配餐':
+   '醫師會自動移動；只要完成目前工作站的主要動作';
   if(shortcut.textContent!==help)shortcut.textContent=help;
   if(!$('cutBtn').textContent.startsWith('E '))$('cutBtn').textContent='E '+$('cutBtn').textContent;
   const penalty=CKClinicRules.heatPenaltyR6(c.eqSimmerTime||c.simmerTimer,c.wok?.isBurnt);
@@ -163,17 +163,11 @@
   if(at==='wok'){
    if(key==='f'){if(!$('heatBtn').disabled)$('heatBtn').click();return true;}
    if(key==='e'||key===' '){
-    if(!window.wok?.hasFood && !$('addBtn').disabled){
-     $('addBtn').click();return true;
-    }
     if(window.wok?.hasFood && window.wok.stirs < 3 && !$('stirBtn').disabled){
      $('stirBtn').click();return true;
     }
-    if(window.wok?.hasFood && window.wok.stirs >= 3 && (window.wok.isSimmered || window.wok.eqSimmerTime>=4.0) && !$('plateBtn').disabled){
-     $('plateBtn').click();return true;
-    }
-    if(!window.wok?.hasFood && window.wok?.flame==='off' && !$('heatBtn').disabled){
-     $('heatBtn').click();return true;
+    if(window.wok?.hasFood && window.wok.stirs >= 3 && (window.wok.isSimmered || window.wok.eqSimmerTime>=4.0) && !$('wokCookDoneBtn').disabled){
+     $('wokCookDoneBtn').click();return true;
     }
    }
   }
