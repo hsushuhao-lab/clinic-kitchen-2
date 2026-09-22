@@ -253,6 +253,9 @@
 <span class="ticket-badge" id="ticketRice">正常飯</span>
 <span class="ticket-badge" id="ticketMiso">附味噌湯</span>
 </div><div class="bench-title-row"><h3>配飯・裝盤 SERVE</h3></div>
+<div class="serve-rx-banner" id="servePrescriptionBanner">
+Clinical meal target loading...
+</div>
 <!-- Rice Cooker Parallel Interaction Widget -->
 <div class="serving-stilllife" aria-hidden="true"><img class="ready-rice" src="assets/cooking/rice_bowl.png" alt=""/><img class="ready-dish" src="assets/cooking/dish_plated.png" alt=""/></div>
 <div class="rice-cooker-widget" id="riceCookerWidget">
@@ -262,10 +265,10 @@
 <span class="rice-status-badge" id="riceStatusBadge">未盛飯</span>
 </div>
 <div class="rice-widget-actions">
-<button class="rice-btn" id="riceHalfBtn" title="盛半碗飯 (減醣輕量 · 快捷鍵 1)" type="button">
+<button class="rice-btn" id="riceHalfBtn" aria-pressed="false" title="盛半碗飯 (減醣輕量 · 快捷鍵 1)" type="button">
 <img src="assets/service/portion_half.webp" alt="半碗飯" style="width:24px;height:20px;vertical-align:middle;object-fit:contain;margin-right:4px;"/>盛半碗飯 (1)
 </button>
-<button class="rice-btn" id="riceFullBtn" title="盛滿碗飯 (大份量 · 快捷鍵 2)" type="button">
+<button class="rice-btn" id="riceFullBtn" aria-pressed="false" title="盛滿碗飯 (大份量 · 快捷鍵 2)" type="button">
 <img src="assets/service/portion_full.webp" alt="滿碗飯" style="width:24px;height:20px;vertical-align:middle;object-fit:contain;margin-right:4px;"/>盛滿碗飯 (2)
 </button>
 </div>
@@ -273,15 +276,29 @@
 <!-- Miso Soup Widget -->
 <div class="miso-soup-widget" id="misoSoupWidget">
 <div class="rice-widget-header">
-<span class="rice-icon">🍲</span>
-<span class="rice-title">暖心味噌湯 (配餐附湯)</span>
-<span class="rice-status-badge" id="misoStatusBadge">未附湯</span>
+<span class="rice-icon">&#127858;</span>
+<span class="rice-title">&#21619;&#22100;&#28271;</span>
+<span class="rice-status-badge" id="misoStatusBadge">&#23578;&#26410;&#36984;&#25799;</span>
 </div>
-<div class="rice-widget-actions">
-<button class="rice-btn" id="misoToggleBtn" title="切換是否附熱味噌湯 (快捷鍵 Q)" type="button">
-<img id="misoBtnIcon" src="assets/service/miso_no.webp" alt="味噌湯" style="width:24px;height:20px;vertical-align:middle;object-fit:contain;margin-right:4px;"/>
-<span id="misoBtnLabel">不要味噌湯 (Q)</span>
+
+<div class="rice-widget-actions soup-choice-actions">
+
+<button class="rice-btn serve-choice-btn"
+        id="misoNoBtn"
+        type="button"
+        aria-pressed="false">
+<img src="assets/service/miso_no.webp" alt="" />
+<span>&#19981;&#35201;&#21619;&#22100;&#28271;</span>
 </button>
+
+<button class="rice-btn serve-choice-btn"
+        id="misoYesBtn"
+        type="button"
+        aria-pressed="false">
+<img src="assets/service/miso_yes.webp" alt="" />
+<span>&#35201;&#21619;&#22100;&#28271;</span>
+</button>
+
 </div>
 </div>
 <!-- Plated Dish Preview on Tray -->
@@ -323,7 +340,7 @@
 <section aria-label="回合狀態" class="session-overlay" hidden="" id="sessionOverlay">
 <div><small>CLINIC KITCHEN · SHIFT</small><h2 id="sessionTitle">門診暫停</h2><p id="sessionMessage"></p><button class="shift-control" id="sessionContinueBtn" type="button">繼續料理</button></div>
 </section>
-<div class="shift-footer"><span id="ruleSummary"></span><span>上方為 Q 版全身可動診間；下方為料理操作。</span></div>
+<div class="shift-footer"><span id="ruleSummary"></span><span>AUTO WORKFLOW: 01 CONSULT -> 02 PREP -> 03 WOK -> 04 SERVE</span></div>
 </section>
 <dialog aria-labelledby="doctorDialogTitle" class="doctor-dialog" id="doctorDialog">
 <div class="doctor-dialog-head"><div><small>CHOOSE YOUR DOCTOR</small><h2 id="doctorDialogTitle">選擇今天的值班醫師</h2></div><button id="closeDoctorBtn" type="button">返回 Esc</button></div>

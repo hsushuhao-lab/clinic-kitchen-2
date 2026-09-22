@@ -2,7 +2,7 @@
    a compact progress strip, and the lower workspace is the primary interaction surface. */
 #app{
   grid-template-columns:236px minmax(0,1fr);
-  grid-template-rows:56px minmax(118px,20dvh) minmax(0,1fr);
+  grid-template-rows:56px minmax(92px,13dvh) minmax(0,1fr);
 }
 #app>#patientHUD{grid-row:2/4;padding:12px;gap:8px}
 #app>#world{grid-row:2}
@@ -57,7 +57,7 @@
 
 /* Result: prioritize the patient's own subjective feedback, keep the detailed
    recipe audit available below, and allow the dialog to scroll instead of crop. */
-#clinicResult{overflow:auto!important;max-height:calc(100dvh - 56px - 17vh - 12px)!important;padding:4px 8px!important;box-sizing:border-box!important}
+#clinicResult{overflow:auto!important;max-height:calc(100dvh - 56px - 13dvh - 12px)!important;padding:4px 8px!important;box-sizing:border-box!important}
 #clinicResult header{margin-bottom:1px!important}
 #clinicResult header small{font-size:9px!important}
 #clinicResult h2{font-size:13px!important;margin:0 0 1px!important}
@@ -81,7 +81,7 @@
 #clinicNextBtn{padding:2px 10px!important;font-size:11px!important;min-height:24px!important}
 
 @media(max-width:699px){
-  #app{grid-template-columns:1fr;grid-template-rows:48px 78px 88px minmax(0,1fr)}
+  #app{grid-template-columns:1fr;grid-template-rows:48px 78px 72px minmax(0,1fr)}
   #app>.shift-hud{grid-row:1}
   #app>#patientHUD{grid-column:1;grid-row:2;display:grid!important;height:78px!important}
   #app>#world{grid-column:1;grid-row:3}
@@ -98,7 +98,7 @@
   #visualPortionPicker{grid-template-columns:75px repeat(3,1fr)}
   #patientSelfRating{grid-template-columns:1fr 1fr}
   #clinicResult{top:8px!important;bottom:8px!important;max-height:calc(100dvh - 16px)!important}
-  #world .scene-dpad{display:grid!important}
+  #world .scene-dpad{display:none!important}
 }
 
 /* Checklist is informational only; never block the cutting controls on compact layouts. */
@@ -137,4 +137,127 @@
   .ftnd-questions{grid-template-columns:repeat(6,1fr)}
   .ftnd-score-row strong{font-size:14px}
   #clinicResultMessage{font-size:9px!important}
+}
+
+
+/* R8.2 prescription summary */
+.prescription-summary{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:5px;
+  margin-top:6px;
+}
+
+.rx-chip{
+  min-width:0;
+  padding:5px 6px;
+  border:1px solid #d7cfba;
+  border-radius:6px;
+  background:#fffaf0;
+}
+
+.rx-chip small{
+  display:block;
+  font-size:8px;
+  color:#74817d;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.rx-chip strong{
+  display:block;
+  margin-top:1px;
+  font-size:10px;
+  color:#294b5c;
+}
+
+
+/* R8.2 fixed workflow strip */
+#world{
+  overflow:hidden!important;
+}
+
+#world .map-station{
+  pointer-events:none!important;
+  cursor:default!important;
+  opacity:.92;
+}
+
+#world .scene-dpad,
+#world .scene-actions,
+#world .control-hint,
+#world .prompt{
+  display:none!important;
+}
+
+#scene2dCanvas{
+  width:100%!important;
+  height:100%!important;
+}
+
+
+/* R8.2 explicit serve choices */
+.serve-rx-banner{
+  padding:8px 12px;
+  border:1px solid #c7ad72;
+  border-radius:7px;
+  background:#fff2cb;
+  color:#294b5c;
+  font-size:13px;
+  font-weight:800;
+}
+
+#panel-serve .rice-widget-actions{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:8px!important;
+}
+
+#panel-serve .rice-btn{
+  min-height:48px!important;
+  border:2px solid #bdc4ba!important;
+  border-radius:8px!important;
+  font-size:12px!important;
+}
+
+#panel-serve .rice-btn img{
+  width:34px!important;
+  height:28px!important;
+  object-fit:contain!important;
+}
+
+#panel-serve .rice-btn[aria-pressed='true']{
+  background:#315b55!important;
+  color:#fff!important;
+  border-color:#23433f!important;
+  box-shadow:0 0 0 2px #d3b162!important;
+}
+
+#panel-serve .rice-btn[aria-pressed='true']::after{
+  content:' OK';
+  font-weight:900;
+}
+
+#riceStatusBadge:not(.is-ready),
+#misoStatusBadge:not(.is-ready){
+  background:#ded9cc!important;
+  color:#655d50!important;
+}
+
+#clinicPlateBtn:disabled{
+  opacity:.48!important;
+  cursor:not-allowed!important;
+}
+
+#clinicPlateBtn:not(:disabled){
+  min-height:44px!important;
+  font-size:14px!important;
+  font-weight:800!important;
+}
+
+@media(max-width:699px){
+  #panel-serve .rice-btn{
+    min-height:48px!important;
+  }
 }

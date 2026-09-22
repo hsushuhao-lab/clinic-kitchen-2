@@ -5,12 +5,26 @@
 (function(){
   'use strict';
   const el=id=>document.getElementById(id),
-    {patients,stations,evaluateR6,evaluateR8,buildExpectedPortions,calculateMealOutcome,calculateClinicalMetrics,generatePatientReview}=CKClinicRules;
+    {patients,stations,evaluateR6,evaluateR8,buildExpectedPortions,buildClinicalPrescription,calculateMealOutcome,calculateClinicalMetrics,generatePatientReview}=CKClinicRules;
   let number=1,patientIndex=0,result=null,last='',previousStation='',panel='prep';
   const original={interact:window.handleInteraction,reset:window.resetAll,cook:window.updateCooking,tick:CKShift.tick};
   const person=()=>patients[patientIndex%patients.length];
   const preference=()=>CKRush.prescribedOrder()||person();
-  const summary=p=>`${p.spicy==='正常'?'正常辣':p.spicy}・${p.scallion?'要蔥':'不要蔥'}・${p.rice}・${p.miso?'附味噌湯':'不要湯'}`;
+  const prescription=()=>buildClinicalPrescription(person());
+  const portionText=v=>v===0?'0':v===0.5?'1/2':'1';
+  const summary=_p=>{
+    const rx=prescription(),p=rx.portions;
+
+    return [
+      'Douban '+portionText(p.douban),
+      'Garlic '+portionText(p.garlic),
+      'Pepper '+portionText(p.pepper),
+      'Scallion '+portionText(p.scallion),
+      'Chili '+portionText(p.chili),
+      rx.rice,
+      rx.miso ? '\u5473\u564c\u6e6f YES' : '\u5473\u564c\u6e6f NO'
+    ].join(' | ');
+  };
   const text=(id,value)=>{if(el(id)&&el(id).textContent!==String(value))el(id).textContent=value;};
   const numberText=n=>String(n).padStart(3,'0');
 
@@ -87,8 +101,8 @@
   }
 
   function announce(){
-    const p=preference(),who=person();
-    currentOrder={spicy:p.spicy,scallion:p.scallion,rice:p.rice,miso:p.miso};
+    const p=preference(),who=person(),rx=prescription();
+    currentOrder={spicy:p.spicy,scallion:p.scallion,rice:rx.rice,miso:rx.miso};
     syncOrderTicketUI();
     if (el('ticketMiso')) el('ticketMiso').textContent = currentOrder.miso ? '附味噌湯' : '不要湯';
     hud.querySelector('.patient-portrait').src=`assets/service/${who.id}.webp`;
@@ -135,7 +149,7 @@
   }
 
   function render(){
-    const s=CKShift.snapshot(),c=getCookingStatus(),p=preference(),who=person();
+    const s=CKShift.snapshot(),c=getCookingStatus(),p=preference(),who=person(),rx=prescription();
     const station=getSceneStatus().interactiveTarget?.id||'';
     if(station&&station!==previousStation){
       if(['prep','wok','serve'].includes(station)) selectPanel(station);
@@ -143,10 +157,37 @@
     previousStation=station;
     // Overwrite only presentation after the engine's panel selection and guard update.
     el('cookingDeck').dataset.panel=panel;el('cookingDeck').dataset.clinicStage=String(c.stage);
+
+    if(el('servePrescriptionBanner')){
+      el('servePrescriptionBanner').textContent =
+        '\u672c\u865f\u914d\u9910\u76ee\u6a19\uff1a' +
+        (rx.rice === '\u534a\u7897\u98ef'
+          ? '\u534a\u7897\u98ef'
+          : '\u4e00\u7897\u98ef') +
+        ' | ' +
+        (rx.miso
+          ? '\u8981\u5473\u564c\u6e6f'
+          : '\u4e0d\u8981\u5473\u564c\u6e6f');
+    }
     const atWokOrServe=['wok','serve'].includes(station)&&!CKShift.isFrozen();
     const canPlateDish = (c.ready || window.wok?.hasFood) && (c.stirs>=3 || (window.wok?.stirs>=3)) && (cookedDish.isSimmered || (window.wok?.isSimmered)) && !c.plated && !window.isPlating;
-    el('clinicPlateBtn').disabled=!canPlateDish;
-    el('clinicPlateBtn').textContent=c.plated ? '已盛盤入托盤' : (window.isPlating ? '盛盤中...' : '盛盤裝托盤 · 送餐給病人');
+    const serviceReady =
+      cookedDish.ricePortion !== '\u672a\u76db\u98ef' &&
+      cookedDish.misoChoice !== null &&
+      cookedDish.misoChoice !== undefined;
+
+    el('clinicPlateBtn').disabled =
+      !canPlateDish || !serviceReady;
+
+    el('clinicPlateBtn').textContent =
+      c.plated
+        ? '\u5df2\u9001\u9910'
+        : window.isPlating
+          ? '\u76db\u76e4\u4e2d...'
+          : serviceReady
+            ? '\u5b8c\u6210\u914d\u9910 \u00b7 \u81ea\u52d5\u9001\u9910'
+            : '\u8acb\u5148\u9078\u64c7\u98ef\u91cf\u8207\u6e6f\u54c1';
+
     if (el('wokCookDoneBtn')) {
       el('wokCookDoneBtn').disabled = !canPlateDish;
     }
@@ -159,16 +200,30 @@
 
     // Update tray preview info
     if (el('platedDishPreview')) {
-      const riceLabel = cookedDish.ricePortion === '半碗飯' ? '🍚 減醣半碗米飯' : '🍚 正常越光米飯';
-      const misoLabel = cookedDish.miso ? ' ＋ 🍲 熱味噌湯' : '';
-      text('trayStatusText', `${riceLabel}${misoLabel} · 盛盤就緒`);
+      const riceLabel =
+        cookedDish.ricePortion === '\u672a\u76db\u98ef'
+          ? '\u767d\u98ef\uff1a\u5c1a\u672a\u9078\u64c7'
+          : '\u767d\u98ef\uff1a' + cookedDish.ricePortion;
+
+      const soupLabel =
+        cookedDish.misoChoice === null ||
+        cookedDish.misoChoice === undefined
+          ? '\u5473\u564c\u6e6f\uff1a\u5c1a\u672a\u9078\u64c7'
+          : cookedDish.misoChoice
+            ? '\u5473\u564c\u6e6f\uff1a\u8981'
+            : '\u5473\u564c\u6e6f\uff1a\u4e0d\u8981';
+
+      text(
+        'trayStatusText',
+        riceLabel + ' | ' + soupLabel
+      );
     }
 
     const key=[number,who.id,p.spicy,p.scallion,p.rice,p.miso,s.status,c.stage,station,c.rice,c.miso,c.heated,cookedDish.isSimmered,c.plated].join('|');
     if(key!==last){
       last=key;text('clinicNumber',numberText(number));text('clinicName',who.name);
       text('clinicStatus',s.status==='won'?'共餐成功':s.status==='lost'?'翻桌待重試':s.status==='active'?'製作中':'已叫號');
-      text('clinicWish',`「${who.wish||summary(p)}」`);text('clinicPreferences',summary(p));
+      text('clinicWish',summary());text('clinicPreferences',summary());
       text('clinicNext',`${numberText(number+1)}　${patients[(patientIndex+1)%patients.length].name} · 候診中`);
       text('clinicOrderSummary',`${numberText(number)} ${who.name}｜${summary(p)}`);
       const instructions=[
@@ -193,7 +248,14 @@
 
   function onConfirmConsult() {
     const p = preference();
-    currentOrder = { spicy: p.spicy, scallion: p.scallion, rice: p.rice, miso: p.miso };
+    const rx = prescription();
+
+    currentOrder = {
+      spicy: p.spicy,
+      scallion: p.scallion,
+      rice: rx.rice,
+      miso: rx.miso
+    };
     syncOrderTicketUI();
     if (el('ticketMiso')) el('ticketMiso').textContent = currentOrder.miso ? '附味噌湯' : '不要湯';
     // R8: lock tofu and pork at 1 (fixed ingredients)
@@ -258,9 +320,14 @@
       return;
     }
     window.isPlating = true;
-    if (cookedDish.ricePortion === '未盛飯') {
-      cookedDish.ricePortion = '正常飯';
-      c.rice = '正常飯';
+    if(
+      cookedDish.ricePortion === '\u672a\u76db\u98ef' ||
+      cookedDish.misoChoice === null ||
+      cookedDish.misoChoice === undefined
+    ){
+      $('log').textContent =
+        '\u8acb\u5148\u9078\u64c7\u767d\u98ef\u4efd\u91cf\u8207\u5473\u564c\u6e6f\u3002';
+      return;
     }
     setTimeout(() => {
       window.isPlating = false;
@@ -305,7 +372,7 @@
       isSimmered: !!(window.wok?.isSimmered || cookedDish.isSimmered),
       isBurnt: !!(window.wok?.isBurnt || cookedDish.isBurnt),
       rice: cookedDish.ricePortion,
-      miso: !!cookedDish.miso
+      miso: cookedDish.misoChoice === true
     };
 
     result = evaluateR8 ? evaluateR8(currentOrder, dishSnapshot, who) : evaluateR6(currentOrder, dishSnapshot);
@@ -436,16 +503,33 @@
     original.interact(name);
   };
 
-  window.resetAll=function(){
-    const status=CKShift.snapshot().status;
-    if(status==='won'){number++;patientIndex++;}
-    if(finish.open)finish.close();result=null;
+  function resetCurrentPatient(){
+    if(finish.open)finish.close();
+    result=null;
+
     if(window.setTopFinale)window.setTopFinale(null);
-    original.reset();last='';previousStation='';selectPanel('prep');announce();
-  };
+
+    original.reset();
+
+    last='';
+    previousStation='';
+    selectPanel('prep');
+    announce();
+  }
+
+  function advanceToNextPatient(){
+    number++;
+    patientIndex=(patientIndex+1)%patients.length;
+    resetCurrentPatient();
+  }
+
+  // R / restart keeps the current patient.
+  window.resetAll=resetCurrentPatient;
 
   el('clinicPlateBtn').addEventListener('click', onPlate);
-  el('clinicNextBtn').addEventListener('click',()=>window.resetAll());
+
+  // Next-patient action always advances after success or failure.
+  el('clinicNextBtn').addEventListener('click',advanceToNextPatient);
   finish.addEventListener('cancel',e=>e.preventDefault());
   finish.addEventListener('keydown',e=>{
     if(['Enter','e','E'].includes(e.key)&&!e.repeat){
@@ -478,7 +562,15 @@
   el('rushMode').addEventListener('click',()=>announce());
   el('doctorDialog').addEventListener('close',()=>el('world').focus({preventScroll:true}));
   window.CKClinic={
-    snapshot:()=>({number,patient:{...person()},order:{...currentOrder},panel,result:result&&JSON.parse(JSON.stringify(result)),resultOpen:finish.open}),
+    snapshot:()=>({
+      number,
+      patient:{...person()},
+      order:{...currentOrder},
+      prescription:JSON.parse(JSON.stringify(prescription())),
+      panel,
+      result:result&&JSON.parse(JSON.stringify(result)),
+      resultOpen:finish.open
+    }),
     deliver,
     render,
     onConfirmConsult

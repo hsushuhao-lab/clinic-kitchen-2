@@ -3,18 +3,52 @@
 (function(){
  'use strict';
  const $=id=>document.getElementById(id),root='assets/service/';
- const icons=p=>[
-  [p.spicy==='重辣'?'spicy-heavy':'spicy-normal',p.spicy==='重辣'?'重辣':'正常辣'],
-  [p.scallion?'scallion-yes':'scallion-no',p.scallion?'要蔥':'不要蔥'],
-  [p.rice==='半碗飯'?'portion_half':'portion_full',p.rice==='半碗飯'?'半碗飯':'正常飯'],
-  [p.miso?'miso_yes':'miso_no',p.miso?'要附湯':'不要湯']
- ];
- function iconRow(order){
-  const row=document.createElement('div');row.className='request-icons';row.setAttribute('aria-label','病人需求圖示');
-  icons(order).forEach(([file,label])=>{
-   const item=document.createElement('figure'),im=document.createElement('img'),cap=document.createElement('figcaption');
-   im.src=root+file+'.webp';im.alt=label;im.width=144;im.height=120;cap.textContent=label;item.append(im,cap);row.append(item);
-  });return row;
+ function prescriptionRow(rx){
+  const row=document.createElement('div');
+  row.className='prescription-summary';
+  row.setAttribute('aria-label','Clinical Prescription');
+
+  const portionText=v=>v===0?'0':v===0.5?'1/2':'1';
+  const p=rx.portions;
+
+  const items=[
+   ['douban',portionText(p.douban),'Craving'],
+   ['garlic',portionText(p.garlic),'Irritability'],
+   ['pepper',portionText(p.pepper),'Anxiety'],
+   ['scallion',portionText(p.scallion),'Concentration'],
+   ['chili',portionText(p.chili),'Restlessness']
+  ];
+
+  for(const [id,value,target] of items){
+   const item=document.createElement('div');
+   item.className='rx-chip';
+
+   const name=CKClinicRules.INGREDIENTS[id]?.name || id;
+
+   item.innerHTML=
+    '<small>'+target+'</small>'+
+    '<strong>'+name+' '+value+'</strong>';
+
+   row.append(item);
+  }
+
+  const rice=document.createElement('div');
+  rice.className='rx-chip';
+  rice.innerHTML=
+   '<small>Appetite</small>'+
+   '<strong>'+rx.rice+'</strong>';
+  row.append(rice);
+
+  const soup=document.createElement('div');
+  soup.className='rx-chip';
+  soup.innerHTML=
+   '<small>Sleep</small>'+
+   '<strong>'+
+   (rx.miso?'\u5473\u564c\u6e6f YES':'\u5473\u564c\u6e6f NO')+
+   '</strong>';
+  row.append(soup);
+
+  return row;
  }
  const wishes=document.createElement('div');wishes.id='requestIcons';
  $('clinicWish').after(wishes);
@@ -43,8 +77,14 @@
   const src=root+id+'.webp',portrait=$('patientHUD').querySelector('.patient-portrait');
   if(portrait.dataset.assetSource!==src){portrait.src=src;portrait.dataset.assetSource=src;}
   if(identity!==id){identity=id;portrait.alt=who.name+'，完整原稿人物插畫';}
-  const key=JSON.stringify(clinic.order);
-  if(key!==request){request=key;wishes.replaceChildren(iconRow(clinic.order));}
+  const key=JSON.stringify(clinic.prescription);
+
+  if(key!==request){
+   request=key;
+   wishes.replaceChildren(
+    prescriptionRow(clinic.prescription)
+   );
+  }
   const at=getSceneStatus().interactiveTarget?.id;
   const help=c.plated?'已盛入托盤！醫師自動端餐送回診間給病人':
    at==='prep'?'1–7 選材料 · Q 循環份量 (0/0.5/1) · E 切配放入備料盤':
@@ -131,7 +171,15 @@
   if(at==='serve'){
    if(key==='1'){if(!$('riceHalfBtn').disabled)$('riceHalfBtn').click();return true;}
    if(key==='2'){if(!$('riceFullBtn').disabled)$('riceFullBtn').click();return true;}
-   if(key==='q'){if($('misoToggleBtn')&&!$('misoToggleBtn').disabled)$('misoToggleBtn').click();return true;}
+   if(key==='q'){
+    const next =
+      cookedDish.misoChoice === true
+        ? $('misoNoBtn')
+        : $('misoYesBtn');
+
+    if(next && !next.disabled)next.click();
+    return true;
+   }
    if(key==='e'){
     if(!$('clinicPlateBtn').disabled){$('clinicPlateBtn').click();return true;}
     if(!$('plateBtn').disabled){$('plateBtn').click();return true;}

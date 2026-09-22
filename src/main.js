@@ -113,6 +113,7 @@ let cookedDish = {
   spicyLevel: '正常',
   ricePortion: '未盛飯',
   miso: false,
+  misoChoice: null,
   stirs: 0,
   simmerProgress: 0,
   eqSimmerTime: 0,
@@ -620,19 +621,64 @@ function updateCooking() {
     $('riceHalfBtn').disabled = riceDisabled;
     $('riceFullBtn').disabled = riceDisabled;
   }
+
   if ($('riceStatusBadge')) {
     const rPortion = cookedDish.ricePortion;
-    $('riceStatusBadge').textContent = rPortion === '未盛飯' ? '未盛飯' : `已盛【${rPortion}】✓`;
-    $('riceStatusBadge').classList.toggle('is-ready', rPortion !== '未盛飯');
+
+    $('riceStatusBadge').textContent =
+      rPortion === '\u672a\u76db\u98ef'
+        ? '\u5c1a\u672a\u9078\u64c7'
+        : '\u5df2\u9078\uff1a' + rPortion + ' \u2713';
+
+    $('riceStatusBadge').classList.toggle(
+      'is-ready',
+      rPortion !== '\u672a\u76db\u98ef'
+    );
+
+    if ($('riceHalfBtn')) {
+      $('riceHalfBtn').setAttribute(
+        'aria-pressed',
+        String(rPortion === '\u534a\u7897\u98ef')
+      );
+    }
+
+    if ($('riceFullBtn')) {
+      $('riceFullBtn').setAttribute(
+        'aria-pressed',
+        String(rPortion === '\u6b63\u5e38\u98ef')
+      );
+    }
   }
 
   // Miso Soup Widget State
-  if ($('misoStatusBadge') && $('misoBtnLabel') && $('misoBtnIcon')) {
-    const hasM = !!cookedDish.miso;
-    $('misoStatusBadge').textContent = hasM ? '已附味噌湯 ✓' : '不要味噌湯';
-    $('misoStatusBadge').classList.toggle('is-ready', hasM);
-    $('misoBtnIcon').src = hasM ? 'assets/service/miso_yes.webp' : 'assets/service/miso_no.webp';
-    $('misoBtnLabel').textContent = hasM ? '要味噌湯 (Q)' : '不要味噌湯 (Q)';
+  if ($('misoStatusBadge')) {
+    const choice = cookedDish.misoChoice;
+
+    $('misoStatusBadge').textContent =
+      choice === null
+        ? '\u5c1a\u672a\u9078\u64c7'
+        : choice
+          ? '\u5df2\u9078\uff1a\u8981\u5473\u564c\u6e6f \u2713'
+          : '\u5df2\u9078\uff1a\u4e0d\u8981\u6e6f \u2713';
+
+    $('misoStatusBadge').classList.toggle(
+      'is-ready',
+      choice !== null
+    );
+
+    if ($('misoNoBtn')) {
+      $('misoNoBtn').setAttribute(
+        'aria-pressed',
+        String(choice === false)
+      );
+    }
+
+    if ($('misoYesBtn')) {
+      $('misoYesBtn').setAttribute(
+        'aria-pressed',
+        String(choice === true)
+      );
+    }
   }
 
   // Simmer Progress Bar Widget
@@ -867,6 +913,7 @@ function resetAll() {
     simmerProgress: 0,
     eqSimmerTime: 0,
     miso: false,
+    misoChoice: null,
     isSimmered: false,
     isBurnt: false,
     overheatSeconds: 0
@@ -910,15 +957,31 @@ function resetAll() {
   if ($('platedDishPreview')) $('platedDishPreview').setAttribute('hidden', '');
   if ($('simmerProgressContainer')) $('simmerProgressContainer').hidden = true;
   if ($('riceStatusBadge')) {
-    $('riceStatusBadge').textContent = '未盛飯';
+    $('riceStatusBadge').textContent = '\u5c1a\u672a\u9078\u64c7';
     $('riceStatusBadge').classList.remove('is-ready');
   }
+
+  if ($('riceHalfBtn')) {
+    $('riceHalfBtn').setAttribute('aria-pressed','false');
+  }
+
+  if ($('riceFullBtn')) {
+    $('riceFullBtn').setAttribute('aria-pressed','false');
+  }
+
   if ($('misoStatusBadge')) {
-    $('misoStatusBadge').textContent = '不要味噌湯';
+    $('misoStatusBadge').textContent = '\u5c1a\u672a\u9078\u64c7';
     $('misoStatusBadge').classList.remove('is-ready');
   }
-  if ($('misoBtnIcon')) $('misoBtnIcon').src = 'assets/service/miso_no.webp';
-  if ($('misoBtnLabel')) $('misoBtnLabel').textContent = '不要味噌湯 (Q)';
+
+  if ($('misoNoBtn')) {
+    $('misoNoBtn').setAttribute('aria-pressed','false');
+  }
+
+  if ($('misoYesBtn')) {
+    $('misoYesBtn').setAttribute('aria-pressed','false');
+  }
+
   $('recipeLog').innerHTML = '<li>等待開始</li>';
   $('log').textContent = '已重置：探索與料理狀態皆已清空';
   if (dialogModal && !dialogModal.hasAttribute('hidden')) dialogModal.setAttribute('hidden', '');
@@ -927,7 +990,7 @@ function resetAll() {
   setStage(STAGES.CONSULT);
   updateCooking();
   updateCameraAndPlayer();
-  if (window.set3DPlayerPosition) window.set3DPlayerPosition(-8.0, -0.2);
+  if (window.set3DPlayerPosition) window.set3DPlayerPosition(-10.5, -1.35);
   if (window.setCarryingTray) window.setCarryingTray(false);
   if (window.setPatientDishVisible) window.setPatientDishVisible(false);
   window.CKShift?.reset();
@@ -1453,11 +1516,28 @@ $('stirBtn').addEventListener('click', () => {
   updateCooking();
 });
 
-if ($('misoToggleBtn')) {
-  $('misoToggleBtn').addEventListener('click', () => {
-    cookedDish.miso = !cookedDish.miso;
-    cookLog(cookedDish.miso ? '托盤新增：熱騰騰暖心味噌湯！' : '托盤移除味噌湯');
-    $('log').textContent = cookedDish.miso ? '配餐：已選擇附熱味噌湯！' : '配餐：不要味噌湯';
+if ($('misoNoBtn')) {
+  $('misoNoBtn').addEventListener('click', () => {
+    cookedDish.misoChoice = false;
+    cookedDish.miso = false;
+
+    cookLog('\u914d\u9910\uff1a\u5df2\u9078\u64c7\u4e0d\u8981\u5473\u564c\u6e6f');
+    $('log').textContent =
+      '\u914d\u9910\uff1a\u5df2\u9078\u64c7\u4e0d\u8981\u5473\u564c\u6e6f\u3002';
+
+    updateCooking();
+  });
+}
+
+if ($('misoYesBtn')) {
+  $('misoYesBtn').addEventListener('click', () => {
+    cookedDish.misoChoice = true;
+    cookedDish.miso = true;
+
+    cookLog('\u914d\u9910\uff1a\u5df2\u9078\u64c7\u8981\u5473\u564c\u6e6f');
+    $('log').textContent =
+      '\u914d\u9910\uff1a\u5df2\u9078\u64c7\u8981\u5473\u564c\u6e6f\u3002';
+
     updateCooking();
   });
 }

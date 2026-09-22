@@ -2,14 +2,18 @@
    not a claim of a 3D renderer. Recipe logic remains in main.js. */
 (function(){
  'use strict';
- const state={initialized:false,renderer:'canvas2d',usingGlb:false,playerPos:{x:-8,y:0,z:-.2},playerFacing:0,isMoving:false,isRunning:false,missionStage:0,interactiveTarget:null,carryingTray:false,patientDishVisible:false,doctorId:'speed',activeFinale:null};
+ const TRACK_Z=-1.35;
+ const state={initialized:false,renderer:'canvas2d',usingGlb:false,playerPos:{x:-10.5,y:0,z:TRACK_Z},playerFacing:Math.PI/2,isMoving:false,isRunning:false,missionStage:0,interactiveTarget:null,carryingTray:false,patientDishVisible:false,doctorId:'speed',activeFinale:null};
  window.scene3DState=state;window.scene2DState=state;
  const stations=CKClinicRules.stations;
  const obstacles=[[-11.1,-9.9,-1.7,-1.1],[-8.1,-6.1,-2.6,-1.4],[-3.4,-1.8,-3.2,-2.4],[-.5,.9,-3.3,-2.3],[3.8,6.2,-3.1,-2.1],[8.2,10.2,-3.1,-2],[11,12,-3.1,-2.1]];
  const targetIds=['consult','prep','prep','prep','wok','wok','consult','consult'];
- const furniture=[{img:'patientSeat',x:-10.5,z:-1.05,label:'01 診間'},{img:'desk',x:-7,z:-1.4,label:''},
-  {img:'sink',x:-2.6,z:-2.4,label:''},{img:'fridge',x:.2,z:-2.3,label:''},
-  {img:'prep',x:5,z:-2.1,label:'02 備料'},{img:'stove',x:9.2,z:-2,label:'03 炒鍋'},{img:'rice',x:11.5,z:-2.1,label:'04 配餐'}];
+ const furniture=[
+  {img:'desk',x:-10.5,z:TRACK_Z,label:'01 CONSULT'},
+  {img:'prep',x:5,z:TRACK_Z,label:'02 PREP'},
+  {img:'stove',x:9,z:TRACK_Z,label:'03 WOK'},
+  {img:'rice',x:11.5,z:TRACK_Z,label:'04 SERVE'}
+ ];
  let clinicPatient='office';
  const CW=112,CH=144,root='assets/chibi/';
  const directions=['south','west','east','north'];
@@ -17,7 +21,31 @@
  let host,canvas,ctx,buttons=[],images={},route=[],routeStage=null,width=1,height=1,last=0,clock=0,workUntil=0;
  let face='south',actor={},view={x:0,y:0,w:1,h:1},camera={x:0,y:0,scale:1},touch={x:0,z:0,run:false};
  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
- const worldPoint=(x,z)=>({x:55+(x+12.6)*66,y:230+z*25});
+ const stationLogical=[-10.5,5,9,11.5];
+ const stationVisual=[225,675,1125,1575];
+
+ function displayX(x){
+  if(x<=stationLogical[0])return stationVisual[0];
+  if(x>=stationLogical[3])return stationVisual[3];
+
+  for(let i=0;i<stationLogical.length-1;i++){
+   const a=stationLogical[i];
+   const b=stationLogical[i+1];
+
+   if(x>=a && x<=b){
+    const t=(x-a)/(b-a);
+    return stationVisual[i]+
+      (stationVisual[i+1]-stationVisual[i])*t;
+   }
+  }
+
+  return stationVisual[0];
+ }
+
+ const worldPoint=(x,z)=>({
+  x:displayX(x),
+  y:218
+ });
  const screenPoint=(x,z)=>{const p=worldPoint(x,z);return{x:view.x+(p.x-camera.x)*camera.scale,y:view.y+(p.y-camera.y)*camera.scale};};
  function frozen(){return !!window.CKShift?.isFrozen()||!document.getElementById('dialogModal').hidden;}
  function stand(x,z){return x>=-11.48&&x<=11.98&&z>=-2.38&&z<=2.38&&obstacles.every(([a,b,c,d])=>x+.28<=a||x-.28>=b||z+.28<=c||z-.28>=d);}
@@ -29,24 +57,60 @@
   return {...best,prompt};
  }
  function step(dx,dz,dt,speed=1){
-  const p=state.playerPos,ox=p.x,oz=p.z,l=Math.hypot(dx,dz)||1,total=Math.min(dt,.1),parts=Math.max(1,Math.ceil(total/.02));
-  for(let n=0;n<parts;n++){const d=4.2*speed*total/parts,nx=p.x+dx/l*d,nz=p.z+dz/l*d;if(stand(nx,p.z))p.x=nx;if(stand(p.x,nz))p.z=nz;}
-  state.isMoving=Math.hypot(p.x-ox,p.z-oz)>.0001;state.isRunning=state.isMoving&&speed>1.1;
-  if(dx||dz){state.playerFacing=Math.atan2(dx,dz);face=Math.abs(dz)>Math.abs(dx)?(dz<0?'north':'south'):(dx<0?'west':'east');}
-  state.interactiveTarget=nearby(p.x,p.z);
+  const p=state.playerPos;
+  const oldX=p.x;
+  const direction=Math.sign(dx);
+
+  if(direction){
+   const distance=4.2*speed*Math.min(dt,.1);
+   p.x+=direction*distance;
+  }
+
+  p.z=TRACK_Z;
+
+  state.isMoving=Math.abs(p.x-oldX)>.0001;
+  state.isRunning=false;
+
+  if(direction<0){
+   face='west';
+   state.playerFacing=-Math.PI/2;
+  }else if(direction>0){
+   face='east';
+   state.playerFacing=Math.PI/2;
+  }
+
+  state.interactiveTarget=nearby(p.x,TRACK_Z);
  }
- function go(s){if(frozen())return;touch.x=touch.z=0;if(state.interactiveTarget?.id===s.id){route=[];state.isMoving=state.isRunning=false;host.focus({preventScroll:true});return;}route=[[state.playerPos.x,0],[s.at[0],0],s.at];routeStage=state.missionStage;host.focus({preventScroll:true});}
+ function go(s){
+  if(frozen())return;
+
+  touch.x=touch.z=0;
+
+  if(state.interactiveTarget?.id===s.id){
+   route=[];
+   state.isMoving=false;
+   state.isRunning=false;
+   return;
+  }
+
+  route=[[s.at[0],TRACK_Z]];
+  routeStage=state.missionStage;
+ }
  function resize(){
   width=host.clientWidth;height=host.clientHeight;const dpr=Math.min(devicePixelRatio||1,2);
   canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);canvas.style.width=width+'px';canvas.style.height=height+'px';
   view={x:0,y:0,w:width,h:height};
-  camera.scale=Math.min(view.w/1800,Math.max(0.48,view.h/220));
+  // Always fit the complete four-station workflow.
+  camera.scale=Math.min(view.w/1800,view.h/280);
   buttons.forEach(({button},i)=>{button.style.left=(i+.5)*width/stations.length+'px';button.style.bottom='3px';button.style.top='auto';});
  }
  function updateCamera(){
-  const p=worldPoint(state.playerPos.x,state.playerPos.z),ex=view.w/camera.scale,ey=view.h/camera.scale;
-  camera.x=ex>=1800?(1800-ex)/2:Math.max(0,Math.min(1800-ex,p.x-ex/2));
-  camera.y=ey>=350?(350-ey)/2:Math.max(0,Math.min(350-ey,p.y-54-ey/2));
+  const ex=view.w/camera.scale;
+  const ey=view.h/camera.scale;
+
+  // Fixed overview. Camera never follows the doctor.
+  camera.x=(1800-ex)/2;
+  camera.y=(280-ey)/2;
  }
  function image(name,x,y,w,h){const im=images[name];if(im?.complete&&im.naturalWidth)ctx.drawImage(im,x,y,w??im.naturalWidth,h??im.naturalHeight);}
  function drawFurniture(f){
@@ -109,14 +173,25 @@
   draw();requestAnimationFrame(loop);
  }
  function init(world){
-  host=world;host.dataset.presentation='chibi-playable-world';canvas=document.createElement('canvas');canvas.id='scene2dCanvas';canvas.setAttribute('aria-label','可自由行走與跑步的 Q 版診間');host.append(canvas);ctx=canvas.getContext('2d');
+  host=world;host.dataset.presentation='chibi-playable-world';canvas=document.createElement('canvas');canvas.id='scene2dCanvas';canvas.setAttribute('aria-label','automatic clinic workflow animation');host.append(canvas);ctx=canvas.getContext('2d');
   for(const name of ['speed','heat','strategy','patient','room-back','desk','chair','fridge','printer','sink','cabinet','prep','stove','rice','table','bed']){const im=new Image();im.src=root+name+'.webp';images[name]=im;}
   for(const id of ['office','student','driver','auntie','quiet','repeat']){const im=new Image();im.src='assets/service/patient-'+id+'.webp';images['patient-'+id]=im;}
   for(const id of ['speed','heat','strategy']){const im=new Image();im.src='assets/service/bonk-'+id+'.webp';images['bonk-'+id]=im;}
   images.meal=new Image();images.meal.src='assets/cooking/tray_served.png';
   images['finale-feast']=new Image();images['finale-feast'].src='assets/finale/success_clinic_meal.webp';
   images['finale-flip']=new Image();images['finale-flip'].src='assets/finale/failure_table_flip.webp';
-  for(const s of stations){const button=document.createElement('button');button.type='button';button.className='map-station';button.dataset.station=s.id;button.textContent=s.label;button.setAttribute('aria-label','走向'+s.label);button.addEventListener('click',()=>go(s));host.append(button);buttons.push({button,s});}
+  for(const s of stations){
+   const button=document.createElement('button');
+   button.type='button';
+   button.className='map-station';
+   button.dataset.station=s.id;
+   button.textContent=s.label;
+   button.tabIndex=-1;
+   button.disabled=true;
+   button.setAttribute('aria-label',s.label);
+   host.append(button);
+   buttons.push({button,s});
+  }
   document.querySelectorAll('[data-move]').forEach(button=>{
    const vector={north:[0,-1],south:[0,1],west:[-1,0],east:[1,0]}[button.dataset.move];
    button.addEventListener('pointerdown',e=>{if(frozen())return;e.preventDefault();route=[];[touch.x,touch.z]=vector;host.focus({preventScroll:true});if(e.isTrusted)button.setPointerCapture(e.pointerId);});
@@ -130,17 +205,38 @@
  }
  window.autoWalkTo=(stationId,onArrival)=>{
   const s=stations.find(st=>st.id===stationId);
-  if(!s){if(onArrival)onArrival();return;}
-  touch.x=touch.z=0;route=[[state.playerPos.x,0],[s.at[0],0],s.at];
-  routeStage=state.missionStage;state.onArrivalCallback=onArrival;
+
+  if(!s){
+   if(onArrival)onArrival();
+   return;
+  }
+
+  touch.x=touch.z=0;
+  route=[[s.at[0],TRACK_Z]];
+  routeStage=state.missionStage;
+  state.onArrivalCallback=onArrival;
  };
  window.setTopFinale=type=>{state.activeFinale=type?type.replace('finale-',''):null;window.topFinale=state.activeFinale;};
  window.update3DPlayerMovement=(dx,dz,dt,speed)=>{
-  if(!dt||frozen()){clearTouch();return;}
-  if(!dx&&!dz&&(touch.x||touch.z)){dx=touch.x;dz=touch.z;speed=touch.run?1.6:1;}
-  if(dx||dz){route=[];step(dx,dz,dt,Math.max(speed||1,touch.run?1.6:1));}else if(!route.length)state.isMoving=state.isRunning=false;
+  // Doctor movement is workflow-driven only.
+  return;
  };
- window.set3DPlayerPosition=(x,z)=>{route=[];clearTouch();state.playerPos.x=x;state.playerPos.z=z;state.interactiveTarget=nearby(x,z);face='south';state.playerFacing=0;workUntil=0;touch.run=false;document.getElementById('sceneRunBtn')?.setAttribute('aria-pressed','false');};
+ window.set3DPlayerPosition=(x,z)=>{
+  route=[];
+  clearTouch();
+
+  state.playerPos.x=x;
+  state.playerPos.z=TRACK_Z;
+  state.interactiveTarget=nearby(x,TRACK_Z);
+
+  face='east';
+  state.playerFacing=Math.PI/2;
+  workUntil=0;
+  touch.run=false;
+
+  document.getElementById('sceneRunBtn')
+    ?.setAttribute('aria-pressed','false');
+ };
  window.setClinicPatient=id=>{clinicPatient=id;};
  window.setMissionStage=n=>{state.missionStage=n;};window.setCarryingTray=v=>{state.carryingTray=!!v;};window.setPatientDishVisible=v=>{state.patientDishVisible=!!v;};window.setDoctorRole=id=>{state.doctorId=id;};window.getNearbyTarget=nearby;
  window.getSceneStatus=()=>({...state,playerPos:{...state.playerPos},actor:{...actor},viewport:{...view},camera:{...camera},stations:stations.map(s=>({...s})),furniture:furniture.map(f=>({...f})),patientId:clinicPatient,obstacleCount:obstacles.length,routeLength:route.length,imagesReady:Object.keys(images).length>=26&&Object.values(images).every(im=>im.complete&&im.naturalWidth>0)});

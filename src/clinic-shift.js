@@ -39,15 +39,10 @@
     const key = [value, focus, round.status, round.paused, round.points, round.served, round.streak, Math.floor(round.elapsed), round.doctorId, resultDismissed].join('|');
     if (key !== lastKey) {
       lastKey = key;
+      // R8.2: keep legacy shift pressure internal.
+      // Never overwrite the 0-4 clinical withdrawal DOM.
       el('patientHUD').dataset.cravingBand = band;
-      setText('cravingText', value + '%');
-      setText('focusText', focus + '%');
       setText('patientMood', labels[band]);
-      if (el('cravingMeter')) {
-        el('cravingMeter').value = value;
-        el('cravingMeter').setAttribute('aria-valuetext', value + '%，' + labels[band]);
-      }
-      if (el('focusMeter')) el('focusMeter').value = focus;
       setText('shiftPoints', round.points);
       setText('shiftServed', round.served);
       setText('shiftStreak', round.streak);

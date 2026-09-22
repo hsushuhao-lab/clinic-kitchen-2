@@ -126,6 +126,34 @@
     };
   }
 
+  function buildClinicalPrescription(patient) {
+    const s = patient.clinicalStatus || {};
+    const portions = buildExpectedPortions(patient);
+
+    return Object.freeze({
+      patientId: patient.id,
+      portions: Object.freeze({ ...portions }),
+
+      // Appetite 0-2 => half bowl; 3-4 => full bowl.
+      rice: Number(s.appetite || 0) >= 3
+        ? '\u6b63\u5e38\u98ef'
+        : '\u534a\u7897\u98ef',
+
+      // Sleep disturbance 0-1 => no soup; 2-4 => miso.
+      miso: Number(s.sleep || 0) >= 2,
+
+      targets: Object.freeze({
+        douban: 'Craving',
+        garlic: 'Irritability',
+        pepper: 'Anxiety',
+        scallion: 'Concentration',
+        chili: 'Restlessness',
+        rice: 'Appetite',
+        miso: 'Sleep'
+      })
+    });
+  }
+
   function createWok() {
     return {
       hasFood: false,
@@ -203,13 +231,23 @@
     const isRush = (order && order.target !== undefined) || (typeof window !== 'undefined' && window.CKRush && window.CKRush.snapshot && window.CKRush.snapshot().mode === 'rush');
 
     // R8 prescription fidelity: adjustable ingredients must match symptom→portion mapping
-    const expected = (patient && !isRush) ? buildExpectedPortions(patient) : {
-      douban: 1,
-      garlic: 1,
-      scallion: order && order.scallion ? 1 : 0,
-      pepper: order && order.spicy === '重辣' ? 1 : 0,
-      chili: 0
-    };
+    const prescription = (patient && !isRush)
+      ? buildClinicalPrescription(patient)
+      : {
+          portions: {
+            douban: 1,
+            garlic: 1,
+            scallion: order && order.scallion ? 1 : 0,
+            pepper: order && order.spicy === '\u91cd\u8fa3' ? 1 : 0,
+            chili: 0,
+            tofu: 1,
+            pork: 1
+          },
+          rice: (order && order.rice) || '\u6b63\u5e38\u98ef',
+          miso: !!(order && order.miso)
+        };
+
+    const expected = prescription.portions;
     const adjustable = ['douban', 'garlic', 'scallion', 'chili', 'pepper'];
     const labelMap = { douban: '豆瓣醬→Craving', garlic: '蒜→Irritability', scallion: '蔥→Concentration', chili: '辣椒→Restlessness', pepper: '花椒→Anxiety' };
     let totalPrescriptionPenalty = 0;
@@ -257,7 +295,7 @@
     }
 
     // 5. Rice portion — R8 penalty: 25 for mismatch
-    const expectedRice = order.rice || '正常飯';
+    const expectedRice = prescription.rice;
     if (rice !== expectedRice) {
       score -= 25;
       checks.push({ label: '配飯份量', expected: expectedRice, actual: rice, ok: false, penalty: 25 });
@@ -266,7 +304,7 @@
     }
 
     // 6. Miso soup — R8 penalty: 18 for mismatch
-    const expectedMiso = !!order.miso;
+    const expectedMiso = prescription.miso;
     if (miso !== expectedMiso) {
       score -= 18;
       checks.push({ label: '味噌湯', expected: expectedMiso ? '要附湯' : '不要湯', actual: miso ? '有湯' : '無湯', ok: false, penalty: 18 });
@@ -540,6 +578,7 @@
     isValidPortion,
     symptomToTargetPortion,
     buildExpectedPortions,
+    buildClinicalPrescription,
     createWok,
     addBatchToWok,
     equivalentSimmerTime,
