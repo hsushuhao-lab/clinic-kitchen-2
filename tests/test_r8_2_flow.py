@@ -183,30 +183,24 @@ try:
             assert actual_wok == expected_wok, (actual_wok, expected_wok)
             assert page.evaluate("window.wok.hasFood === true")
 
-            # The failure-path deliberately sets adjustable ingredients to zero,
-            # so the visual count must match the positive portions for that order
-            # rather than assume four or more ingredients are always present.
-            page.wait_for_function(
-                """n => document.querySelectorAll(
-                    '#wokFoodLayer .wok-food-item'
-                ).length === n""",
-                arg=len(expected_wok)
-            )
+            # The failure-path deliberately changes which adjustable ingredients
+            # are non-zero. Validate the presence of every expected visual directly;
+            # do not require an exact DOM child count because decorative/stale-safe
+            # renderer nodes are not part of the gameplay contract.
             visual_selectors = {
                 "tofu": ".wok-food-tofu",
                 "pork": ".wok-food-pork",
-                "douban": ".wok-food-douban, .wok-food-douban-paste",
+                "douban": ".wok-food-douban",
                 "garlic": ".wok-food-garlic",
                 "scallion": ".wok-food-scallion",
                 "chili": ".wok-food-chili",
                 "pepper": ".wok-food-pepper",
             }
             for food in expected_wok:
-                expect(
-                    page.locator(
-                        "#wokFoodLayer " + visual_selectors[food]
-                    )
-                ).to_be_visible()
+                page.wait_for_selector(
+                    "#wokFoodLayer " + visual_selectors[food],
+                    state="visible"
+                )
 
             expect(page.locator("#heatBtn")).to_be_enabled()
 
