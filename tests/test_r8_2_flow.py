@@ -182,11 +182,31 @@ try:
             actual_wok = set(cook()["inWok"])
             assert actual_wok == expected_wok, (actual_wok, expected_wok)
             assert page.evaluate("window.wok.hasFood === true")
+
+            # The failure-path deliberately sets adjustable ingredients to zero,
+            # so the visual count must match the positive portions for that order
+            # rather than assume four or more ingredients are always present.
             page.wait_for_function(
-                "() => document.querySelectorAll('#wokFoodLayer .wok-food-item').length >= 4"
+                """n => document.querySelectorAll(
+                    '#wokFoodLayer .wok-food-item'
+                ).length === n""",
+                arg=len(expected_wok)
             )
-            expect(page.locator("#wokFoodLayer .wok-food-tofu")).to_be_visible()
-            expect(page.locator("#wokFoodLayer .wok-food-pork")).to_be_visible()
+            visual_selectors = {
+                "tofu": ".wok-food-tofu",
+                "pork": ".wok-food-pork",
+                "douban": ".wok-food-douban-paste",
+                "garlic": ".wok-food-garlic",
+                "scallion": ".wok-food-scallion",
+                "chili": ".wok-food-chili",
+                "pepper": ".wok-food-pepper",
+            }
+            for food in expected_wok:
+                expect(
+                    page.locator(
+                        "#wokFoodLayer " + visual_selectors[food]
+                    )
+                ).to_be_visible()
 
             expect(page.locator("#heatBtn")).to_be_enabled()
 
