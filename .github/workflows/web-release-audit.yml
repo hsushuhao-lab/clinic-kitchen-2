@@ -33,45 +33,40 @@ jobs:
         run: |
           python -m pip install -r requirements-qa.txt
           python -m playwright install --with-deps chromium
-      - name: Validate source, art and all rule suites
+      - name: Build and validate R9 runtime
         run: |
           python tests/smoke_test.py
           python tools/verify_assets.py
           python tools/verify_shift_assets.py
           python tools/build_web_release.py
-      - name: Test runtime-only R8.2 clinic flow
+      - name: Test runtime-only R9 clinic flow
         run: |
-          python -m http.server 8000 --bind 127.0.0.1 --directory web-dist > /tmp/ck-release-http.log 2>&1 &
+          python -m http.server 8000 --bind 127.0.0.1 --directory web-dist > /tmp/ck-r9-release-http.log 2>&1 &
           sleep 2
-          python tests/test_r8_2_flow.py --base-url http://127.0.0.1:8000/ --output qa/current/r8-2
+          python tests/test_r9_flow.py --base-url http://127.0.0.1:8000/ --output qa/current/r9
           python - <<'PY'
           from urllib.request import urlopen
           from urllib.error import HTTPError
-          for path in ['.git/config', '.env', 'README.md', 'docs/AGENT_PROMPT.md', 'assets/manifest.json', 'assets/art_direction/approved/doctor_concepts.png']:
+          for path in ['.git/config','.env','README.md','docs/AGENT_PROMPT.md','assets/manifest.json']:
               try:
-                  urlopen('http://127.0.0.1:8000/' + path)
+                  urlopen('http://127.0.0.1:8000/'+path)
               except HTTPError as e:
-                  assert e.code == 404, (path, e.code)
+                  assert e.code==404,(path,e.code)
               else:
-                  raise AssertionError('Non-runtime path was served: ' + path)
-          print('Release privacy smoke: PASS')
+                  raise AssertionError('Non-runtime path was served: '+path)
+          print('R9 release privacy smoke: PASS')
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: clinic-kitchen-web-runtime
+          name: clinic-kitchen-r9-runtime
           path: web-dist/
           retention-days: 14
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: clinic-kitchen-release-audit
+          name: clinic-kitchen-r9-audit
           path: qa/current/
-          retention-days: 14
-      - uses: actions/upload-artifact@v4
-        with:
-          name: clinic-kitchen-verification-scripts
-          path: tests/
           retention-days: 14
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3

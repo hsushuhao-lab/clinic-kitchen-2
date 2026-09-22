@@ -20,20 +20,20 @@ jobs:
         run: |
           python -m pip install -r requirements-qa.txt
           python -m playwright install --with-deps chromium
-      - name: Source, rules and art integrity
+      - name: Validate R9 source, rules and assets
         run: |
           python tests/smoke_test.py
           python tools/verify_assets.py
           python tools/verify_shift_assets.py
           python tools/build_web_release.py
-      - name: Test R8.2 automatic clinic workflow
+      - name: Play R9 clean clinic flow
         run: |
-          python -m http.server 8000 --bind 127.0.0.1 --directory web-dist > /tmp/ck-flat-http.log 2>&1 &
+          python -m http.server 8000 --bind 127.0.0.1 --directory web-dist > /tmp/ck-r9-http.log 2>&1 &
           sleep 2
-          python tests/test_r8_2_flow.py --base-url http://127.0.0.1:8000/ --output qa/current/r8-2
+          python tests/test_r9_flow.py --base-url http://127.0.0.1:8000/ --output qa/current/r9
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ck-clinic-browser-evidence
-          path: qa/current/r8-2/
+          name: ck-r9-browser-evidence
+          path: qa/current/r9/
           retention-days: 14
