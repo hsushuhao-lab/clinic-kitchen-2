@@ -76,7 +76,8 @@ try:
                 window.CKService &&
                 window.getSceneStatus &&
                 getSceneStatus().imagesReady &&
-                document.querySelectorAll('#requestIcons .rx-chip').length === 7
+                document.querySelectorAll('#requestIcons .rx-chip').length === 7 &&
+                document.querySelectorAll('#requestIcons .rx-icon').length === 7
             """
         )
 
@@ -171,6 +172,21 @@ try:
             wait_station("wok")
             expect(page.locator("#panel-wok")).to_be_visible()
             assert_fixed_track()
+
+            # Regression guard: automatic PREP -> WOK transfer must synchronize
+            # logical contents with the private visual inWok state.
+            expected_wok = {
+                food for food, portion in page.evaluate("window.preparedTray").items()
+                if portion > 0
+            }
+            actual_wok = set(cook()["inWok"])
+            assert actual_wok == expected_wok, (actual_wok, expected_wok)
+            assert page.evaluate("window.wok.hasFood === true")
+            page.wait_for_function(
+                "() => document.querySelectorAll('#wokFoodLayer .wok-food-item').length >= 4"
+            )
+            expect(page.locator("#wokFoodLayer .wok-food-tofu")).to_be_visible()
+            expect(page.locator("#wokFoodLayer .wok-food-pork")).to_be_visible()
 
             expect(page.locator("#heatBtn")).to_be_enabled()
 
@@ -431,6 +447,13 @@ try:
         assert page.locator(
             "#requestIcons .rx-chip"
         ).count() == 7
+
+        rx_icons = page.locator("#requestIcons .rx-icon")
+        assert rx_icons.count() == 7
+        page.wait_for_function(
+            """() => Array.from(document.querySelectorAll('#requestIcons .rx-icon'))
+                .every(img => img.complete && img.naturalWidth > 0)"""
+        )
 
         assert page.locator("#focusMeter").count() == 0
 

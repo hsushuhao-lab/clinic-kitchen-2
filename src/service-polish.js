@@ -11,6 +11,13 @@
   const portionText=v=>v===0?'0':v===0.5?'1/2':'1';
   const p=rx.portions;
 
+  const iconMap={
+   douban:'assets/workspace/douban-paste.webp',
+   garlic:'assets/workspace/garlic-whole.webp',
+   pepper:'assets/workspace/pepper.webp',
+   scallion:'assets/workspace/scallion-whole.webp',
+   chili:'assets/ingredients/mapo_tofu/chili.png'
+  };
   const items=[
    ['douban',portionText(p.douban),'Craving'],
    ['garlic',portionText(p.garlic),'Irritability'],
@@ -24,8 +31,8 @@
    item.className='rx-chip';
 
    const name=CKClinicRules.INGREDIENTS[id]?.name || id;
-
    item.innerHTML=
+    '<img class="rx-icon" src="'+iconMap[id]+'" alt="'+name+'">'+
     '<small>'+target+'</small>'+
     '<strong>'+name+' '+value+'</strong>';
 
@@ -34,18 +41,21 @@
 
   const rice=document.createElement('div');
   rice.className='rx-chip';
+  const riceIcon=rx.rice==='\u534a\u7897\u98ef'?'assets/service/portion_half.webp':'assets/service/portion_full.webp';
   rice.innerHTML=
+   '<img class="rx-icon" src="'+riceIcon+'" alt="'+rx.rice+'">'+
    '<small>Appetite</small>'+
    '<strong>'+rx.rice+'</strong>';
   row.append(rice);
 
   const soup=document.createElement('div');
   soup.className='rx-chip';
+  const soupLabel=rx.miso?'\u5473\u564c\u6e6f YES':'\u5473\u564c\u6e6f NO';
+  const soupIcon=rx.miso?'assets/service/miso_yes.webp':'assets/service/miso_no.webp';
   soup.innerHTML=
+   '<img class="rx-icon" src="'+soupIcon+'" alt="'+soupLabel+'">'+
    '<small>Sleep</small>'+
-   '<strong>'+
-   (rx.miso?'\u5473\u564c\u6e6f YES':'\u5473\u564c\u6e6f NO')+
-   '</strong>';
+   '<strong>'+soupLabel+'</strong>';
   row.append(soup);
 
   return row;

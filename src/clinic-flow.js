@@ -273,20 +273,23 @@
   }
 
   function onPrepDone() {
-    const c = getCookingStatus();
     if (CKShift.isFrozen()) return;
-    if ($('addBtn') && !$('addBtn').disabled) {
-      $('addBtn').click();
-    } else if (!window.wok?.hasFood) {
+
+    // PREP completion is an automatic batch transfer. Do not click #addBtn here:
+    // at this moment the doctor is still at PREP, so the WOK proximity guard
+    // correctly rejects that click and leaves the visual inWok state empty.
+    if (!window.wok?.hasFood) {
       if (window.CKClinicRules?.addBatchToWok) {
         window.CKClinicRules.addBatchToWok(window.wok, window.preparedTray);
       } else {
         window.wok.contents = { ...window.preparedTray };
         window.wok.hasFood = true;
       }
-      if (window.syncWokFoodDOM) window.syncWokFoodDOM();
-      setStage(STAGES.COOK);
     }
+    if (window.syncWokFoodStateFromContents) {
+      window.syncWokFoodStateFromContents();
+    }
+    setStage(STAGES.COOK);
     cookLog('全料備妥一次下鍋！前往炒鍋爐台烹飪');
     if (window.autoWalkTo) {
       window.autoWalkTo('wok', () => selectPanel('wok'));

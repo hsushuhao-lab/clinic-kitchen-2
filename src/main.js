@@ -886,6 +886,31 @@ function syncWokFoodDOM() {
   }
 }
 
+// R8.2 hotfix: clinic-flow can batch-load wok.contents while the visual renderer
+// tracks a private inWok Set. Keep both representations synchronized so the
+// ingredients are actually visible and animated when the player reaches WOK.
+function syncWokFoodStateFromContents() {
+  inWok.clear();
+  for (const id of Object.keys(foodNames)) {
+    const portion = Number(wok.contents?.[id] || 0);
+    if (portion > 0) inWok.add(id);
+  }
+
+  wok.hasFood = inWok.size > 0;
+  cookedDish.contents = { ...wok.contents };
+  cookedDish.hasTofu = inWok.has('tofu');
+  cookedDish.hasPork = inWok.has('pork');
+  cookedDish.hasDouban = inWok.has('douban');
+  cookedDish.hasGarlic = inWok.has('garlic');
+  cookedDish.hasScallion = inWok.has('scallion');
+  cookedDish.hasChili = inWok.has('chili');
+  cookedDish.hasPepper = inWok.has('pepper');
+
+  syncWokFoodDOM();
+  return [...inWok];
+}
+window.syncWokFoodStateFromContents = syncWokFoodStateFromContents;
+
 function resetAll() {
   cancelActionTimers();
   if (platingTimeout) {
