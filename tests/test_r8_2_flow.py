@@ -195,7 +195,7 @@ try:
             visual_selectors = {
                 "tofu": ".wok-food-tofu",
                 "pork": ".wok-food-pork",
-                "douban": ".wok-food-douban-paste",
+                "douban": ".wok-food-douban, .wok-food-douban-paste",
                 "garlic": ".wok-food-garlic",
                 "scallion": ".wok-food-scallion",
                 "chili": ".wok-food-chili",
@@ -249,6 +249,15 @@ try:
             wait_station("serve")
             expect(page.locator("#panel-serve")).to_be_visible()
             assert_fixed_track()
+
+            # SERVE regression guard: prescription banner must remain a compact
+            # header and may not consume the entire flexible service workspace.
+            serve_panel = page.locator("#panel-serve").bounding_box()
+            serve_banner = page.locator("#servePrescriptionBanner").bounding_box()
+            assert serve_panel and serve_banner
+            assert serve_banner["height"] < min(90, serve_panel["height"] * 0.25), (serve_panel, serve_banner)
+            expect(page.locator("#riceCookerWidget")).to_be_visible()
+            expect(page.locator("#misoSoupWidget")).to_be_visible()
 
             # Explicit side selection is mandatory.
             assert page.evaluate(
@@ -474,6 +483,8 @@ try:
             """() => Array.from(document.querySelectorAll('#requestIcons .rx-icon'))
                 .every(img => img.complete && img.naturalWidth > 0)"""
         )
+        wish = page.locator("#clinicWish").inner_text()
+        assert "Douban " not in wish and "Garlic " not in wish and "Pepper " not in wish
 
         assert page.locator("#focusMeter").count() == 0
 

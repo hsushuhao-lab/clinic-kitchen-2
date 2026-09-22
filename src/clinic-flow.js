@@ -223,9 +223,9 @@
     if(key!==last){
       last=key;text('clinicNumber',numberText(number));text('clinicName',who.name);
       text('clinicStatus',s.status==='won'?'共餐成功':s.status==='lost'?'翻桌待重試':s.status==='active'?'製作中':'已叫號');
-      text('clinicWish',summary());text('clinicPreferences',summary());
+      text('clinicWish',`「${who.complaint || who.wish || '今日依症狀調整料理份量。'}」`);text('clinicPreferences','');
       text('clinicNext',`${numberText(number+1)}　${patients[(patientIndex+1)%patients.length].name} · 候診中`);
-      text('clinicOrderSummary',`${numberText(number)} ${who.name}｜${summary(p)}`);
+      text('clinicOrderSummary',`${numberText(number)} ${who.name}｜依症狀處方備餐`);
       const instructions=[
         '點擊「確認處方開單」開始備料，或走到病人椅 (X: -10.5) 按 E 問診。',
         '需求已記錄。請前往備料檯 (X: 5.0) 準備食材。',

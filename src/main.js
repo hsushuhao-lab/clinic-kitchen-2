@@ -797,11 +797,11 @@ function syncWokFoodDOM() {
   }
 
   // 4. Douban paste
-  let doubanEl = container.querySelector('.wok-food-douban-paste');
+  let doubanEl = container.querySelector('.wok-food-douban-paste, .wok-food-douban');
   if (inWok.has('douban')) {
     if (!doubanEl) {
       doubanEl = document.createElement('div');
-      doubanEl.className = `wok-food-item wok-food-douban-paste ${stirs >= 2 ? 'is-red-oil' : ''}`;
+      doubanEl.className = `wok-food-item wok-food-douban wok-food-douban-paste ${stirs >= 2 ? 'is-red-oil' : ''}`;
       doubanEl.title = '發酵紅油豆瓣醬';
       container.appendChild(doubanEl);
     } else {
