@@ -49,7 +49,7 @@
 #wokFoodLayer::before{content:'';position:absolute;inset:8px 10px;background:radial-gradient(ellipse,#c1431870,#952c14bb);opacity:0;border-radius:50%}#wokFoodLayer[data-red-oil='true']::before{opacity:1}#wokFoodLayer[data-simmered='true']{visibility:hidden}
 #wokFoodLayer .wok-food-item{filter:drop-shadow(0 1px 1px #6335173b);object-fit:contain}
 #wokFoodLayer .wok-food-tofu{width:118px;height:80px;left:45px;bottom:5px}#wokFoodLayer .wok-food-pork{width:75px;height:68px;left:75px;bottom:8px}#wokFoodLayer .wok-food-garlic{width:45px;height:30px;left:42px;bottom:38px}
-#wokFoodLayer .wok-food-douban{width:69px;height:41px;left:83px;bottom:18px}#wokFoodLayer .wok-food-scallion{width:78px;height:38px;left:80px;bottom:22px;z-index:2}#wokFoodLayer .wok-food-pepper{width:22px;height:18px;left:54px;bottom:37px}
+#wokFoodLayer .wok-food-douban{width:69px;height:41px;left:83px;bottom:18px}#wokFoodLayer .wok-food-scallion{width:78px;height:38px;left:80px;bottom:22px;z-index:2}#wokFoodLayer .wok-food-chili{width:42px;height:32px;left:118px;bottom:34px;z-index:3}#wokFoodLayer .wok-food-pepper{width:22px;height:18px;left:54px;bottom:37px;z-index:3}
 #wokSimmerImg{inset:auto;left:50%;top:46%;transform:translate(-62%,-50%);width:206px;height:88px;object-fit:fill;z-index:5;animation:none;clip-path:ellipse(49% 43% at 50% 50%)}
 #wokContents{left:12px;bottom:10px;font-size:11px;color:#415044;background:#f8f4e8d9;padding:4px 8px;z-index:8;max-width:90%}
 .wok-actions{margin:0;gap:5px}.wok-actions button{height:36px;min-height:36px;font-size:11px;border-radius:4px;background:#2c4d59;color:#fff4df;border:0;padding:4px}.wok-actions button:last-child{background:#b78946;color:#fff;border:0}.wok-actions button:disabled{background:#788981;color:#fff;opacity:.6}
