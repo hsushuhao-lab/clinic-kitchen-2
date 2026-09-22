@@ -8,6 +8,11 @@
   row.className='prescription-summary';
   row.setAttribute('aria-label','Clinical Prescription');
 
+  const header=document.createElement('div');
+  header.className='rx-heading';
+  header.textContent='料理處方 · CLINICAL PRESCRIPTION';
+  row.append(header);
+
   const portionText=v=>v===0?'0':v===0.5?'1/2':'1';
   const p=rx.portions;
 
