@@ -24,9 +24,6 @@
  const stationLogical=[-10.5,5,9,11.5];
  const stationVisual=[225,675,1125,1575];
 
- const WORLD_WIDTH=1800;
- const WORLD_HEIGHT=260;
-
  function displayX(x){
   if(x<=stationLogical[0])return stationVisual[0];
   if(x>=stationLogical[3])return stationVisual[3];
@@ -47,7 +44,7 @@
 
  const worldPoint=(x,z)=>({
   x:displayX(x),
-  y:202
+  y:218
  });
  const screenPoint=(x,z)=>{const p=worldPoint(x,z);return{x:view.x+(p.x-camera.x)*camera.scale,y:view.y+(p.y-camera.y)*camera.scale};};
  function frozen(){return !!window.CKShift?.isFrozen()||!document.getElementById('dialogModal').hidden;}
@@ -104,7 +101,7 @@
   canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);canvas.style.width=width+'px';canvas.style.height=height+'px';
   view={x:0,y:0,w:width,h:height};
   // Always fit the complete four-station workflow.
-  camera.scale=Math.min(view.w/WORLD_WIDTH,view.h/WORLD_HEIGHT);
+  camera.scale=Math.min(view.w/1800,view.h/280);
   buttons.forEach(({button},i)=>{button.style.left=(i+.5)*width/stations.length+'px';button.style.bottom='3px';button.style.top='auto';});
  }
  function updateCamera(){
@@ -112,18 +109,10 @@
   const ey=view.h/camera.scale;
 
   // Fixed overview. Camera never follows the doctor.
-  camera.x=(WORLD_WIDTH-ex)/2;
-  camera.y=(WORLD_HEIGHT-ey)/2;
+  camera.x=(1800-ex)/2;
+  camera.y=(280-ey)/2;
  }
  function image(name,x,y,w,h){const im=images[name];if(im?.complete&&im.naturalWidth)ctx.drawImage(im,x,y,w??im.naturalWidth,h??im.naturalHeight);}
- function drawContained(name,cx,baseY,maxW,maxH){
-  const im=images[name];
-  if(!im?.naturalWidth)return;
-  const scale=Math.min(maxW/im.naturalWidth,maxH/im.naturalHeight);
-  const w=im.naturalWidth*scale;
-  const h=im.naturalHeight*scale;
-  ctx.drawImage(im,cx-w/2,baseY-h,w,h);
- }
  function drawFurniture(f){
   const p=worldPoint(f.x,f.z);
   if(f.img==='patientSeat'){
@@ -131,11 +120,8 @@
    // R7: the patient is represented in the persistent left clinical rail; keep the
    // upper world as a compact doctor/workstation progress strip without a duplicate chibi patient.
    if(state.patientDishVisible)image('meal',p.x-32,p.y-39,64,27);
-  }else{
-   const size={desk:[132,100],prep:[140,100],stove:[128,98],rice:[112,96]}[f.img]||[125,96];
-   drawContained(f.img,p.x,p.y+6,size[0],size[1]);
-  }
-  // Canvas labels removed: DOM .map-station buttons are the sole station labels (R8.3)
+  }else{const im=images[f.img];if(!im?.naturalWidth)return;image(f.img,p.x-im.naturalWidth/2,p.y-im.naturalHeight+8);}
+  if(f.label){ctx.font='600 14px system-ui';ctx.textAlign='center';ctx.fillStyle='#2e5362';ctx.fillText(f.label,p.x,p.y+18);}
  }
  function drawDoctor(){
   const p=worldPoint(state.playerPos.x,state.playerPos.z);

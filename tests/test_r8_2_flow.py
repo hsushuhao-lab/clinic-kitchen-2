@@ -345,7 +345,7 @@ try:
 
         world_box = page.locator("#world").bounding_box()
         assert world_box
-        assert 80 <= world_box["height"] <= 155, world_box
+        assert 80 <= world_box["height"] <= 115, world_box
 
         dpad = page.locator("#world .scene-dpad")
         assert dpad.count() == 1

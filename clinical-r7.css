@@ -1,15 +1,15 @@
 /* R7 clinical-workflow UI: patient status stays in the left rail, the world becomes
    a compact progress strip, and the lower workspace is the primary interaction surface. */
 #app{
-  grid-template-columns:248px minmax(0,1fr);
-  grid-template-rows:56px clamp(116px,15dvh,150px) minmax(0,1fr);
+  grid-template-columns:236px minmax(0,1fr);
+  grid-template-rows:56px minmax(92px,13dvh) minmax(0,1fr);
 }
 #app>#patientHUD{grid-row:2/4;padding:12px;gap:8px}
 #app>#world{grid-row:2}
 #app>#cookingDeck{grid-row:3;grid-template-rows:76px 32px 19px minmax(0,1fr) 12px;padding-top:8px}
 #world .control-hint,#world .scene-actions,#world .scene-dpad,#world .prompt{display:none!important}
 #world .map-station{bottom:2px!important}
-#scene2dCanvas{filter:saturate(.96) contrast(1.04)}
+#scene2dCanvas{filter:saturate(.9)}
 #clinicWorktabs button{min-height:32px;font-size:12px}
 #rushStrip{padding:5px 10px}
 #precisionTrack{height:26px}
@@ -42,20 +42,11 @@
 
 /* Ingredient choices are the prescription-building metaphor. Keep all decisions
    visual and enlarge the food artwork/portion state. */
-#cookingDeck[data-panel='prep'] #panel-prep{
-  grid-template-rows:28px 100px minmax(180px,1fr) 20px!important;
-  gap:8px!important;
-}
-#panel-prep .ingredient-tray{
-  display:grid;
-  grid-template-columns:repeat(7,minmax(86px,108px));
-  justify-content:start;
-  align-items:stretch;
-  gap:10px;
-}
-#panel-prep .ingredient-tray button{position:relative;flex-direction:column!important;gap:2px!important;border-radius:10px!important;background:#fffdf7!important;min-width:0;width:100%;min-height:92px}
+#cookingDeck[data-panel='prep'] #panel-prep{grid-template-rows:27px 92px 42px minmax(0,1fr) 19px!important}
+#panel-prep .ingredient-tray{gap:8px}
+#panel-prep .ingredient-tray button{position:relative;flex-direction:column!important;gap:2px!important;border-radius:10px!important;background:#fffdf7!important}
 #panel-prep .ingredient-tray button.is-selected{background:#f4e5b9!important}
-#panel-prep .food-art{width:48px!important;height:48px!important;background:transparent!important}
+#panel-prep .food-art{width:54px!important;height:54px!important;background:transparent!important}
 #panel-prep .ingredient-tray span{font-size:11px;font-weight:700}
 .portion-badge{font-size:10px!important;padding:2px 5px!important}
 #visualPortionPicker{display:grid;grid-template-columns:110px repeat(3,minmax(0,1fr));gap:6px;align-items:center}
@@ -102,7 +93,7 @@
   .clinical-observation{display:none}
   #clinicalConsultCard{grid-template-columns:1fr}
   .clinical-snapshot-card{display:none}
-  #cookingDeck[data-panel='prep'] #panel-prep{grid-template-rows:23px 72px minmax(120px,1fr) 17px!important}
+  #cookingDeck[data-panel='prep'] #panel-prep{grid-template-rows:23px 75px 38px minmax(0,1fr) 17px!important}
   #panel-prep .food-art{width:42px!important;height:42px!important}
   #visualPortionPicker{grid-template-columns:75px repeat(3,1fr)}
   #patientSelfRating{grid-template-columns:1fr 1fr}
@@ -130,12 +121,9 @@
 .clinical-metrics-list .meter-row small{font-size:9px;color:#8a8a7a;margin-left:1px}
 
 /* Fixed ingredient indicator */
-.ingredient-tray .ingredient-fixed{opacity:0.88;cursor:default!important}
+.ingredient-tray .ingredient-fixed{opacity:0.82;cursor:default!important}
 .ingredient-tray .ingredient-fixed:hover{transform:none!important;box-shadow:none!important}
 .portion-badge.is-fixed{background:#d6cebd!important;color:#5a5040!important;font-style:italic}
-
-/* P0 R8.3: disabled-but-display-only controls must not be faded */
-#panel-prep .ingredient-tray button.ingredient-fixed:disabled{opacity:.88!important;filter:none!important;}
 
 /* clinicResultMessage visible in R8 (hardFail mode) */
 #clinicResultMessage{display:block!important;font-size:9px!important;margin:1px 0 2px!important;padding:2px 5px!important;border-radius:4px!important;background:#f4ece2!important;color:#5c3a20!important;line-height:1.25!important}
@@ -160,28 +148,18 @@
   margin-top:6px;
 }
 
-.rx-heading{
-  grid-column:1/-1;
-  font-size:9px;
-  font-weight:800;
-  letter-spacing:.04em;
-  color:#7a6336;
-  padding-bottom:2px;
-  border-bottom:1px solid #d8c9a7;
-}
-
 .rx-chip{
   min-width:0;
   padding:5px 6px;
-  border:1px solid #d4c7a8;
+  border:1px solid #d7cfba;
   border-radius:6px;
   background:#fffaf0;
 }
 
 .rx-chip small{
   display:block;
-  font-size:8.5px;
-  color:#61777a;
+  font-size:8px;
+  color:#74817d;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
@@ -190,16 +168,8 @@
 .rx-chip strong{
   display:block;
   margin-top:1px;
-  font-size:10.5px;
-  line-height:1.25;
-  color:#23495a;
-}
-
-@media(max-width:1100px) and (min-width:700px){
-  #panel-prep .ingredient-tray{
-    grid-template-columns:repeat(7,minmax(72px,1fr));
-    gap:5px;
-  }
+  font-size:10px;
+  color:#294b5c;
 }
 
 
@@ -212,29 +182,6 @@
   pointer-events:none!important;
   cursor:default!important;
   opacity:.92;
-  bottom:5px!important;
-  min-width:86px;
-  padding:4px 8px;
-  font-size:10px;
-  border:1px solid #aac3c4;
-  background:#fffdf4;
-  color:#355b68;
-}
-
-/* P0 R8.3: display-only station buttons must not fade via global :disabled rule */
-#world .map-station:disabled{opacity:1!important;filter:none!important;}
-
-#world .map-station.is-objective{
-  background:#4e8790!important;
-  color:#fff!important;
-  border-color:#4e8790!important;
-  box-shadow:none!important;
-  opacity:1!important;
-}
-
-#world .map-station.is-near{
-  border-color:#d2a64e!important;
-  opacity:1!important;
 }
 
 #world .scene-dpad,
@@ -247,48 +194,6 @@
 #scene2dCanvas{
   width:100%!important;
   height:100%!important;
-}
-
-/* P1 R8.3: left clinical rail hierarchy */
-#app>#patientHUD{
-  color:#213f52;
-  background:#fbf8ee;
-}
-
-#patientHUD .clinic-identity .patient-portrait{
-  height:130px;
-  width:100%;
-  object-fit:contain;
-  object-position:center bottom;
-  background:#f4efe3;
-}
-
-#patientHUD .clinic-identity strong{
-  padding:3px 0;
-  font-size:13px;
-}
-
-#patientHUD .clinical-metrics-list{gap:5px;}
-
-#patientHUD .clinical-metrics-list .meter-row{
-  color:#294b5c;
-  font-size:9.5px;
-  font-weight:600;
-}
-
-#patientHUD .clinical-metrics-list .meter-row>span:first-child{
-  color:#294b5c;
-  font-weight:700;
-}
-
-#patientHUD .clinical-metrics-list progress{
-  width:68px;
-  height:7px;
-}
-
-.ftnd-card{
-  background:#fff8e8;
-  border-color:#cba967;
 }
 
 

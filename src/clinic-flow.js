@@ -223,7 +223,7 @@
     if(key!==last){
       last=key;text('clinicNumber',numberText(number));text('clinicName',who.name);
       text('clinicStatus',s.status==='won'?'共餐成功':s.status==='lost'?'翻桌待重試':s.status==='active'?'製作中':'已叫號');
-      text('clinicWish',`「${who.complaint || who.wish || '今日依症狀調整料理份量。'}」`);text('clinicPreferences','');
+      text('clinicWish',summary());text('clinicPreferences',summary());
       text('clinicNext',`${numberText(number+1)}　${patients[(patientIndex+1)%patients.length].name} · 候診中`);
       text('clinicOrderSummary',`${numberText(number)} ${who.name}｜${summary(p)}`);
       const instructions=[
