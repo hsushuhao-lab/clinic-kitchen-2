@@ -42,7 +42,7 @@
 
 /* Ingredient choices are the prescription-building metaphor. Keep all decisions
    visual and enlarge the food artwork/portion state. */
-#cookingDeck[data-panel='prep'] #panel-prep{grid-template-rows:27px 92px 42px minmax(0,1fr) 19px!important}
+#cookingDeck[data-panel='prep'] #panel-prep{grid-template-rows:27px 92px minmax(180px,1fr) 19px!important}
 #panel-prep .ingredient-tray{gap:8px}
 #panel-prep .ingredient-tray button{position:relative;flex-direction:column!important;gap:2px!important;border-radius:10px!important;background:#fffdf7!important}
 #panel-prep .ingredient-tray button.is-selected{background:#f4e5b9!important}
@@ -93,7 +93,7 @@
   .clinical-observation{display:none}
   #clinicalConsultCard{grid-template-columns:1fr}
   .clinical-snapshot-card{display:none}
-  #cookingDeck[data-panel='prep'] #panel-prep{grid-template-rows:23px 75px 38px minmax(0,1fr) 17px!important}
+  #cookingDeck[data-panel='prep'] #panel-prep{grid-template-rows:23px 75px minmax(120px,1fr) 17px!important}
   #panel-prep .food-art{width:42px!important;height:42px!important}
   #visualPortionPicker{grid-template-columns:75px repeat(3,1fr)}
   #patientSelfRating{grid-template-columns:1fr 1fr}

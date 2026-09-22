@@ -156,6 +156,11 @@ try:
             expect(page.locator("#panel-prep")).to_be_visible()
             assert_fixed_track()
 
+            # Regression guard: PREP must expose a real cutting-board workspace,
+            # not collapse the board into a thin strip under the ingredient row.
+            board_box = page.locator("#boardStage").bounding_box()
+            assert board_box and board_box["height"] >= 140, board_box
+
             set_prescription_portions(
                 rx,
                 correct=expect_success
