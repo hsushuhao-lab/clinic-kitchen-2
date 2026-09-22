@@ -20,13 +20,18 @@
    deck.dataset.rice=cookedDish.ricePortion==='未盛飯'?'empty':'ready';deck.dataset.plated=String(plated);
    const container=document.getElementById('wokFoodLayer');
    if(!container)return;
-   if(!inWok.size||plated){container.replaceChildren();return;}
-   const items={pork:stirs?'pork-cooked':'pork-raw',garlic:'garlic-cut',douban:'douban-paste',tofu:'tofu-diced',scallion:'scallion-cut',pepper:'pepper'};
+   if(!inWok.size||plated){
+     container.replaceChildren();
+     container.dataset.redOil='false';
+     container.dataset.simmered='false';
+     return;
+   }
+   const items={pork:stirs?'pork-cooked':'pork-raw',garlic:'garlic-cut',douban:'douban-paste',tofu:'tofu-diced',scallion:'scallion-cut',pepper:'pepper',chili:'__chili_png__'};
    for(const [id,name] of Object.entries(items)){
      let image=container.querySelector(`[data-ingredient="${id}"]`);
      if(!inWok.has(id)){image?.remove();continue;}
      if(!image){image=document.createElement('img');image.dataset.ingredient=id;image.className=`wok-food-item wok-food-${id}`;image.alt=foodNames[id];container.append(image);}
-     const src=root+name+'.webp';if(image.getAttribute('src')!==src)image.src=src;
+     const src=id==='chili'?'assets/ingredients/mapo_tofu/chili.png':root+name+'.webp';if(image.getAttribute('src')!==src)image.src=src;
    }
    container.dataset.redOil=String(inWok.has('douban'));
    container.dataset.simmered=String(stirs>=3&&inWok.size>=4);

@@ -749,6 +749,8 @@ function syncWokFoodDOM() {
   if (!container) return;
   if (inWok.size === 0 || plated) {
     if (container.hasChildNodes()) container.innerHTML = '';
+    container.dataset.redOil = 'false';
+    container.dataset.simmered = 'false';
     return;
   }
 
@@ -884,6 +886,9 @@ function syncWokFoodDOM() {
   } else if (bubblesEl) {
     bubblesEl.remove();
   }
+
+  container.dataset.redOil = String(inWok.has('douban'));
+  container.dataset.simmered = String(stirs >= 3 && inWok.size >= 4);
 }
 
 // R8.2 hotfix: clinic-flow can batch-load wok.contents while the visual renderer
@@ -978,7 +983,13 @@ function resetAll() {
   if ($('stirBtn')) { $('stirBtn').textContent = '翻炒 (0/3次)'; }
   if ($('heatBtn')) { $('heatBtn').textContent = '開小火 (F)'; }
   if ($('wokSimmerImg')) $('wokSimmerImg').setAttribute('hidden', '');
-  if ($('wokFoodLayer')) $('wokFoodLayer').innerHTML = '';
+  if ($('wokFoodLayer')) {
+    const layer = $('wokFoodLayer');
+    layer.innerHTML = '';
+    layer.dataset.redOil = 'false';
+    layer.dataset.simmered = 'false';
+    layer.classList.remove('is-stirred');
+  }
   if ($('platedDishPreview')) $('platedDishPreview').setAttribute('hidden', '');
   if ($('simmerProgressContainer')) $('simmerProgressContainer').hidden = true;
   if ($('riceStatusBadge')) {
