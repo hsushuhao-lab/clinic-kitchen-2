@@ -35,7 +35,7 @@
     portions:blankPortions(),touched:blankTouched(),activeFood:'tofu',prepResult:null,
     irritation:0,paused:document.hidden,lastTick:performance.now(),gameOver:false,
     heatLevel:'off',wokPhase:'heat',stirCount:0,stirPulse:false,lastStirAt:0,heatSamples:[],simmerSeconds:0,simmerQuality:null,cookingResult:null,
-    rice:null,miso:null,serviceResult:null,finalResult:null,won:null
+    rice:null,miso:null,serviceResult:null,finalResult:null,won:null,ordersCompleted:0,streak:0
   };
 
   function patient(){return rules.patients[state.patientIndex%rules.patients.length];}
@@ -83,7 +83,7 @@
   function renderPatient(){
     const p=patient();
     $('ticketNumber').textContent=String(state.ticket).padStart(3,'0');
-    $('patientPortrait').src=`assets/service/patient-${p.id}.webp`;$('patientPortrait').alt=p.name;
+    $('patientPortrait').src=`assets/service/${p.id}.webp`;$('patientPortrait').alt=p.name;
     $('patientRole').textContent='CURRENT PATIENT';$('patientName').textContent=p.name;$('patientComplaint').textContent=p.complaint;
     $('ftndScore').textContent=p.ftnd.total;$('ftndSeverity').textContent=p.ftnd.severity;
     $('ftndItems').innerHTML=Array.from({length:6},(_,i)=>`<span>Q${i+1}<b>${p.ftnd['q'+(i+1)]}</b></span>`).join('');
@@ -91,7 +91,12 @@
     const pres=rx();$('prescriptionGrid').innerHTML=foodOrder.map(id=>`<div class="rx-chip"><img src="${food[id].img}" alt=""><div><small>${food[id].target}</small><strong>${food[id].name} ${portionLabel(pres.portions[id])}</strong></div></div>`).join('');
     renderPressure();
   }
-  function updateDoctorHud(){const d=state.doctor?doctors[state.doctor]:null;$('doctorHud').innerHTML=d?`<span>DOCTOR</span><strong>${d.name}</strong>`:'<span>DOCTOR</span><strong>尚未選擇</strong>';}
+  function updateShiftHud(){
+    const el=$('shiftHud');if(!el)return;
+    el.innerHTML=`<span>SHIFT</span><strong>${state.ordersCompleted} CLEAR · STREAK ${state.streak}</strong>`;
+    el.dataset.streak=state.streak>1?'hot':'normal';
+  }
+  function updateDoctorHud(){const d=state.doctor?doctors[state.doctor]:null;$('doctorHud').innerHTML=d?`<span>DOCTOR</span><strong>${d.name}</strong>`:'<span>DOCTOR</span><strong>尚未選擇</strong>';updateShiftHud();}
   function shell(kicker,title,desc){const n=document.createElement('div');n.className='stage-shell';n.innerHTML=`<div class="stage-head"><small>${kicker}</small><h1>${title}</h1><p>${desc}</p></div>`;return n;}
   function actionRow(...items){const row=document.createElement('div');row.className='stage-actions';row.append(...items);return row;}
   function button(id,text,klass='primary-action',disabled=false){const b=document.createElement('button');b.type='button';if(id)b.id=id;b.className=klass;b.textContent=text;b.disabled=disabled;return b;}
@@ -225,18 +230,41 @@
     const patientMood=Math.max(0,Math.min(100,Math.round(100-state.irritation*.65-(state.prepResult.gateB_pass?0:22)-(state.serviceResult.pass?0:18)-(cookingQuality>=60?0:20))));
     const total=Math.round(prescriptionFidelity*.3+cookingQuality*.3+serviceFidelity*.2+speedScore*.2);
     const won=state.prepResult.gateB_pass&&cookingQuality>=60&&state.serviceResult.pass;
-    state.finalResult={prescriptionFidelity,cookingQuality,serviceFidelity,speedScore,patientMood,total,won};
-    state.won=won;state.gameOver=true;state.stage='result';world.setMessage(won?'送餐成功！病人滿意':'餐點送達，但需要調整');renderStage();statusBar.textContent=won?'R11 M3 · ORDER COMPLETE':'R11 M3 · RESULT · NEEDS RETRY';
+    const rank=total>=92?'S':total>=82?'A':total>=70?'B':'C';
+    const stars=total>=90?3:total>=75?2:1;
+    const problems=[];
+    if(!state.prepResult.gateB_pass)problems.push('配料處方未達 Gate B');
+    if(cookingQuality<60)problems.push('料理品質不足');
+    if(!state.serviceResult.riceOk)problems.push('飯量不符合處方');
+    if(!state.serviceResult.misoOk)problems.push('味噌湯不符合處方');
+    if(!problems.length&&speedScore<70)problems.push('送餐速度還能更快');
+    const metrics={Prescription:prescriptionFidelity,Cooking:cookingQuality,Service:serviceFidelity,Speed:speedScore,'Patient Mood':patientMood};
+    const weakest=Object.entries(metrics).sort((a,b)=>a[1]-b[1])[0];
+    state.streak=won?state.streak+1:0;state.ordersCompleted+=1;
+    state.finalResult={prescriptionFidelity,cookingQuality,serviceFidelity,speedScore,patientMood,total,won,rank,stars,problems,weakest};
+    state.won=won;state.gameOver=true;state.stage='result';world.setMessage(won?'送餐成功！病人滿意':'餐點送達，但需要調整');renderStage();statusBar.textContent=won?'R11 · ORDER COMPLETE':'R11 · RESULT · NEEDS RETRY';
   }
   function renderResult(){
-    const r=state.finalResult,n=shell(r.won?'ORDER COMPLETE · SUCCESS':'ORDER COMPLETE · NEEDS RETRY',r.won?'病人滿意，完成送餐！':'這份餐點需要調整',r.won?'處方、料理與配餐都完成；下一號病人正在等。':'不是 timeout，因此不觸發翻桌；可重試這位病人，或先叫下一號。');
+    const r=state.finalResult;
+    const reason=r.won?(r.rank==='S'?'完美出餐！':'送餐成功！'):(r.problems[0]||'差一點！再試一次');
+    const n=shell(r.won?'ORDER COMPLETE · SUCCESS':'ORDER COMPLETE · NEEDS RETRY',reason,`總分 ${r.total} · RANK ${r.rank} · ${'★'.repeat(r.stars)}${'☆'.repeat(3-r.stars)}`);
+    n.classList.add('result-shell');
     const hero=document.createElement('div');hero.className='result-hero-r11'+(r.won?' is-win':' is-retry');
-    hero.innerHTML=`<img src="${r.won?'assets/finale/success_clinic_meal.webp':'assets/cooking/dish_plated.png'}" alt="${r.won?'病人滿意用餐':'餐點需要調整'}"><div><small>FINAL SCORE</small><strong>${r.total}</strong><span>${r.won?'SUCCESS':'NEEDS RETRY'}</span></div>`;n.append(hero);
+    hero.innerHTML=`<img src="${r.won?'assets/finale/success_clinic_meal.webp':'assets/cooking/dish_plated.png'}" alt="${r.won?'病人滿意用餐':'餐點需要調整'}"><div class="result-score-main"><small>FINAL SCORE</small><strong>${r.total}</strong><span>${r.won?'SUCCESS':'NEEDS RETRY'}</span></div><div class="result-rank"><small>RANK</small><strong>${r.rank}</strong><span class="result-stars">${'★'.repeat(r.stars)}${'☆'.repeat(3-r.stars)}</span><em>${state.streak>1?'STREAK ×'+state.streak:state.ordersCompleted+' ORDER'+(state.ordersCompleted>1?'S':'')+' CLEARED'}</em></div>`;n.append(hero);
+
+    const values=[['Prescription',r.prescriptionFidelity],['Cooking',r.cookingQuality],['Service',r.serviceFidelity],['Speed',r.speedScore],['Patient Mood',r.patientMood]];
+    const min=Math.min(...values.map(x=>x[1])),max=Math.max(...values.map(x=>x[1]));
     const scores=document.createElement('div');scores.className='result-score-grid';
-    [['Prescription',r.prescriptionFidelity],['Cooking',r.cookingQuality],['Speed',r.speedScore],['Patient Mood',r.patientMood]].forEach(([label,value])=>{const card=document.createElement('div');card.className='score-card';card.dataset.score=label;card.innerHTML=`<small>${label}</small><strong>${value}</strong><span>/100</span>`;scores.append(card);});n.append(scores);
+    values.forEach(([label,value])=>{const card=document.createElement('div');card.className='score-card'+(value===min?' is-weak':'')+(value===max?' is-best':'');card.dataset.score=label;card.innerHTML=`<small>${label}</small><strong>${value}</strong><span>/100</span><i><b style="width:${value}%"></b></i>`;scores.append(card);});n.append(scores);
+
+    const challenge=r.problems.length?r.problems.map(x=>'• '+x).join('<br>'):(r.weakest[0]==='Cooking'?'• 下一輪把收汁停在 PERFECT 區':r.weakest[0]==='Speed'?'• 下一輪在病人煩躁 20% 前送餐':'• 下一輪挑戰總分 '+Math.min(100,r.total+8)+'+');
+    const quote=r.won?(r.rank==='S'?'「太厲害了，完全是我想吃的！」':'「這次有對味，謝謝醫師！」'):(!state.serviceResult.pass?'「味道不錯，但配餐跟我點的不一樣喔。」':r.cookingQuality<60?'「火候還差一點，再試一次吧。」':'「配料好像跟我的需求不太一樣。」');
+    const detail=document.createElement('div');detail.className='result-detail-grid';
+    detail.innerHTML=`<section class="result-feedback"><small>WHY THIS RESULT</small><strong>${r.won?'本輪亮點':'主要失分原因'}</strong><p>${r.won?'處方、配餐與料理已達過關條件。':challenge}</p></section><section class="result-challenge"><small>NEXT CHALLENGE</small><strong>${r.won?'衝更高分':'再挑戰一次'}</strong><p>${r.won?'把最低分的 '+r.weakest[0]+' 拉到 90+，挑戰 S Rank。':'修正上面的失分點，目標 '+Math.min(100,r.total+10)+' 分以上。'}</p></section><section class="result-patient-response"><img src="assets/service/${patient().id}.webp" alt="${patient().name}"><div><small>PATIENT REACTION</small><strong>${patient().name}</strong><p>${quote}</p></div></section>`;n.append(detail);
+
     const note=document.createElement('div');note.className='result-note';note.innerHTML=`<strong>SERVICE ${state.serviceResult.fidelity}</strong><span>飯：${state.serviceResult.riceOk?'✓':'✕'} · 味噌湯：${state.serviceResult.misoOk?'✓':'✕'} · PREP Gate B：${state.prepResult.gateB_pass?'PASS':'FAIL'}</span>`;n.append(note);
-    const retry=button('retryPatientBtn','重試這位病人',r.won?'secondary-action':'primary-action');retry.addEventListener('click',resetCurrentPatient);
-    const next=button('nextPatientBtn','下一號病人',r.won?'primary-action':'secondary-action');next.addEventListener('click',nextPatient);n.append(actionRow(retry,next));return n;
+    const retry=button('retryPatientBtn',r.won?'再挑戰這位病人':'再挑戰一次 · 目標 '+Math.min(100,r.total+10)+'+ ',r.won?'secondary-action':'primary-action');retry.addEventListener('click',resetCurrentPatient);
+    const next=button('nextPatientBtn','下一號病人 →',r.won?'primary-action':'secondary-action');next.addEventListener('click',nextPatient);n.append(actionRow(retry,next));return n;
   }
   function nextPatient(){
     state.ticket+=1;state.patientIndex=(state.patientIndex+1)%rules.patients.length;resetCurrentPatient();

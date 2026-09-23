@@ -50,9 +50,6 @@
       ctx.fillStyle=id===state.stage?'#ffd65a66':'#ffffff00';
       ctx.beginPath();ctx.ellipse(x,y-8,Math.max(42,dw*.34),12,0,0,Math.PI*2);ctx.fill();
       if(im?.naturalWidth)ctx.drawImage(im,x-dw/2,y-dh,dw,dh);
-      if(id==='wok'||id==='serve'){
-        ctx.fillStyle='#123f5ad9';ctx.font='700 11px system-ui';ctx.textAlign='center';ctx.fillText(id==='wok'?'M2':'M3',x,y-8);
-      }
     });
   }
 

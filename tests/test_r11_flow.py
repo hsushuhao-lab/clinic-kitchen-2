@@ -30,7 +30,9 @@ try:
         assert f'assets/r11/doctors/doctor_{doctor}.webp' in art.get_attribute('src')
     page.wait_for_function("()=>Array.from(document.querySelectorAll('.doctor-art')).every(x=>x.complete&&x.naturalWidth>0)")
     page.screenshot(path=str(out/'desktop-doctor-select.png'),full_page=True);done('three playable doctors use the new R11 character art')
-    page.locator('[data-doctor="heat"]').click();wait_stage(page,'consult');assert snap(page)['doctor']=='heat' and snap(page)['world']['doctor']=='heat';done('DR. HEAT persists in HUD and chibi world')
+    page.locator('[data-doctor="heat"]').click();wait_stage(page,'consult');assert snap(page)['doctor']=='heat' and snap(page)['world']['doctor']=='heat'
+    portrait=page.locator('#patientPortrait');expect(portrait).to_be_visible();assert portrait.get_attribute('src').endswith('/office.webp');page.wait_for_function("()=>patientPortrait.complete&&patientPortrait.naturalWidth>0")
+    done('DR. HEAT persists and patient rail uses a single portrait, not the four-frame strip')
 
     before=snap(page)['irritation'];page.wait_for_timeout(900);assert snap(page)['irritation']>before+.2
     page.evaluate('CKR11.__qaSetHidden(true)');paused=snap(page)['irritation'];page.wait_for_timeout(700);assert abs(snap(page)['irritation']-paused)<.08;page.evaluate('CKR11.__qaSetHidden(false)');done('patient timer runs and hidden-tab pause works')
@@ -70,9 +72,9 @@ try:
     ticket=snap(page)['ticket'];patient_id=snap(page)['patient']['id']
     page.locator('#serveDoneBtn').click();page.wait_for_function("()=>CKR11.snapshot().stage==='result'",timeout=5000)
     final=snap(page)['finalResult'];assert final and final['won'] and snap(page)['won'] is True
-    assert snap(page)['serviceResult']['pass'] is True and page.locator('.score-card').count()==4
-    expect(page.locator('.result-hero-r11.is-win')).to_be_visible();page.screenshot(path=str(out/'mobile-success-result.png'),full_page=True)
-    done('DELIVERY reaches success result with Prescription/Cooking/Speed/Patient Mood scores')
+    assert snap(page)['serviceResult']['pass'] is True and page.locator('.score-card').count()==5
+    expect(page.locator('.result-hero-r11.is-win')).to_be_visible();expect(page.locator('.result-rank')).to_be_visible();expect(page.locator('.result-detail-grid')).to_be_visible();page.screenshot(path=str(out/'mobile-success-result.png'),full_page=True)
+    done('DELIVERY reaches a game-like result with rank, five scores, feedback and next challenge')
 
     page.locator('#nextPatientBtn').click();wait_stage(page,'consult')
     assert snap(page)['ticket']==ticket+1 and snap(page)['patient']['id']!=patient_id and snap(page)['doctor']=='heat'
