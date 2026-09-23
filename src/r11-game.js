@@ -21,9 +21,9 @@
     pepper:{name:'花椒',target:'Anxiety',img:'assets/ingredients/mapo_tofu/pepper.png',wok:'assets/ingredients/mapo_tofu/pepper.png'}
   };
   const doctors={
-    speed:{id:'speed',name:'DR. SPEED',tag:'快速料理',ability:'病人煩躁累積速度 −15%',detail:'適合把整段流程壓快。',sprite:'assets/chibi/speed.webp'},
-    heat:{id:'heat',name:'DR. HEAT',tag:'火候專家',ability:'收汁 Perfect Zone +25%',detail:'抓收汁時間時有更大的完美容錯。',sprite:'assets/chibi/heat.webp'},
-    strategy:{id:'strategy',name:'DR. STRATEGY',tag:'配料專家',ability:'PREP 目標提示更醒目',detail:'適合先看症狀，再精準配料。',sprite:'assets/chibi/strategy.webp'}
+    speed:{id:'speed',name:'DR. SPEED',tag:'快速料理',ability:'病人煩躁累積速度 −15%',detail:'適合把整段流程壓快。',sprite:'assets/chibi/speed.webp',art:'assets/r11/doctors/doctor_speed.webp',bump:'assets/r11/doctors/doctor_speed_bump.webp'},
+    heat:{id:'heat',name:'DR. HEAT',tag:'火候專家',ability:'收汁 Perfect Zone +25%',detail:'抓收汁時間時有更大的完美容錯。',sprite:'assets/chibi/heat.webp',art:'assets/r11/doctors/doctor_heat.webp',bump:'assets/r11/doctors/doctor_heat_bump.webp'},
+    strategy:{id:'strategy',name:'DR. STRATEGY',tag:'配料專家',ability:'PREP 目標提示更醒目',detail:'適合先看症狀，再精準配料。',sprite:'assets/chibi/strategy.webp',art:'assets/r11/doctors/doctor_strategy.webp',bump:'assets/finale/doctor_strategy_bump.webp'}
   };
   const symptomMeta=[
     ['craving','Craving','菸癮'],['irritability','Irritability','煩躁'],['anxiety','Anxiety','焦慮'],['concentration','Concentration','注意力'],['restlessness','Restlessness','坐立難安'],['appetite','Appetite','食慾'],['sleep','Sleep','睡眠']
@@ -96,7 +96,7 @@
   function actionRow(...items){const row=document.createElement('div');row.className='stage-actions';row.append(...items);return row;}
   function button(id,text,klass='primary-action',disabled=false){const b=document.createElement('button');b.type='button';if(id)b.id=id;b.className=klass;b.textContent=text;b.disabled=disabled;return b;}
 
-  function doctorCard(d){const card=document.createElement('button');card.type='button';card.className='doctor-card';card.dataset.doctor=d.id;card.innerHTML=`<span class="doctor-sprite" style="--doctor-sprite:url('${d.sprite}')"></span><span class="doctor-copy"><small>${d.tag}</small><strong>${d.name}</strong><b>${d.ability}</b><em>${d.detail}</em></span><span class="choose-badge">選這位</span>`;card.addEventListener('click',()=>chooseDoctor(d.id));return card;}
+  function doctorCard(d){const card=document.createElement('button');card.type='button';card.className='doctor-card';card.dataset.doctor=d.id;card.innerHTML=`<img class="doctor-art" src="${d.art}" alt="${d.name}"><span class="doctor-copy"><small>${d.tag}</small><strong>${d.name}</strong><b>${d.ability}</b><em>${d.detail}</em></span><span class="choose-badge">選這位</span>`;card.addEventListener('click',()=>chooseDoctor(d.id));return card;}
   function chooseDoctor(id){
     if(!doctors[id])return;state.doctor=id;state.stage='consult';state.irritation=0;state.lastTick=performance.now();state.paused=document.hidden;state.gameOver=false;
     world.setDoctor(id);world.reset();updateDoctorHud();renderPatient();renderStage();statusBar.textContent='R11 M3 · 病人等候計時中';
@@ -247,7 +247,7 @@
   }
   function renderFailure(){
     const n=shell('PATIENT TIMEOUT','病人翻桌！','等待太久，病人直接翻桌；這是遊戲失敗機制，不代表任何臨床因果。');
-    const scene=document.createElement('div');scene.className='failure-scene';scene.innerHTML=`<img class="failure-table" src="assets/finale/failure_table_flip.webp" alt="病人翻桌"><img class="failure-doctor" src="assets/finale/doctor_${state.doctor}_bump.webp" alt="${doctors[state.doctor].name} 頭上腫一包"><div class="comic-stars">✦ ★ ✦</div><div class="failure-copy"><strong>等待太久！</strong><span>${doctors[state.doctor].name} 被波及，頭上腫了一包。</span></div>`;n.append(scene);
+    const scene=document.createElement('div');scene.className='failure-scene';scene.innerHTML=`<img class="failure-table" src="assets/finale/failure_table_flip.webp" alt="病人翻桌"><img class="failure-doctor" src="${doctors[state.doctor].bump}" alt="${doctors[state.doctor].name} 頭上腫一包"><div class="comic-stars">✦ ★ ✦</div><div class="failure-copy"><strong>等待太久！</strong><span>${doctors[state.doctor].name} 被波及，頭上腫了一包。</span></div>`;n.append(scene);
     const retry=button('retryPatientBtn','重試這位病人','primary-action');retry.addEventListener('click',resetCurrentPatient);n.append(actionRow(retry));return n;
   }
   function resetCurrentPatient(){

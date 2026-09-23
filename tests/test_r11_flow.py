@@ -23,7 +23,13 @@ try:
     res=page.goto(args.base_url,wait_until='networkidle');assert res and res.status==200
     page.wait_for_function("()=>window.CKR11&&window.CKR11World&&CKR11.snapshot().version==='R11_INTERACTIVE_KITCHEN_M3'&&CKR11World.snapshot().ready",timeout=30000)
 
-    assert page.locator('.doctor-card').count()==3;page.screenshot(path=str(out/'desktop-doctor-select.png'),full_page=True);done('three playable doctors visible')
+    assert page.locator('.doctor-card').count()==3
+    for doctor in ['speed','heat','strategy']:
+        art=page.locator(f'.doctor-card[data-doctor="{doctor}"] .doctor-art')
+        expect(art).to_be_visible()
+        assert f'assets/r11/doctors/doctor_{doctor}.webp' in art.get_attribute('src')
+    page.wait_for_function("()=>Array.from(document.querySelectorAll('.doctor-art')).every(x=>x.complete&&x.naturalWidth>0)")
+    page.screenshot(path=str(out/'desktop-doctor-select.png'),full_page=True);done('three playable doctors use the new R11 character art')
     page.locator('[data-doctor="heat"]').click();wait_stage(page,'consult');assert snap(page)['doctor']=='heat' and snap(page)['world']['doctor']=='heat';done('DR. HEAT persists in HUD and chibi world')
 
     before=snap(page)['irritation'];page.wait_for_timeout(900);assert snap(page)['irritation']>before+.2
@@ -74,7 +80,7 @@ try:
 
     page.set_viewport_size({'width':1200,'height':900});page.goto(args.base_url,wait_until='networkidle');page.wait_for_function("()=>window.CKR11&&CKR11World.snapshot().ready")
     page.locator('[data-doctor="speed"]').click();wait_stage(page,'consult');page.evaluate('CKR11.__qaSetIrritation(99.9)');page.wait_for_function("()=>CKR11.snapshot().stage==='fail-table-flip'",timeout=5000)
-    expect(page.locator('.failure-table')).to_be_visible();src=page.locator('.failure-doctor').get_attribute('src');assert 'doctor_speed_bump.webp' in src,src
+    expect(page.locator('.failure-table')).to_be_visible();src=page.locator('.failure-doctor').get_attribute('src');assert 'assets/r11/doctors/doctor_speed_bump.webp' in src,src
     page.screenshot(path=str(out/'desktop-timeout-failure.png'),full_page=True);done('patient timeout still triggers table flip with selected doctor reaction')
 
     assert not errors,errors;assert not failed,failed;done('no uncaught JavaScript errors or failed runtime requests')
