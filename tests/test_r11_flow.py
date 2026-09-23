@@ -46,17 +46,28 @@ try:
     page.locator('#prepDoneBtn').click();wait_stage(page,'wok');assert snap(page)['prepResult']['fidelity']==100 and snap(page)['prepResult']['gateB_pass'];done('R11 rules evaluator gives correct manual PREP 100 fidelity')
 
     assert snap(page)['heatLevel']=='off' and snap(page)['stirCount']==0 and snap(page)['wokPhase']=='heat'
-    page.wait_for_timeout(700);assert snap(page)['stirCount']==0 and snap(page)['simmerSeconds']==0
-    page.locator('.heat-btn[data-heat="medium"]').click()
-    for i in range(3):
-        page.locator('#stirBtn').click();page.wait_for_timeout(420);assert snap(page)['stirCount']==i+1
-    done('WOK remains manual: player controls heat and all three stirs')
+    page.wait_for_timeout(500);assert snap(page)['stirCount']==0 and snap(page)['simmerSeconds']==0
+    page.locator('.heat-btn[data-heat="medium"]').click();assert snap(page)['wokPhase']=='drop'
+    batch_count=snap(page)['wokBatchCount'];assert batch_count>=2
+    for i in range(batch_count):
+        expect(page.locator('#dropIngredientBtn')).to_be_enabled();page.locator('#dropIngredientBtn').click();page.wait_for_timeout(430)
+        assert snap(page)['dropIndex']==i+1
+    assert snap(page)['wokPhase']=='stir'
+    for i in range(6):
+        if page.locator('#rescueBtn').count():
+            page.locator('#rescueBtn').click();page.wait_for_timeout(120)
+        page.locator('#stirBtn').click();page.wait_for_timeout(430);assert snap(page)['stirCount']==i+1
+    if page.locator('#rescueBtn').count():page.locator('#rescueBtn').click();page.wait_for_timeout(120)
+    assert snap(page)['maxCombo']>=3 and snap(page)['rescuedEvents']==2
+    assert page.locator('.sizzle-particles b').count()==12
+    done('WOK arcade loop includes manual ingredient drops, six-hit combo, particles and two rescue events')
 
     page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(250)
     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+2');box=page.locator('#startSimmerBtn').bounding_box();assert box and box['height']>=54
     page.locator('#startSimmerBtn').click();page.wait_for_timeout(4700);sec=snap(page)['simmerSeconds'];assert 4.3<=sec<=5.6,sec
     page.locator('#finishSimmerBtn').click();wait_stage(page,'serve')
-    result=snap(page)['cookingResult'];assert result and result['simmerKey']=='perfect' and result['cookingQuality']>=90,result
+    result=snap(page)['cookingResult'];assert result and result['simmerKey']=='perfect' and result['cookingQuality']>=85,result
+    assert result['ingredientTimingScore']>=90 and result['comboScore']>=50 and result['rescueScore']==100,result
     assert snap(page)['world']['stage']=='serve' and snap(page)['world']['x']>.8
     page.screenshot(path=str(out/'mobile-serve.png'),full_page=True);done('manual PERFECT simmer travels to SERVE on mobile')
 
@@ -73,7 +84,7 @@ try:
     page.locator('#serveDoneBtn').click();page.wait_for_function("()=>CKR11.snapshot().stage==='result'",timeout=5000)
     final=snap(page)['finalResult'];assert final and final['won'] and snap(page)['won'] is True and snap(page)['ordersCompleted']==1 and snap(page)['streak']==1
     assert snap(page)['serviceResult']['pass'] is True and page.locator('.score-card').count()==5
-    expect(page.locator('.result-hero-r11.is-win')).to_be_visible();expect(page.locator('.result-rank')).to_be_visible();expect(page.locator('.result-detail-grid')).to_be_visible();page.screenshot(path=str(out/'mobile-success-result.png'),full_page=True)
+    expect(page.locator('.result-hero-r11.is-win')).to_be_visible();expect(page.locator('.result-rank')).to_be_visible();expect(page.locator('.result-detail-grid')).to_be_visible();assert page.locator('.cook-breakdown-chip').count()==5;page.screenshot(path=str(out/'mobile-success-result.png'),full_page=True)
     done('DELIVERY reaches a game-like result with rank, five scores, feedback and next challenge')
 
     page.locator('#nextPatientBtn').click();wait_stage(page,'consult')

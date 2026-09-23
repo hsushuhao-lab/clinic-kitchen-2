@@ -34,7 +34,7 @@
     version:'R11_INTERACTIVE_KITCHEN_M3',ticket:1,patientIndex:0,doctor:null,stage:'doctor-select',traveling:false,
     portions:blankPortions(),touched:blankTouched(),activeFood:'tofu',prepResult:null,
     irritation:0,paused:document.hidden,lastTick:performance.now(),gameOver:false,
-    heatLevel:'off',wokPhase:'heat',stirCount:0,stirPulse:false,lastStirAt:0,heatSamples:[],simmerSeconds:0,simmerQuality:null,cookingResult:null,
+    heatLevel:'off',wokPhase:'heat',stirCount:0,stirPulse:false,dropPulse:false,lastStirAt:0,lastDropAt:0,heatSamples:[],dropIndex:0,dropScores:[],combo:0,maxCombo:0,microEvent:null,rescuedEvents:0,eventMisses:0,actionFeedback:'',simmerSeconds:0,simmerQuality:null,cookingResult:null,
     rice:null,miso:null,serviceResult:null,finalResult:null,won:null,ordersCompleted:0,streak:0
   };
 
@@ -138,18 +138,66 @@
   }
   function scorePrep(){return rules.evaluateR11Portions(state.portions,patient());}
   async function finishPrepAndMove(){
-    if(decidedCount()<7||state.traveling)return;state.prepResult=scorePrep();state.traveling=true;renderStage();world.setCarry(true);await world.goTo('wok',{carry:true,messageText:'端著備料跑向炒鍋'});world.setCarry(false);state.traveling=false;state.stage='wok';state.heatLevel='off';state.wokPhase='heat';state.stirCount=0;state.stirPulse=false;state.heatSamples=[];state.simmerSeconds=0;state.simmerQuality=null;state.cookingResult=null;renderStage();
+    if(decidedCount()<7||state.traveling)return;state.prepResult=scorePrep();state.traveling=true;renderStage();world.setCarry(true);await world.goTo('wok',{carry:true,messageText:'端著備料跑向炒鍋'});world.setCarry(false);state.traveling=false;state.stage='wok';state.heatLevel='off';state.wokPhase='heat';state.stirCount=0;state.stirPulse=false;state.dropPulse=false;state.lastStirAt=0;state.lastDropAt=0;state.heatSamples=[];state.dropIndex=0;state.dropScores=[];state.combo=0;state.maxCombo=0;state.microEvent=null;state.rescuedEvents=0;state.eventMisses=0;state.actionFeedback='';state.simmerSeconds=0;state.simmerQuality=null;state.cookingResult=null;renderStage();
   }
 
+  const wokBatchTemplate=[
+    {id:'aroma',name:'肉末＋蒜末爆香',foods:['pork','garlic']},
+    {id:'spice',name:'豆瓣＋辣椒＋花椒',foods:['douban','chili','pepper']},
+    {id:'tofu',name:'豆腐下鍋',foods:['tofu']},
+    {id:'finish',name:'青蔥收尾',foods:['scallion']}
+  ];
+  function activeWokBatches(){return wokBatchTemplate.map(x=>({...x,foods:x.foods.filter(id=>Number(state.portions[id])>0)})).filter(x=>x.foods.length);}
   function heatLabel(level){return level==='low'?'小火':level==='medium'?'中火':level==='high'?'大火':'關火';}
-  function setHeat(level){if(state.stage!=='wok'||state.wokPhase==='done')return;state.heatLevel=level;renderStage();}
-  function wokFoodLayer(){return foodOrder.filter(id=>Number(state.portions[id])>0).map((id,i)=>`<img class="wok-food wok-food-${i%4}" data-food="${id}" src="${food[id].wok}" alt="${food[id].name}">`).join('');}
-  function canStir(){return state.heatLevel!=='off'&&state.stirCount<3&&!state.stirPulse&&state.wokPhase!=='simmer';}
-  function doStir(){
-    if(!canStir())return;state.stirCount+=1;state.stirPulse=true;state.lastStirAt=performance.now();state.heatSamples.push(state.heatLevel);state.wokPhase='stir';renderStage();
-    setTimeout(()=>{state.stirPulse=false;if(state.stage==='wok')renderStage();},340);
+  function setHeat(level){
+    if(state.stage!=='wok'||state.wokPhase==='done'||state.wokPhase==='simmer')return;
+    state.heatLevel=level;
+    if(state.wokPhase==='heat'&&level!=='off'){state.wokPhase='drop';state.lastDropAt=performance.now();state.actionFeedback='🔥 鍋熱了！開始下料';}
+    renderStage();
   }
-  function startSimmer(){if(state.stage!=='wok'||state.stirCount<3||state.heatLevel==='off')return;state.wokPhase='simmer';state.simmerSeconds=0;state.lastTick=performance.now();renderStage();}
+  function droppedFoods(){
+    const batches=activeWokBatches(),done=batches.slice(0,state.dropIndex);
+    return new Set(done.flatMap(x=>x.foods));
+  }
+  function wokFoodLayer(){
+    const dropped=droppedFoods();
+    return foodOrder.filter(id=>dropped.has(id)).map((id,i)=>`<img class="wok-food wok-food-${i%4}" data-food="${id}" src="${food[id].wok}" alt="${food[id].name}">`).join('');
+  }
+  function dropNextBatch(){
+    if(state.stage!=='wok'||state.wokPhase!=='drop'||state.heatLevel==='off'||state.dropPulse)return;
+    const batches=activeWokBatches();if(state.dropIndex>=batches.length)return;
+    const now=performance.now(),delta=state.lastDropAt?now-state.lastDropAt:700;
+    const score=delta>=280&&delta<=1800?100:75;
+    state.dropScores.push(score);state.lastDropAt=now;state.dropIndex+=1;state.dropPulse=true;
+    state.actionFeedback=score===100?'PERFECT DROP! ✦':'GOOD DROP';
+    if(state.dropIndex>=batches.length)state.wokPhase='stir';
+    renderStage();
+    setTimeout(()=>{state.dropPulse=false;if(state.stage==='wok')renderStage();},420);
+  }
+  function canStir(){return state.heatLevel!=='off'&&state.wokPhase==='stir'&&state.stirCount<6&&!state.stirPulse;}
+  function triggerMicroEvent(){
+    if(state.stirCount===2&&!state.microEvent)state.microEvent={id:'stick',title:'鍋底快黏了！',action:'快速推炒救鍋'};
+    if(state.stirCount===4&&!state.microEvent)state.microEvent={id:'flare',title:'火焰突然竄高！',action:'穩住火候'};
+  }
+  function rescueEvent(){
+    if(state.stage!=='wok'||!state.microEvent)return;
+    const id=state.microEvent.id;
+    state.rescuedEvents+=1;state.microEvent=null;state.actionFeedback='SAVE IT! +15 ✦';
+    if(id==='flare')state.heatLevel='medium';
+    renderStage();
+  }
+  function doStir(){
+    if(!canStir())return;
+    if(state.microEvent){state.eventMisses+=1;state.microEvent=null;state.combo=0;state.actionFeedback='MISS! Combo reset';}
+    const now=performance.now(),delta=state.lastStirAt?now-state.lastStirAt:520;
+    const perfect=delta>=300&&delta<=1100;
+    state.combo=perfect?state.combo+1:1;state.maxCombo=Math.max(state.maxCombo,state.combo);
+    state.stirCount+=1;state.stirPulse=true;state.lastStirAt=now;state.heatSamples.push(state.heatLevel);
+    state.actionFeedback=perfect?(state.combo>=3?`PERFECT! COMBO ×${state.combo}`:'GREAT!'):'GOOD';
+    triggerMicroEvent();renderStage();
+    setTimeout(()=>{state.stirPulse=false;if(state.stage==='wok')renderStage();},360);
+  }
+  function startSimmer(){if(state.stage!=='wok'||state.stirCount<6||state.heatLevel==='off'||state.microEvent)return;state.wokPhase='simmer';state.simmerSeconds=0;state.lastTick=performance.now();state.actionFeedback='收汁開始！盯緊 PERFECT 區';renderStage();}
   function simmerBand(seconds){
     const heatDoctor=state.doctor==='heat',perfectLo=heatDoctor?4.25:4.5,perfectHi=heatDoctor?5.75:5.5;
     if(seconds<3)return {key:'raw',label:'太生',score:35};
@@ -158,14 +206,17 @@
     if(seconds<=7)return {key:'dry',label:'稍乾',score:68};
     return {key:'burnt',label:'過火',score:30};
   }
-  function heatScore(){if(!state.heatSamples.length)return 0;const values=state.heatSamples.map(x=>x==='medium'?100:x==='high'?88:72);return Math.round(values.reduce((a,b)=>a+b,0)/values.length);}
+  function heatScore(){if(!state.heatSamples.length)return 0;const values=state.heatSamples.map(x=>x==='medium'?100:x==='high'?84:76);return Math.round(values.reduce((a,b)=>a+b,0)/values.length);}
+  function ingredientTimingScore(){return state.dropScores.length?Math.round(state.dropScores.reduce((a,b)=>a+b,0)/state.dropScores.length):0;}
+  function comboScore(){return Math.min(100,Math.round(state.maxCombo/6*100));}
+  function rescueScore(){const total=state.rescuedEvents+state.eventMisses;return total?Math.round(state.rescuedEvents/total*100):70;}
   async function finishSimmer(){
     if(state.stage!=='wok'||state.wokPhase!=='simmer'||state.traveling)return;
     const band=simmerBand(state.simmerSeconds);
     state.simmerQuality=band;state.heatLevel='off';state.wokPhase='done';
-    const stirScore=state.stirCount>=3?100:Math.round(state.stirCount/3*100),h=heatScore();
-    const cook=Math.round(stirScore*.3+h*.3+band.score*.4);
-    state.cookingResult={stirScore,heatScore:h,simmerScore:band.score,simmerLabel:band.label,simmerKey:band.key,simmerSeconds:Number(state.simmerSeconds.toFixed(2)),cookingQuality:cook};
+    const h=heatScore(),ingredient=ingredientTimingScore(),combo=comboScore(),rescue=rescueScore();
+    const cook=Math.round(h*.20+ingredient*.20+combo*.25+rescue*.15+band.score*.20);
+    state.cookingResult={heatScore:h,ingredientTimingScore:ingredient,comboScore:combo,rescueScore:rescue,simmerScore:band.score,simmerLabel:band.label,simmerKey:band.key,simmerSeconds:Number(state.simmerSeconds.toFixed(2)),maxCombo:state.maxCombo,rescuedEvents:state.rescuedEvents,eventMisses:state.eventMisses,cookingQuality:cook};
     state.rice=null;state.miso=null;state.serviceResult=null;state.finalResult=null;state.won=null;
     state.traveling=true;renderStage();world.setCarry(true);
     await world.goTo('serve',{carry:true,messageText:'起鍋！端去配餐檯'});
@@ -178,14 +229,44 @@
     const needle=stagePanel.querySelector('.simmer-track .needle');if(needle)needle.style.left=Math.min(100,state.simmerSeconds/8*100)+'%';
   }
   function renderWok(){
-    const n=shell('03 WOK · 手動炒鍋','火力、翻炒、收汁都由你控制','禁止一鍵自動料理。先開火，親自翻炒 3 次，再開始收汁並抓時間起鍋。病人仍在等待。');
+    const batches=activeWokBatches(),nextBatch=batches[state.dropIndex];
+    const phaseLabel=state.wokPhase==='heat'?'① 熱鍋':state.wokPhase==='drop'?`② 下料 ${Math.min(state.dropIndex+1,batches.length)}/${batches.length}`:state.wokPhase==='stir'?`③ 翻炒 ${state.stirCount}/6`:'④ 收汁';
+    const n=shell('03 WOK · 熱炒挑戰','把這鍋炒出節奏！','火候、下料、連擊、救場與收汁都會影響 Cooking 分數。保持節奏，別讓病人等太久。');
     const layout=document.createElement('div');layout.className='wok-layout-r11';
-    const visual=document.createElement('div');visual.className=`wok-visual-r11 heat-${state.heatLevel}${state.stirPulse?' is-stirring':''}${state.wokPhase==='simmer'?' is-simmering':''}`;visual.innerHTML=`<img class="wok-stove" src="assets/chibi/stove.webp" alt="爐台"><div class="flame-r11"><i></i><i></i><i></i></div><img class="wok-pan" src="assets/cooking/wok_empty.png" alt="炒鍋"><div class="wok-food-layer">${wokFoodLayer()}</div><span class="steam"></span><span class="steam s2"></span><img class="spatula-img" src="assets/cooking/metal_spatula.png" alt="鍋鏟">`;
-    const controls=document.createElement('div');controls.className='wok-controls-r11';controls.innerHTML=`<div class="wok-status-row"><span>火力 <b id="heatStatus">${heatLabel(state.heatLevel)}</b></span><span>翻炒 <b id="stirStatus">${state.stirCount}/3</b></span><span>病人 <b>${Math.round(state.irritation)}%</b></span></div><div class="heat-buttons" id="heatButtons"></div><div class="simmer-meter"><small>收汁秒數</small><strong id="simmerSeconds">${state.simmerSeconds.toFixed(1)} 秒</strong><b id="simmerBand" data-band="${state.wokPhase==='simmer'?simmerBand(state.simmerSeconds).key:'idle'}">${state.wokPhase==='simmer'?simmerBand(state.simmerSeconds).label:'尚未開始'}</b><div class="simmer-track"><i class="z raw"></i><i class="z good"></i><i class="z perfect"></i><i class="z dry"></i><i class="z burnt"></i><span class="needle" style="left:${Math.min(100,state.simmerSeconds/8*100)}%"></span></div><em>${state.doctor==='heat'?'DR. HEAT：Perfect Zone 已擴大':'Perfect 目標約 4.5–5.5 秒'}</em></div>`;
-    const heatButtons=controls.querySelector('#heatButtons');[['low','小火'],['medium','中火'],['high','大火']].forEach(([id,label])=>{const b=button('',label,'heat-btn');b.dataset.heat=id;b.setAttribute('aria-pressed',String(state.heatLevel===id));b.addEventListener('click',()=>setHeat(id));heatButtons.append(b);});const off=button('heatOffBtn','關火','heat-btn');off.dataset.heat='off';off.setAttribute('aria-pressed',String(state.heatLevel==='off'));off.addEventListener('click',()=>setHeat('off'));heatButtons.append(off);
-    const stir=button('stirBtn',state.stirCount>=3?'翻炒完成 3/3':`翻炒 ${state.stirCount}/3`,'wok-action',!canStir());stir.addEventListener('click',doStir);controls.append(stir);
-    if(state.stirCount>=3&&state.wokPhase!=='simmer'){
-      const simmer=button('startSimmerBtn','開始收汁','wok-action',state.heatLevel==='off');simmer.addEventListener('click',startSimmer);controls.append(simmer);
+    const visual=document.createElement('div');
+    visual.className=`wok-visual-r11 heat-${state.heatLevel}${state.stirPulse?' is-stirring':''}${state.dropPulse?' is-dropping':''}${state.wokPhase==='simmer'?' is-simmering':''}${state.combo>=3?' combo-hot':''}`;
+    visual.innerHTML=`
+      <img class="wok-doctor-avatar" src="${doctors[state.doctor].art}" alt="">
+      <div class="wok-patient-peek"><img src="assets/service/${patient().id}.webp" alt=""><span>${Math.round(state.irritation)}%</span></div>
+      <img class="wok-stove" src="assets/chibi/stove.webp" alt="爐台">
+      <div class="flame-r11"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="heat-haze"></div>
+      <img class="wok-pan" src="assets/cooking/wok_empty.png" alt="炒鍋">
+      <div class="wok-food-layer">${wokFoodLayer()}</div>
+      <div class="sizzle-particles">${'<b></b>'.repeat(12)}</div>
+      <span class="steam"></span><span class="steam s2"></span><span class="steam s3"></span>
+      <img class="spatula-img" src="assets/cooking/metal_spatula.png" alt="鍋鏟">
+      ${state.combo>1?`<div class="combo-badge">COMBO ×${state.combo}</div>`:''}
+      ${state.actionFeedback?`<div class="wok-feedback-pop">${state.actionFeedback}</div>`:''}
+      ${state.microEvent?`<div class="micro-event-overlay"><small>⚠ QUICK EVENT</small><strong>${state.microEvent.title}</strong></div>`:''}`;
+    const controls=document.createElement('div');controls.className='wok-controls-r11';
+    controls.innerHTML=`
+      <div class="wok-phase-strip"><span class="${state.wokPhase==='heat'?'is-current':''}">熱鍋</span><span class="${state.wokPhase==='drop'?'is-current':''}">下料</span><span class="${state.wokPhase==='stir'?'is-current':''}">翻炒</span><span class="${state.wokPhase==='simmer'?'is-current':''}">收汁</span></div>
+      <div class="wok-mission"><small>NOW</small><strong>${phaseLabel}</strong><em>${state.wokPhase==='heat'?'選火力把鍋燒熱':state.wokPhase==='drop'?(nextBatch?'下一批：'+nextBatch.name:'下料完成'):state.wokPhase==='stir'?'保持約 0.3–1.1 秒節奏，累積 Combo':'PERFECT 約 4.5–5.5 秒'}</em></div>
+      <div class="wok-status-row"><span>火力 <b id="heatStatus">${heatLabel(state.heatLevel)}</b></span><span>Combo <b id="comboStatus">×${state.combo}</b></span><span>救場 <b id="rescueStatus">${state.rescuedEvents}/2</b></span><span>病人 <b>${Math.round(state.irritation)}%</b></span></div>
+      <div class="heat-buttons" id="heatButtons"></div>
+      <div class="simmer-meter"><small>收汁秒數</small><strong id="simmerSeconds">${state.simmerSeconds.toFixed(1)} 秒</strong><b id="simmerBand" data-band="${state.wokPhase==='simmer'?simmerBand(state.simmerSeconds).key:'idle'}">${state.wokPhase==='simmer'?simmerBand(state.simmerSeconds).label:'尚未開始'}</b><div class="simmer-track"><i class="z raw"></i><i class="z good"></i><i class="z perfect"></i><i class="z dry"></i><i class="z burnt"></i><span class="needle" style="left:${Math.min(100,state.simmerSeconds/8*100)}%"></span></div><em>${state.doctor==='heat'?'DR. HEAT：Perfect Zone 已擴大':'抓準綠色區起鍋'}</em></div>`;
+    const heatButtons=controls.querySelector('#heatButtons');
+    [['low','小火'],['medium','中火'],['high','大火']].forEach(([id,label])=>{const b=button('',label,'heat-btn');b.dataset.heat=id;b.setAttribute('aria-pressed',String(state.heatLevel===id));b.addEventListener('click',()=>setHeat(id));heatButtons.append(b);});
+    const off=button('heatOffBtn','關火','heat-btn');off.dataset.heat='off';off.setAttribute('aria-pressed',String(state.heatLevel==='off'));off.addEventListener('click',()=>setHeat('off'));heatButtons.append(off);
+
+    if(state.wokPhase==='drop'){
+      const drop=button('dropIngredientBtn',nextBatch?'下料！ '+nextBatch.name:'下料完成','wok-action ingredient-drop-action',!nextBatch||state.heatLevel==='off'||state.dropPulse);drop.addEventListener('click',dropNextBatch);controls.append(drop);
+    }
+    if(state.wokPhase==='stir'){
+      if(state.microEvent){const rescue=button('rescueBtn','⚡ '+state.microEvent.action,'wok-action rescue-action');rescue.addEventListener('click',rescueEvent);controls.append(rescue);}
+      const stir=button('stirBtn',state.stirCount>=6?'翻炒完成 6/6':`翻炒！ ${state.stirCount}/6`,'wok-action stir-action',!canStir());stir.addEventListener('click',doStir);controls.append(stir);
+      if(state.stirCount>=6&&!state.microEvent){const simmer=button('startSimmerBtn','🔥 進入收汁階段','wok-action');simmer.addEventListener('click',startSimmer);controls.append(simmer);}
     }
     if(state.wokPhase==='simmer'){
       const plate=button('finishSimmerBtn','起鍋！','wok-action danger-action');plate.addEventListener('click',finishSimmer);controls.append(plate);
@@ -259,6 +340,7 @@
 
     const challenge=r.problems.length?r.problems.map(x=>'• '+x).join('<br>'):(r.weakest[0]==='Cooking'?'• 下一輪把收汁停在 PERFECT 區':r.weakest[0]==='Speed'?'• 下一輪在病人煩躁 20% 前送餐':'• 下一輪挑戰總分 '+Math.min(100,r.total+8)+'+');
     const quote=r.won?(r.rank==='S'?'「太厲害了，完全是我想吃的！」':'「這次有對味，謝謝醫師！」'):(!state.serviceResult.pass?'「味道不錯，但配餐跟我點的不一樣喔。」':r.cookingQuality<60?'「火候還差一點，再試一次吧。」':'「配料好像跟我的需求不太一樣。」');
+    const cookBreak=document.createElement('div');cookBreak.className='cooking-breakdown';const c=state.cookingResult;[['Heat Control',c.heatScore],['Ingredient Timing',c.ingredientTimingScore],['Stir Combo',c.comboScore],['Rescue Events',c.rescueScore],['Finishing',c.simmerScore]].forEach(([label,value])=>{const chip=document.createElement('div');chip.className='cook-breakdown-chip';chip.innerHTML=`<small>${label}</small><strong>${value}</strong>`;cookBreak.append(chip);});n.append(cookBreak);
     const detail=document.createElement('div');detail.className='result-detail-grid';
     detail.innerHTML=`<section class="result-feedback"><small>WHY THIS RESULT</small><strong>${r.won?'本輪亮點':'主要失分原因'}</strong><p>${r.won?'處方、配餐與料理已達過關條件。':challenge}</p></section><section class="result-challenge"><small>NEXT CHALLENGE</small><strong>${r.won?'衝更高分':'再挑戰一次'}</strong><p>${r.won?'把最低分的 '+r.weakest[0]+' 拉到 90+，挑戰 S Rank。':'修正上面的失分點，目標 '+Math.min(100,r.total+10)+' 分以上。'}</p></section><section class="result-patient-response"><img src="assets/service/${patient().id}.webp" alt="${patient().name}"><div><small>PATIENT REACTION</small><strong>${patient().name}</strong><p>${quote}</p></div></section>`;n.append(detail);
 
@@ -280,7 +362,7 @@
   }
   function resetCurrentPatient(){
     state.stage='consult';state.traveling=false;state.portions=blankPortions();state.touched=blankTouched();state.activeFood='tofu';state.prepResult=null;state.irritation=0;state.gameOver=false;
-    state.heatLevel='off';state.wokPhase='heat';state.stirCount=0;state.stirPulse=false;state.heatSamples=[];state.simmerSeconds=0;state.simmerQuality=null;state.cookingResult=null;
+    state.heatLevel='off';state.wokPhase='heat';state.stirCount=0;state.stirPulse=false;state.dropPulse=false;state.lastStirAt=0;state.lastDropAt=0;state.heatSamples=[];state.dropIndex=0;state.dropScores=[];state.combo=0;state.maxCombo=0;state.microEvent=null;state.rescuedEvents=0;state.eventMisses=0;state.actionFeedback='';state.simmerSeconds=0;state.simmerQuality=null;state.cookingResult=null;
     state.rice=null;state.miso=null;state.serviceResult=null;state.finalResult=null;state.won=null;state.lastTick=performance.now();
     world.reset();world.setDoctor(state.doctor);renderStage();statusBar.textContent='R11 M3 · 病人等候計時中';
   }
@@ -292,7 +374,7 @@
   }
 
   window.CKR11={
-    snapshot:()=>({version:state.version,ticket:state.ticket,patient:patient(),prescription:rx(),doctor:state.doctor,stage:state.stage,traveling:state.traveling,portions:{...state.portions},touched:{...state.touched},prepResult:state.prepResult,irritation:Number(state.irritation.toFixed(3)),paused:state.paused,gameOver:state.gameOver,heatLevel:state.heatLevel,wokPhase:state.wokPhase,stirCount:state.stirCount,simmerSeconds:Number(state.simmerSeconds.toFixed(3)),simmerQuality:state.simmerQuality,cookingResult:state.cookingResult,rice:state.rice,miso:state.miso,serviceResult:state.serviceResult,finalResult:state.finalResult,won:state.won,ordersCompleted:state.ordersCompleted,streak:state.streak,world:world.snapshot()}),
+    snapshot:()=>({version:state.version,ticket:state.ticket,patient:patient(),prescription:rx(),doctor:state.doctor,stage:state.stage,traveling:state.traveling,portions:{...state.portions},touched:{...state.touched},prepResult:state.prepResult,irritation:Number(state.irritation.toFixed(3)),paused:state.paused,gameOver:state.gameOver,heatLevel:state.heatLevel,wokPhase:state.wokPhase,stirCount:state.stirCount,simmerSeconds:Number(state.simmerSeconds.toFixed(3)),simmerQuality:state.simmerQuality,cookingResult:state.cookingResult,dropIndex:state.dropIndex,wokBatchCount:activeWokBatches().length,combo:state.combo,maxCombo:state.maxCombo,microEvent:state.microEvent,rescuedEvents:state.rescuedEvents,eventMisses:state.eventMisses,rice:state.rice,miso:state.miso,serviceResult:state.serviceResult,finalResult:state.finalResult,won:state.won,ordersCompleted:state.ordersCompleted,streak:state.streak,world:world.snapshot()}),
     __qaSetHidden:v=>handleVisibility(!!v),
     __qaSetIrritation:v=>{state.irritation=Math.max(0,Math.min(100,Number(v)||0));renderPressure();}
   };
