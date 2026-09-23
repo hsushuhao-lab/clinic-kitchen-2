@@ -173,3 +173,61 @@ img{display:block;max-width:100%}
   .wok-food-layer{transform:translate(-50%,-50%) scale(.82)}.primary-action{width:100%;min-width:0}.choice-row{grid-template-columns:1fr 1fr}
   #statusBar{display:none}
 }
+
+
+/* R10.1 mobile-first interaction polish */
+.patient-rail-toggle{display:none}
+.complaint-card p{font-size:12.5px;line-height:1.6}
+.patient-copy h2{font-size:20px}
+.symptom-label span{font-size:8px}.symptom-label b{font-size:10px}.symptom-row>strong{font-size:9px}
+.rx-chip small{font-size:8px}.rx-chip strong{font-size:10.5px}
+.stage-head small{font-size:10px}.stage-head h2{font-size:24px}.stage-head p{font-size:13px;line-height:1.5}
+.consult-box blockquote{font-size:18px}.consult-target p{font-size:12px}
+.ingredient-copy strong{font-size:12px}.ingredient-copy small{font-size:9px}
+.portion-btn,.fixed-pill{min-height:40px;font-size:11px}
+.prep-station-copy strong{font-size:14px}.prep-station-copy span{font-size:11px}.prep-tray span{font-size:10px}
+.control-card strong{font-size:14px}.control-card span{font-size:11px}
+.serve-goal strong,.serve-goal span{font-size:11px}
+.serve-group h3{font-size:14px}.serve-choice{min-height:88px;font-size:14px}
+.primary-action,.wok-btn{min-height:54px;font-size:15px}
+.stage-actions{position:sticky;bottom:-1px;z-index:8;margin-top:auto;padding:9px 0 2px;background:linear-gradient(180deg,#f8f7ef00,#f8f7ef 35%)}
+.auto-rx-note{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid #a8c1ae;border-radius:8px;background:#edf5eb}
+.auto-rx-note strong{font-size:12px;color:#315f46}.auto-rx-note span{font-size:11px;color:#63726d}
+.touch-hint{padding:9px 11px;border-radius:8px;background:#e9efe9;color:#426157;font-size:12px;font-weight:700}
+.cook-action{background:#a56b2f}
+
+@media(max-width:760px){
+  #app{display:flex;flex-direction:column;min-height:100dvh;height:auto}
+  .topbar{order:0;flex:0 0 56px}
+  #patientRail{order:1;flex:0 0 auto;padding:7px 8px;gap:6px;background:#f3eee1}
+  #gameMain{order:2;flex:1 1 auto;padding:7px}
+  #statusBar{order:3}
+  .patient-rail-toggle{display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;border:1px solid #bdc7bf;border-radius:8px;background:#fffdf7;color:#294b59;font-size:14px;font-weight:800}
+  #patientRail.is-compact .complaint-card,
+  #patientRail.is-compact .ftnd-card,
+  #patientRail.is-compact .symptom-card,
+  #patientRail.is-compact .rx-card-panel{display:none}
+  #patientRail.is-compact .patient-card{min-height:78px;grid-template-columns:66px 1fr}
+  #patientRail.is-compact .patient-portrait{width:66px;height:78px}
+  #patientRail.is-compact .patient-copy{padding:7px 9px}
+  #patientRail.is-compact .patient-copy h2{font-size:18px}
+  #patientRail.is-compact .patient-copy small{font-size:10px}
+  .world-strip{height:132px;margin-bottom:7px}
+  .world-message{font-size:11px}
+  .station-labels b{font-size:8px}.station-labels small{font-size:8px}
+  .stage-shell{min-height:calc(100dvh - 56px - 132px - 105px);padding:10px;gap:9px}
+  .stage-head h2{font-size:22px}.stage-head p{font-size:14px}
+  .consult-box blockquote{font-size:16px}
+  .pantry{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .ingredient-card{grid-template-rows:62px auto auto;padding:8px}.ingredient-card>img{height:62px}
+  .ingredient-copy strong{font-size:13px}.ingredient-copy small{font-size:10px}
+  .portion-btn,.fixed-pill{min-height:46px;font-size:13px}
+  .prep-station,.wok-visual,.tray-stage{min-height:270px}
+  .auto-rx-note{display:block}.auto-rx-note strong,.auto-rx-note span{display:block;font-size:12px}.auto-rx-note span{margin-top:3px}
+  .control-card strong{font-size:15px}.control-card span{font-size:13px}
+  .touch-hint{font-size:13px;text-align:center}
+  .serve-choice{min-height:82px;font-size:15px}.serve-choice img{width:56px;height:48px}
+  .primary-action,.wok-btn{width:100%;min-height:58px;font-size:16px;border-radius:10px}
+  .stage-actions{padding:10px 0 max(4px,env(safe-area-inset-bottom))}
+  .result-table table{font-size:11px}
+}

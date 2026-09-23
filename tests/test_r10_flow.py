@@ -17,10 +17,10 @@ def snap(page): return page.evaluate('CKR10.snapshot()')
 def wait_stage(page,stage):
     page.wait_for_function('(s)=>window.CKR10&&CKR10.snapshot().stage===s&&!CKR10.snapshot().traveling',arg=stage,timeout=15000)
 
-def set_portions(page,pres,correct):
+def make_wrong_portions(page,pres):
     for food in ['douban','garlic','scallion','chili','pepper']:
         target=pres['portions'][food]
-        value=target if correct else (1 if target==0 else 0)
+        value=1 if target==0 else 0
         page.locator(f'.portion-btn[data-food="{food}"][data-portion="{value}"]').click()
         assert snap(page)['portions'][food]==value
 
@@ -32,7 +32,10 @@ def complete_order(page,correct,tag):
     assert snap(page)['world']['x']>start_x+.15
     done(tag+': chibi doctor runs CONSULT -> PREP')
 
-    set_portions(page,pres,correct)
+    if correct:
+        assert snap(page)['portions']==pres['portions']
+    else:
+        make_wrong_portions(page,pres)
     expect(page.locator('#boardFoodPreview')).to_be_visible()
     page.locator('#prepDoneBtn').click()
     wait_stage(page,'wok')
@@ -44,33 +47,31 @@ def complete_order(page,correct,tag):
         expect(page.locator(f'#wokFoodLayer .wok-food[data-food="{food}"]')).to_be_visible()
     done(tag+': selected ingredients are visibly in wok')
 
-    expect(page.locator('#stirBtn')).to_be_disabled()
-    page.locator('#fireBtn').click()
-    expect(page.locator('#stirBtn')).to_be_enabled()
-    for _ in range(3):
-        page.locator('#stirBtn').click()
-        page.wait_for_timeout(100)
-    page.wait_for_function('()=>CKR10.snapshot().simmerReady===true',timeout=6000)
-    expect(page.locator('#wokDoneBtn')).to_be_enabled()
-    page.locator('#wokDoneBtn').click()
+    expect(page.locator('#cookActionBtn')).to_be_enabled()
+    page.locator('#cookActionBtn').click()
     wait_stage(page,'serve')
-    done(tag+': fire, three stirs and simmer complete')
+    assert snap(page)['stirs']==3
+    assert snap(page)['simmerReady'] is True
+    done(tag+': one tap completes fire, three stirs, simmer and travel to SERVE')
 
-    rice='#riceHalfBtn' if pres['rice']=='半碗飯' else '#riceFullBtn'
-    page.locator(rice).click()
+    assert snap(page)['rice']==pres['rice']
+    assert snap(page)['miso']==pres['miso']
     expect(page.locator('#trayRice')).to_be_visible()
     expected_rice='rice-half.webp' if pres['rice']=='半碗飯' else 'rice-full.webp'
     assert expected_rice in page.locator('#trayRice').get_attribute('src')
-
-    soup='#misoYesBtn' if pres['miso'] else '#misoNoBtn'
-    page.locator(soup).click()
     if pres['miso']:
         expect(page.locator('#traySoup')).to_be_visible()
-        assert page.locator('#trayNoSoup').count()==0
     else:
         expect(page.locator('#trayNoSoup')).to_be_visible()
-        assert page.locator('#traySoup').count()==0
-    done(tag+': rice and miso tray preview changes with selection')
+
+    # Choices stay editable and update the tray immediately.
+    alt_rice='#riceFullBtn' if pres['rice']=='半碗飯' else '#riceHalfBtn'
+    page.locator(alt_rice).click()
+    assert expected_rice not in page.locator('#trayRice').get_attribute('src')
+    page.locator('#riceHalfBtn' if pres['rice']=='半碗飯' else '#riceFullBtn').click()
+    page.locator('#misoNoBtn' if pres['miso'] else '#misoYesBtn').click()
+    page.locator('#misoYesBtn' if pres['miso'] else '#misoNoBtn').click()
+    done(tag+': service defaults to prescription and tray preview remains editable')
 
     expect(page.locator('#serveDoneBtn')).to_be_enabled()
     page.locator('#serveDoneBtn').click()
@@ -96,7 +97,7 @@ try:
         page.on('pageerror',lambda e:errors.append(str(e)))
         page.on('response',lambda r:failed.append(r.url) if r.status>=400 else None)
         res=page.goto(args.base_url,wait_until='networkidle');assert res and res.status==200
-        page.wait_for_function("()=>window.CKR10&&window.CKR10World&&CKR10.snapshot().version==='R10_KITCHEN_REBUILD'&&CKR10World.snapshot().ready",timeout=30000)
+        page.wait_for_function("()=>window.CKR10&&window.CKR10World&&CKR10.snapshot().version==='R10_MOBILE_FLOW'&&CKR10World.snapshot().ready",timeout=30000)
 
         assert page.locator('#worldCanvas').count()==1
         assert page.locator('.station-labels span').count()==4
@@ -119,11 +120,15 @@ try:
         done('wrong prescription reaches Gate B failure without breaking flow')
         page.locator('#nextPatientBtn').click();wait_stage(page,'consult')
 
-        page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(200)
+        page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(250)
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+2')
+        expect(page.locator('#patientRailToggle')).to_be_visible()
+        assert page.locator('#patientRail').evaluate("(x)=>x.classList.contains('is-compact')")
         expect(page.locator('#consultConfirmBtn')).to_be_visible()
+        button_box=page.locator('#consultConfirmBtn').bounding_box();assert button_box and button_box['height']>=52,button_box
+        font_size=float(page.locator('.stage-head p').evaluate("(x)=>parseFloat(getComputedStyle(x).fontSize)"));assert font_size>=14,font_size
         page.screenshot(path=str(out/'mobile-consult.png'),full_page=True)
-        done('mobile layout remains usable without horizontal overflow')
+        done('mobile layout uses compact patient rail, large type and 52px+ primary touch target')
 
         assert not errors,errors
         assert not failed,failed

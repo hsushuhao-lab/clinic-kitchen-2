@@ -28,15 +28,17 @@
   };
   const state={
     ticket:1,patientIndex:0,stage:'consult',traveling:false,activeFood:'tofu',
-    portions:{},fireOn:false,stirs:0,stirPulse:false,simmering:false,simmerReady:false,simmerTimer:null,
-    rice:null,miso:null,result:null,clinical:null,review:null,won:null
+    portions:{},fireOn:false,stirs:0,stirPulse:false,simmering:false,simmerReady:false,
+    cookingSequence:false,sequenceTimers:[],rice:null,miso:null,result:null,clinical:null,review:null,won:null
   };
   const patient=()=>rules.patients[state.patientIndex%rules.patients.length];
   const rx=()=>rules.buildClinicalPrescription(patient());
   const ticketText=()=>String(state.ticket).padStart(3,'0');
   const portionText=v=>Number(v)===0?'0':Number(v)===.5?'半':'1';
   const resetPortions=()=>{state.portions={tofu:1,pork:1,douban:0,garlic:0,scallion:0,chili:0,pepper:0};};
-  const clearTimers=()=>{if(state.simmerTimer)clearTimeout(state.simmerTimer);state.simmerTimer=null;};
+  const applyPrescription=()=>{state.portions={...rx().portions};};
+  const clearTimers=()=>{state.sequenceTimers.forEach(clearTimeout);state.sequenceTimers=[];};
+  const sleep=ms=>new Promise(resolve=>{const id=setTimeout(()=>{state.sequenceTimers=state.sequenceTimers.filter(x=>x!==id);resolve();},ms);state.sequenceTimers.push(id);});
 
   function makeButton(id,label,klass='primary-action',disabled=false){
     const b=document.createElement('button');b.type='button';if(id)b.id=id;b.className=klass;b.textContent=label;b.disabled=disabled;return b;
@@ -62,7 +64,13 @@
   }
 
   async function moveTo(stage,opts={}){
-    state.traveling=true;renderStage();await world.goTo(stage,opts);state.traveling=false;state.stage=stage;renderStage();
+    state.traveling=true;renderStage();await world.goTo(stage,opts);
+    if(stage==='serve'){
+      const pres=rx();
+      state.rice=pres.rice;
+      state.miso=pres.miso;
+    }
+    state.traveling=false;state.stage=stage;renderStage();
   }
 
   function renderConsult(){
@@ -72,7 +80,7 @@
     const target=document.createElement('article');target.className='consult-box consult-target';target.innerHTML='<small>本號配餐</small><strong>'+pres.rice+' · '+(pres.miso?'要味噌湯':'不要味噌湯')+'</strong><p>豆腐、絞肉固定 1 份；豆瓣、蒜、青蔥、辣椒、花椒依左側 Clinical Prescription。</p>';
     layout.append(complaint,target);n.append(layout);
     const b=makeButton('consultConfirmBtn',state.traveling?'醫師前往備料檯…':'確認處方 → 前往備料檯','primary-action',state.traveling);
-    b.addEventListener('click',()=>{resetPortions();state.activeFood='tofu';state.fireOn=false;state.stirs=0;state.simmering=false;state.simmerReady=false;state.rice=null;state.miso=null;moveTo('prep',{messageText:'Q版醫師跑向備料檯'});});
+    b.addEventListener('click',()=>{applyPrescription();state.activeFood='tofu';state.fireOn=false;state.stirs=0;state.stirPulse=false;state.simmering=false;state.simmerReady=false;state.cookingSequence=false;state.rice=null;state.miso=null;moveTo('prep',{messageText:'Q版醫師跑向備料檯'});});
     n.append(actionRow(b));return n;
   }
 
@@ -88,49 +96,63 @@
   }
 
   function renderPrep(){
-    const n=shell('02 PREP · 備料','廚房配料','點食材、調份量；右側砧板會跟著變動。完成後醫師跑到炒鍋。');
+    const n=shell('02 PREP · 備料','處方已自動配好','可以直接開始料理；想挑戰時再調整 0／半份／1份。右側砧板會同步顯示。');
+    const preset=document.createElement('div');preset.className='auto-rx-note';preset.innerHTML='<strong>✓ 已套用 Clinical Prescription</strong><span>不用逐項點選；需要時仍可手動修改。</span>';
+    n.append(preset);
     const layout=document.createElement('div');layout.className='prep-layout';
     const pantry=document.createElement('div');pantry.className='pantry';foodOrder.forEach(id=>pantry.append(ingredientCard(id)));
     const station=document.createElement('div');station.className='prep-station';
     const active=food[state.activeFood];station.innerHTML='<img class="board-img" src="assets/cooking/board_empty.png" alt="砧板"><img id="boardFoodPreview" class="board-food-preview" src="'+active.prep+'" alt="'+active.name+'"><img class="knife-img" src="assets/cooking/chef_knife.png" alt="菜刀"><div class="prep-station-copy"><strong>現在處理：'+active.name+'</strong><span>目前份量：'+portionText(state.portions[state.activeFood])+' 份</span><div id="prepTray" class="prep-tray"></div></div>';
     const tray=station.querySelector('#prepTray');foodOrder.filter(id=>Number(state.portions[id])>0).forEach(id=>{const s=document.createElement('span');s.innerHTML='<img src="'+food[id].prep+'" alt="">'+food[id].name+' '+portionText(state.portions[id]);tray.append(s);});
     layout.append(pantry,station);n.append(layout);
-    const b=makeButton('prepDoneBtn',state.traveling?'醫師前往炒鍋…':'備料完成 → 食材端去炒鍋','primary-action',state.traveling);
+    const b=makeButton('prepDoneBtn',state.traveling?'醫師前往炒鍋…':'開始料理 → 食材端去炒鍋','primary-action',state.traveling);
     b.addEventListener('click',()=>moveTo('wok',{messageText:'端著備料跑向炒鍋'}));n.append(actionRow(b));return n;
   }
 
-  function startSimmer(){
-    clearTimers();state.simmering=true;state.simmerReady=false;renderStage();
-    state.simmerTimer=setTimeout(()=>{state.simmerTimer=null;if(state.stage==='wok'){state.simmering=false;state.simmerReady=true;renderStage();}},1600);
+  async function runCookSequence(){
+    if(state.cookingSequence||state.simmerReady||state.traveling)return;
+    state.cookingSequence=true;state.fireOn=true;state.stirs=0;state.simmering=false;state.stirPulse=false;renderStage();
+    await sleep(320);
+    for(let i=1;i<=3;i++){
+      if(state.stage!=='wok')return;
+      state.stirs=i;state.stirPulse=true;renderStage();
+      await sleep(300);
+      state.stirPulse=false;renderStage();
+      if(i<3)await sleep(240);
+    }
+    if(state.stage!=='wok')return;
+    state.simmering=true;renderStage();
+    await sleep(1350);
+    if(state.stage!=='wok')return;
+    state.simmering=false;state.simmerReady=true;state.fireOn=false;state.cookingSequence=false;renderStage();
+    await sleep(420);
+    if(state.stage==='wok')await moveTo('serve',{messageText:'起鍋後自動跑向配餐檯'});
   }
 
   function renderWok(){
-    const n=shell('03 WOK · 翻炒','開火、翻炒、收汁','食材已全部進鍋。先開火，再用鍋鏟翻炒 3 次；第三次後自動收汁。');
+    const n=shell('03 WOK · 翻炒','一鍵開火翻炒','按一次就會依序開火、翻炒 3 次、收汁，再自動跑到配餐檯。');
     const layout=document.createElement('div');layout.className='wok-layout';
     const visual=document.createElement('div');visual.className='wok-visual'+(state.stirPulse?' is-stirring':'')+(state.simmering?' is-simmering':'')+(state.simmerReady?' is-ready':'');
     visual.innerHTML='<img class="wok-stove" src="assets/chibi/stove.webp" alt="爐台"><div class="flame-r10'+(state.fireOn?' is-on':'')+'"><i></i><i></i><i></i></div><img class="wok-pan" src="assets/cooking/wok_empty.png" alt="炒鍋"><div id="wokFoodLayer" class="wok-food-layer"></div><img class="simmer-overlay" src="assets/cooking/wok_simmering.png" alt=""><span class="steam"></span><span class="steam s2"></span><img class="spatula-img" src="assets/cooking/metal_spatula.png" alt="鍋鏟">';
     const layer=visual.querySelector('#wokFoodLayer');foodOrder.forEach(id=>{if(Number(state.portions[id])<=0)return;const img=document.createElement('img');img.className='wok-food';img.dataset.food=id;img.src=id==='pork'&&state.stirs>0?food[id].browned:food[id].wok;img.alt=food[id].name;layer.append(img);});
     const controls=document.createElement('div');controls.className='wok-controls';
-    const fireCard=document.createElement('div');fireCard.className='control-card';fireCard.innerHTML='<strong>1. 爐火</strong><span>'+(state.fireOn?'爐火已開，可以翻炒':'先開火熱鍋')+'</span>';
-    const fireBtn=makeButton('fireBtn',state.fireOn?'🔥 爐火已開':'🔥 開火','wok-btn secondary',state.fireOn||state.simmerReady);fireBtn.addEventListener('click',()=>{state.fireOn=true;renderStage();});
-    const stirCard=document.createElement('div');stirCard.className='control-card';const dots=[0,1,2].map(i=>'<i class="'+(i<state.stirs?'is-done':'')+'"></i>').join('');stirCard.innerHTML='<strong>2. 翻炒 3 次</strong><span>鍋鏟把豆腐與配料推勻</span><div class="progress-dots">'+dots+'</div>';
-    const stirBtn=makeButton('stirBtn',state.stirs>=3?'翻炒完成':'翻炒 '+state.stirs+'/3','wok-btn',!state.fireOn||state.stirs>=3||state.simmering||state.simmerReady);
-    stirBtn.addEventListener('click',()=>{if(stirBtn.disabled)return;state.stirs++;state.stirPulse=true;renderStage();setTimeout(()=>{state.stirPulse=false;if(state.stage==='wok')renderStage();},360);if(state.stirs===3)startSimmer();});
-    const simmer=document.createElement('div');simmer.className='control-card';simmer.innerHTML='<strong>3. 收汁</strong><span>'+(state.simmerReady?'紅油收汁完成，可以起鍋':state.simmering?'鍋中咕嘟收汁中…':'翻炒 3 次後開始')+'</span>';
-    const done=makeButton('wokDoneBtn',state.traveling?'醫師前往配餐檯…':'關火起鍋 → 前往配餐','wok-btn',!state.simmerReady||state.traveling);
-    done.addEventListener('click',()=>{state.fireOn=false;moveTo('serve',{messageText:'端著麻婆豆腐跑向配餐檯'});});
-    controls.append(fireCard,fireBtn,stirCard,stirBtn,simmer,done);
-    layout.append(visual,controls);n.append(layout);return n;
+    const phase=document.createElement('div');phase.className='control-card cook-sequence-card';
+    const dots=[0,1,2].map(i=>'<i class="'+(i<state.stirs?'is-done':'')+'"></i>').join('');
+    const phaseText=state.simmerReady?'收汁完成，前往配餐':state.simmering?'鍋中咕嘟收汁中…':state.cookingSequence?'自動翻炒 '+state.stirs+'/3':'準備開火';
+    phase.innerHTML='<strong>'+phaseText+'</strong><span>一次操作完成開火 → 翻炒 ×3 → 收汁</span><div class="progress-dots">'+dots+'</div>';
+    const touchHint=document.createElement('div');touchHint.className='touch-hint';touchHint.textContent='手機：只需按下方大按鈕一次';
+    controls.append(phase,touchHint);layout.append(visual,controls);n.append(layout);
+    const label=state.traveling?'前往配餐檯…':state.simmerReady?'收汁完成':state.cookingSequence?'料理進行中…':'🔥 開火並自動翻炒';
+    const cook=makeButton('cookActionBtn',label,'primary-action cook-action',state.cookingSequence||state.simmerReady||state.traveling);
+    cook.addEventListener('click',runCookSequence);n.append(actionRow(cook));return n;
   }
-  function simimerAlias(x){return x}
-  function simimmerFix(x){return x}
 
   function serveChoice(id,label,src,active,handler){
     const b=makeButton(id,'','serve-choice');b.setAttribute('aria-pressed',String(active));b.innerHTML='<img src="'+src+'" alt=""><span>'+label+'</span>';b.addEventListener('click',handler);return b;
   }
   function renderServe(){
-    const pres=rx(),n=shell('04 SERVE · 配餐','白飯與味噌湯','飯量與湯品都會直接反映在左側餐盤預覽。');
-    const goal=document.createElement('div');goal.className='serve-goal';goal.innerHTML='<strong>本號目標</strong><span>'+pres.rice+'</span><span>'+(pres.miso?'要味噌湯':'不要味噌湯')+'</span>';n.append(goal);
+    const pres=rx(),n=shell('04 SERVE · 配餐','配餐已依處方選好','可以直接送餐；若想更改，點飯量或湯品即可，餐盤圖示會立即更新。');
+    const goal=document.createElement('div');goal.className='serve-goal';goal.innerHTML='<strong>✓ 已自動套用</strong><span>'+pres.rice+'</span><span>'+(pres.miso?'要味噌湯':'不要味噌湯')+'</span>';n.append(goal);
     const layout=document.createElement('div');layout.className='serve-layout';
     const tray=document.createElement('div');tray.className='tray-stage';tray.innerHTML='<div class="tray-board"></div><img class="tray-dish" src="assets/cooking/dish_plated.png" alt="麻婆豆腐"><div id="riceSlot"></div><div id="soupSlot"></div><div id="trayCaption" class="tray-caption"></div>';
     const riceSlot=tray.querySelector('#riceSlot');if(state.rice){const img=document.createElement('img');img.id='trayRice';img.className='tray-rice';img.src=state.rice==='半碗飯'?'assets/service/rice-half.webp':'assets/service/rice-full.webp';img.alt=state.rice;riceSlot.append(img);}
@@ -140,7 +162,7 @@
     const riceGroup=document.createElement('section');riceGroup.className='serve-group';riceGroup.innerHTML='<h3>白飯份量</h3>';const rr=document.createElement('div');rr.className='choice-row';rr.append(serveChoice('riceHalfBtn','半碗飯','assets/service/rice-half.webp',state.rice==='半碗飯',()=>{state.rice='半碗飯';renderStage();}),serveChoice('riceFullBtn','一碗飯','assets/service/rice-full.webp',state.rice==='正常飯',()=>{state.rice='正常飯';renderStage();}));riceGroup.append(rr);
     const soupGroup=document.createElement('section');soupGroup.className='serve-group';soupGroup.innerHTML='<h3>味噌湯</h3>';const sr=document.createElement('div');sr.className='choice-row';sr.append(serveChoice('misoNoBtn','不要','assets/service/miso_no.webp',state.miso===false,()=>{state.miso=false;renderStage();}),serveChoice('misoYesBtn','要','assets/service/miso_yes.webp',state.miso===true,()=>{state.miso=true;renderStage();}));soupGroup.append(sr);choices.append(riceGroup,soupGroup);
     layout.append(tray,choices);n.append(layout);
-    const ready=state.rice!==null&&state.miso!==null,b=makeButton('serveDoneBtn',state.traveling?'送餐中…':ready?'完成配餐 → 端回診間':'先選飯量與湯品','primary-action',!ready||state.traveling);
+    const ready=state.rice!==null&&state.miso!==null,b=makeButton('serveDoneBtn',state.traveling?'送餐中…':ready?'確認配餐 → 自動送餐':'載入處方中…','primary-action',!ready||state.traveling);
     b.addEventListener('click',deliver);n.append(actionRow(b));return n;
   }
 
@@ -183,10 +205,17 @@
   }
 
   function nextPatient(){
-    clearTimers();state.ticket++;state.patientIndex=(state.patientIndex+1)%rules.patients.length;state.stage='consult';state.traveling=false;state.activeFood='tofu';resetPortions();state.fireOn=false;state.stirs=0;state.stirPulse=false;state.simmering=false;state.simmerReady=false;state.rice=null;state.miso=null;state.result=null;state.clinical=null;state.review=null;state.won=null;world.reset();renderRail();renderStage();
+    clearTimers();state.ticket++;state.patientIndex=(state.patientIndex+1)%rules.patients.length;state.stage='consult';state.traveling=false;state.activeFood='tofu';resetPortions();state.fireOn=false;state.stirs=0;state.stirPulse=false;state.simmering=false;state.simmerReady=false;state.cookingSequence=false;state.rice=null;state.miso=null;state.result=null;state.clinical=null;state.review=null;state.won=null;world.reset();renderRail();renderStage();
   }
-  function snapshot(){return {version:'R10_KITCHEN_REBUILD',ticket:state.ticket,patient:{id:patient().id,name:patient().name},stage:state.stage,traveling:state.traveling,prescription:JSON.parse(JSON.stringify(rx())),portions:{...state.portions},activeFood:state.activeFood,fireOn:state.fireOn,stirs:state.stirs,simmerReady:state.simmerReady,rice:state.rice,miso:state.miso,result:state.result?JSON.parse(JSON.stringify(state.result)):null,won:state.won,world:world.snapshot()};}
+  function snapshot(){return {version:'R10_MOBILE_FLOW',ticket:state.ticket,patient:{id:patient().id,name:patient().name},stage:state.stage,traveling:state.traveling,prescription:JSON.parse(JSON.stringify(rx())),portions:{...state.portions},activeFood:state.activeFood,fireOn:state.fireOn,stirs:state.stirs,cookingSequence:state.cookingSequence,simmerReady:state.simmerReady,rice:state.rice,miso:state.miso,result:state.result?JSON.parse(JSON.stringify(state.result)):null,won:state.won,world:world.snapshot()};}
 
-  resetPortions();world.whenReady().then(()=>world.reset());renderRail();renderStage();
+  const rail=document.getElementById('patientRail'),railToggle=document.getElementById('patientRailToggle'),mobileMQ=matchMedia('(max-width:760px)');
+  function updateRailToggle(){const compact=rail.classList.contains('is-compact');railToggle.setAttribute('aria-expanded',String(!compact));railToggle.textContent=compact?'病人資料 ▾':'收起病人資料 ▴';}
+  function syncMobileRail(){if(mobileMQ.matches)rail.classList.add('is-compact');else rail.classList.remove('is-compact');updateRailToggle();}
+  railToggle.addEventListener('click',()=>{rail.classList.toggle('is-compact');updateRailToggle();});
+  mobileMQ.addEventListener?.('change',syncMobileRail);
+  addEventListener('keydown',e=>{if(e.repeat||!['Enter',' '].includes(e.key)||e.target.closest('button,input,select,textarea,[contenteditable="true"]'))return;const b=dom.stage.querySelector('#consultConfirmBtn,#prepDoneBtn,#cookActionBtn,#serveDoneBtn,#nextPatientBtn');if(b&&!b.disabled){e.preventDefault();b.click();}});
+
+  resetPortions();syncMobileRail();world.whenReady().then(()=>world.reset());renderRail();renderStage();
   window.CKR10={snapshot,render:()=>{renderRail();renderStage();},nextPatient};
 })();
