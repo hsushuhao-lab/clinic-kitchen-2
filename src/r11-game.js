@@ -240,7 +240,7 @@
     if(!problems.length&&speedScore<70)problems.push('送餐速度還能更快');
     const metrics={Prescription:prescriptionFidelity,Cooking:cookingQuality,Service:serviceFidelity,Speed:speedScore,'Patient Mood':patientMood};
     const weakest=Object.entries(metrics).sort((a,b)=>a[1]-b[1])[0];
-    state.streak=won?state.streak+1:0;state.ordersCompleted+=1;
+    state.streak=won?state.streak+1:0;if(won)state.ordersCompleted+=1;
     state.finalResult={prescriptionFidelity,cookingQuality,serviceFidelity,speedScore,patientMood,total,won,rank,stars,problems,weakest};
     state.won=won;state.gameOver=true;state.stage='result';world.setMessage(won?'送餐成功！病人滿意':'餐點送達，但需要調整');renderStage();statusBar.textContent=won?'R11 · ORDER COMPLETE':'R11 · RESULT · NEEDS RETRY';
   }
@@ -292,7 +292,7 @@
   }
 
   window.CKR11={
-    snapshot:()=>({version:state.version,ticket:state.ticket,patient:patient(),prescription:rx(),doctor:state.doctor,stage:state.stage,traveling:state.traveling,portions:{...state.portions},touched:{...state.touched},prepResult:state.prepResult,irritation:Number(state.irritation.toFixed(3)),paused:state.paused,gameOver:state.gameOver,heatLevel:state.heatLevel,wokPhase:state.wokPhase,stirCount:state.stirCount,simmerSeconds:Number(state.simmerSeconds.toFixed(3)),simmerQuality:state.simmerQuality,cookingResult:state.cookingResult,rice:state.rice,miso:state.miso,serviceResult:state.serviceResult,finalResult:state.finalResult,won:state.won,world:world.snapshot()}),
+    snapshot:()=>({version:state.version,ticket:state.ticket,patient:patient(),prescription:rx(),doctor:state.doctor,stage:state.stage,traveling:state.traveling,portions:{...state.portions},touched:{...state.touched},prepResult:state.prepResult,irritation:Number(state.irritation.toFixed(3)),paused:state.paused,gameOver:state.gameOver,heatLevel:state.heatLevel,wokPhase:state.wokPhase,stirCount:state.stirCount,simmerSeconds:Number(state.simmerSeconds.toFixed(3)),simmerQuality:state.simmerQuality,cookingResult:state.cookingResult,rice:state.rice,miso:state.miso,serviceResult:state.serviceResult,finalResult:state.finalResult,won:state.won,ordersCompleted:state.ordersCompleted,streak:state.streak,world:world.snapshot()}),
     __qaSetHidden:v=>handleVisibility(!!v),
     __qaSetIrritation:v=>{state.irritation=Math.max(0,Math.min(100,Number(v)||0));renderPressure();}
   };

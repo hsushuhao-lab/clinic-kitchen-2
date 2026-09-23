@@ -71,7 +71,7 @@ try:
 
     ticket=snap(page)['ticket'];patient_id=snap(page)['patient']['id']
     page.locator('#serveDoneBtn').click();page.wait_for_function("()=>CKR11.snapshot().stage==='result'",timeout=5000)
-    final=snap(page)['finalResult'];assert final and final['won'] and snap(page)['won'] is True
+    final=snap(page)['finalResult'];assert final and final['won'] and snap(page)['won'] is True and snap(page)['ordersCompleted']==1 and snap(page)['streak']==1
     assert snap(page)['serviceResult']['pass'] is True and page.locator('.score-card').count()==5
     expect(page.locator('.result-hero-r11.is-win')).to_be_visible();expect(page.locator('.result-rank')).to_be_visible();expect(page.locator('.result-detail-grid')).to_be_visible();page.screenshot(path=str(out/'mobile-success-result.png'),full_page=True)
     done('DELIVERY reaches a game-like result with rank, five scores, feedback and next challenge')
