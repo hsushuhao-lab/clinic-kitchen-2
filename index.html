@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#123f5a">
 <title>Clinic Kitchen R11 · Interactive Kitchen</title>
-<link rel="stylesheet" href="r11.css?v=r11-m3-drama-1">
+<link rel="stylesheet" href="r11.css?v=r11-m3-intro-1">
 </head>
 <body>
 <div id="app">
@@ -77,6 +77,21 @@
   <footer id="statusBar">R11 M3 loading…</footer>
 </div>
 
+<div id="introOverlay" class="intro-overlay" aria-live="polite">
+  <div class="intro-stage" role="dialog" aria-modal="true" aria-labelledby="introTitle">
+    <img id="introArt" class="intro-art" src="assets/r11/intro/title.webp" alt="Clinic Kitchen 遊戲封面">
+    <div class="intro-vignette" aria-hidden="true"></div>
+    <div class="intro-copy">
+      <small id="introKicker">CLINIC KITCHEN</small>
+      <h1 id="introTitle">MAPO RESCUE SHIFT</h1>
+      <p id="introBody">夜班開始前，準備接手今天最混亂的一班。</p>
+    </div>
+    <div id="introProgress" class="intro-progress" aria-label="開場進度"><i></i><i></i><i></i></div>
+    <button id="introNextBtn" class="intro-next" type="button">PRESS START ▶</button>
+    <button id="introSkipBtn" class="intro-skip" type="button">略過開場</button>
+  </div>
+</div>
+
 <div id="eventOverlay" class="event-overlay" hidden aria-live="assertive">
   <div class="event-card" role="dialog" aria-modal="true" aria-labelledby="eventTitle">
     <img id="eventArt" class="event-art" src="" alt="">
@@ -89,8 +104,8 @@
   </div>
 </div>
 
-<script src="src/clinic-rules.js?v=r11-m3-drama-1"></script>
-<script src="src/r11-world.js?v=r11-m3-drama-1"></script>
-<script src="src/r11-game.js?v=r11-m3-drama-1"></script>
+<script src="src/clinic-rules.js?v=r11-m3-intro-1"></script>
+<script src="src/r11-world.js?v=r11-m3-intro-1"></script>
+<script src="src/r11-game.js?v=r11-m3-intro-1"></script>
 </body>
 </html>

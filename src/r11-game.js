@@ -18,6 +18,14 @@
   const eventTitle=$('eventTitle');
   const eventBody=$('eventBody');
   const eventDismissBtn=$('eventDismissBtn');
+  const introOverlay=$('introOverlay');
+  const introArt=$('introArt');
+  const introKicker=$('introKicker');
+  const introTitle=$('introTitle');
+  const introBody=$('introBody');
+  const introProgress=$('introProgress');
+  const introNextBtn=$('introNextBtn');
+  const introSkipBtn=$('introSkipBtn');
   const foodOrder=['tofu','pork','douban','garlic','scallion','chili','pepper'];
   const food={
     tofu:{name:'豆腐',target:'基底',img:'assets/ingredients/mapo_tofu/tofu.png',wok:'assets/cooking/tofu_cubes.png'},
@@ -44,8 +52,29 @@
     irritation:0,paused:document.hidden,lastTick:performance.now(),gameOver:false,
     heatLevel:'off',wokPhase:'heat',stirCount:0,stirPulse:false,dropPulse:false,lastStirAt:0,lastDropAt:0,heatSamples:[],dropIndex:0,dropScores:[],combo:0,maxCombo:0,microEvent:null,rescuedEvents:0,eventMisses:0,actionFeedback:'',simmerSeconds:0,simmerQuality:null,cookingResult:null,
     rice:null,miso:null,serviceResult:null,finalResult:null,won:null,ordersCompleted:0,streak:0,
-    musicEnabled:true,cutInActive:false,complaintShown:{55:false,75:false,90:false}
+    musicEnabled:true,cutInActive:false,complaintShown:{55:false,75:false,90:false},
+    introStep:0,introFinished:false
   };
+
+  const introSlides=[
+    {art:'assets/r11/intro/title.webp',alt:'Clinic Kitchen 遊戲封面',kicker:'CLINIC KITCHEN',title:'MAPO RESCUE SHIFT',body:'夜班、快炒、病人壓力。準備接手今晚最混亂的一班。',button:'PRESS START ▶'},
+    {art:'assets/r11/intro/intro01.webp',alt:'夜班開始的診所等待區',kicker:'INTRO 01 · NIGHT SHIFT',title:'夜班開始',body:'門診還沒結束，候診區已經塞滿病人。有人焦躁、有人抱怨，所有人都在等一份熱食。',button:'點擊繼續 →'},
+    {art:'assets/r11/intro/intro02.webp',alt:'醫師進入廚房準備麻婆豆腐',kicker:'INTRO 02 · YOUR MISSION',title:'在煩躁度爆表前完成出餐',body:'讀懂病人、配對食材、控制火候、救回突發狀況，最後把麻婆豆腐送到病人手上。',button:'開始值班 ▶'}
+  ];
+  function renderIntro(){
+    const s=introSlides[state.introStep]||introSlides[0];
+    introArt.src=s.art;introArt.alt=s.alt;introKicker.textContent=s.kicker;introTitle.textContent=s.title;introBody.textContent=s.body;introNextBtn.textContent=s.button;
+    Array.from(introProgress.children).forEach((dot,i)=>dot.classList.toggle('is-active',i===state.introStep));
+  }
+  function finishIntro(){
+    state.introFinished=true;introOverlay.hidden=true;statusBar.textContent='SHIFT START · 選擇值班醫師';stagePanel.querySelector('.doctor-card')?.focus();
+  }
+  function advanceIntro(){
+    if(state.introStep<introSlides.length-1){state.introStep+=1;renderIntro();return;}
+    finishIntro();
+  }
+  introNextBtn?.addEventListener('click',advanceIntro);
+  introSkipBtn?.addEventListener('click',finishIntro);
 
   const complaintEvents={
     55:{art:'assets/r11/events/complaint_55.webp',kicker:'PATIENT ALERT · 55%',title:'病人在催單！',body:'動作快一點，煩躁度正在上升。'},
@@ -479,11 +508,11 @@
   }
 
   window.CKR11={
-    snapshot:()=>({version:state.version,ticket:state.ticket,patient:patient(),prescription:rx(),doctor:state.doctor,stage:state.stage,traveling:state.traveling,portions:{...state.portions},touched:{...state.touched},prepResult:state.prepResult,irritation:Number(state.irritation.toFixed(3)),paused:state.paused,gameOver:state.gameOver,heatLevel:state.heatLevel,wokPhase:state.wokPhase,stirCount:state.stirCount,simmerSeconds:Number(state.simmerSeconds.toFixed(3)),simmerQuality:state.simmerQuality,cookingResult:state.cookingResult,dropIndex:state.dropIndex,wokBatchCount:activeWokBatches().length,combo:state.combo,maxCombo:state.maxCombo,microEvent:state.microEvent,rescuedEvents:state.rescuedEvents,eventMisses:state.eventMisses,rice:state.rice,miso:state.miso,serviceResult:state.serviceResult,finalResult:state.finalResult,won:state.won,ordersCompleted:state.ordersCompleted,streak:state.streak,musicEnabled:state.musicEnabled,musicInterval:musicInterval(),cutInActive:state.cutInActive,complaintShown:{...state.complaintShown},world:world.snapshot()}),
+    snapshot:()=>({version:state.version,ticket:state.ticket,patient:patient(),prescription:rx(),doctor:state.doctor,stage:state.stage,traveling:state.traveling,portions:{...state.portions},touched:{...state.touched},prepResult:state.prepResult,irritation:Number(state.irritation.toFixed(3)),paused:state.paused,gameOver:state.gameOver,heatLevel:state.heatLevel,wokPhase:state.wokPhase,stirCount:state.stirCount,simmerSeconds:Number(state.simmerSeconds.toFixed(3)),simmerQuality:state.simmerQuality,cookingResult:state.cookingResult,dropIndex:state.dropIndex,wokBatchCount:activeWokBatches().length,combo:state.combo,maxCombo:state.maxCombo,microEvent:state.microEvent,rescuedEvents:state.rescuedEvents,eventMisses:state.eventMisses,rice:state.rice,miso:state.miso,serviceResult:state.serviceResult,finalResult:state.finalResult,won:state.won,ordersCompleted:state.ordersCompleted,streak:state.streak,musicEnabled:state.musicEnabled,musicInterval:musicInterval(),cutInActive:state.cutInActive,complaintShown:{...state.complaintShown},introStep:state.introStep,introFinished:state.introFinished,world:world.snapshot()}),
     __qaSetHidden:v=>handleVisibility(!!v),
     __qaSetIrritation:v=>{state.irritation=Math.max(0,Math.min(100,Number(v)||0));renderPressure();},
     __qaTriggerComplaint:v=>showComplaintCutIn(Number(v)),
     __qaDismissComplaint:()=>dismissComplaintCutIn()
   };
-  renderSoundToggle();world.setMessage('先選擇值班醫師');renderStage();
+  renderSoundToggle();renderIntro();world.setMessage('先選擇值班醫師');renderStage();
 })();

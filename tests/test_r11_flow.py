@@ -23,6 +23,18 @@ try:
     res=page.goto(args.base_url,wait_until='networkidle');assert res and res.status==200
     page.wait_for_function("()=>window.CKR11&&window.CKR11World&&CKR11.snapshot().version==='R11_INTERACTIVE_KITCHEN_M3'&&CKR11World.snapshot().ready",timeout=30000)
 
+    expect(page.locator('#introOverlay')).to_be_visible()
+    intro_paths=['title.webp','intro01.webp','intro02.webp']
+    for step,path in enumerate(intro_paths):
+        assert snap(page)['introStep']==step
+        assert path in page.locator('#introArt').get_attribute('src')
+        page.wait_for_function("()=>introArt.complete&&introArt.naturalWidth>0")
+        assert page.locator('#introTitle').evaluate("el=>parseFloat(getComputedStyle(el).fontSize)")>=38
+        page.screenshot(path=str(out/f'desktop-intro-{step}.png'))
+        page.locator('#introNextBtn').click()
+    expect(page.locator('#introOverlay')).to_be_hidden();assert snap(page)['introFinished'] is True
+    done('three-step title / INTRO 01 / INTRO 02 opening cutscene is playable')
+
     assert page.locator('.doctor-card').count()==3
     for doctor in ['speed','heat','strategy']:
         art=page.locator(f'.doctor-card[data-doctor="{doctor}"] .doctor-art')
@@ -33,7 +45,8 @@ try:
     expect(page.locator('#soundToggle')).to_be_visible()
     page.locator('[data-doctor="heat"]').click();wait_stage(page,'consult');assert snap(page)['doctor']=='heat' and snap(page)['world']['doctor']=='heat' and snap(page)['musicEnabled'] is True
     portrait=page.locator('#patientPortrait');expect(portrait).to_be_visible();assert portrait.get_attribute('src').endswith('/office.webp');page.wait_for_function("()=>patientPortrait.complete&&patientPortrait.naturalWidth>0")
-    assert page.locator('.stage-head h1').evaluate("el=>parseFloat(getComputedStyle(el).fontSize)")>=26
+    assert page.locator('.stage-head h1').evaluate("el=>parseFloat(getComputedStyle(el).fontSize)")>=29
+    assert page.locator('#patientComplaint').evaluate("el=>parseFloat(getComputedStyle(el).fontSize)")>=16
     for level in [55,75,90]:
         assert page.evaluate("(l)=>CKR11.__qaTriggerComplaint(l)",level)
         expect(page.locator('#eventOverlay')).to_be_visible()
@@ -112,6 +125,7 @@ try:
     done('next patient advances ticket while keeping selected doctor for the shift')
 
     page.set_viewport_size({'width':1200,'height':900});page.goto(args.base_url,wait_until='networkidle');page.wait_for_function("()=>window.CKR11&&CKR11World.snapshot().ready")
+    page.locator('#introSkipBtn').click();expect(page.locator('#introOverlay')).to_be_hidden()
     page.locator('[data-doctor="speed"]').click();wait_stage(page,'consult');page.evaluate('CKR11.__qaSetIrritation(99.9)')
     page.wait_for_function("()=>CKR11.snapshot().cutInActive===true",timeout=5000);expect(page.locator('#eventOverlay')).to_be_visible()
     assert 'complaint_90.webp' in page.locator('#eventArt').get_attribute('src');page.locator('#eventDismissBtn').click()
