@@ -7,6 +7,7 @@
 
   const $=id=>document.getElementById(id);
   const stagePanel=$('stagePanel');
+  const gameMain=$('gameMain');
   const statusBar=$('statusBar');
   const rail=$('patientRail');
   const railToggle=$('patientRailToggle');
@@ -369,6 +370,7 @@
 
   function renderStage(){
     renderPatient();updateDoctorHud();
+    gameMain.classList.toggle('is-result-mode',state.stage==='result');
     const views={'doctor-select':renderDoctorSelect,consult:renderConsult,prep:renderPrep,wok:renderWok,serve:renderServe,delivery:renderDelivery,result:renderResult,'fail-table-flip':renderFailure};
     const view=views[state.stage];if(!view)throw new Error('Unknown R11 stage '+state.stage);stagePanel.replaceChildren(view());
   }

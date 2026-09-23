@@ -84,8 +84,14 @@ try:
     page.locator('#serveDoneBtn').click();page.wait_for_function("()=>CKR11.snapshot().stage==='result'",timeout=5000)
     final=snap(page)['finalResult'];assert final and final['won'] and snap(page)['won'] is True and snap(page)['ordersCompleted']==1 and snap(page)['streak']==1
     assert snap(page)['serviceResult']['pass'] is True and page.locator('.score-card').count()==5
-    expect(page.locator('.result-hero-r11.is-win')).to_be_visible();expect(page.locator('.result-rank')).to_be_visible();expect(page.locator('.result-detail-grid')).to_be_visible();assert page.locator('.cook-breakdown-chip').count()==5;page.screenshot(path=str(out/'mobile-success-result.png'),full_page=True)
-    done('DELIVERY reaches a game-like result with rank, five scores, feedback and next challenge')
+    expect(page.locator('.result-hero-r11.is-win')).to_be_visible();expect(page.locator('.result-rank')).to_be_visible();expect(page.locator('.result-detail-grid')).to_be_visible();assert page.locator('.cook-breakdown-chip').count()==5
+    page.screenshot(path=str(out/'mobile-success-result.png'),full_page=True)
+    page.set_viewport_size({'width':1536,'height':1024});page.wait_for_timeout(250)
+    assert page.locator('#gameMain').evaluate("el=>el.classList.contains('is-result-mode')")
+    assert page.locator('.result-shell').evaluate("el=>el.scrollHeight<=el.clientHeight+2")
+    assert page.evaluate("()=>{const a=[...document.querySelectorAll('.result-shell .stage-actions button')];return a.length===2&&a.every(b=>{const r=b.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight-28&&r.width>0&&r.height>=40})}")
+    page.screenshot(path=str(out/'desktop-result-one-screen.png'))
+    done('RESULT fits 1536x1024 in one screen with both action buttons fully visible')
 
     page.locator('#nextPatientBtn').click();wait_stage(page,'consult')
     assert snap(page)['ticket']==ticket+1 and snap(page)['patient']['id']!=patient_id and snap(page)['doctor']=='heat'
