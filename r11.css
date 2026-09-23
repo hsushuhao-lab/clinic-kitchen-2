@@ -169,3 +169,16 @@ img{display:block;max-width:100%}
 .result-hero-r11.is-invalid .result-stars{color:#b84d38;font-size:13px;font-weight:1000}
 @media(max-width:1100px){.intro-replay-toggle{display:none}}
 @media(max-width:720px){.result-hero-r11.is-invalid::after{right:3%;top:10%;font-size:14px;border-width:3px}}
+
+/* R11 M4 tablet result containment */
+.result-shell>*{min-width:0}
+.result-score-grid>*,.cooking-breakdown>*,.result-detail-grid>*{min-width:0}
+@media(min-width:721px) and (max-width:1100px){
+  #gameMain.is-result-mode{min-width:0}
+  #gameMain.is-result-mode .result-hero-r11{grid-template-columns:140px minmax(0,1fr);grid-template-rows:auto auto;gap:8px 10px;padding:10px}
+  #gameMain.is-result-mode .result-hero-r11>img{grid-column:1;grid-row:1/3;width:140px;height:140px;object-fit:contain;align-self:center}
+  #gameMain.is-result-mode .result-score-main{grid-column:2;grid-row:1;min-width:0}
+  #gameMain.is-result-mode .result-rank{grid-column:2;grid-row:2;min-width:0;padding-left:10px}
+  #gameMain.is-result-mode .result-rank>strong{font-size:40px}
+  #gameMain.is-result-mode .result-stars{font-size:14px;overflow-wrap:anywhere}
+}
