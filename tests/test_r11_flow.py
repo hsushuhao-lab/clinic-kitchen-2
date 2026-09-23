@@ -30,9 +30,18 @@ try:
         assert f'assets/r11/doctors/doctor_{doctor}.webp' in art.get_attribute('src')
     page.wait_for_function("()=>Array.from(document.querySelectorAll('.doctor-art')).every(x=>x.complete&&x.naturalWidth>0)")
     page.screenshot(path=str(out/'desktop-doctor-select.png'),full_page=True);done('three playable doctors use the new R11 character art')
-    page.locator('[data-doctor="heat"]').click();wait_stage(page,'consult');assert snap(page)['doctor']=='heat' and snap(page)['world']['doctor']=='heat'
+    expect(page.locator('#soundToggle')).to_be_visible()
+    page.locator('[data-doctor="heat"]').click();wait_stage(page,'consult');assert snap(page)['doctor']=='heat' and snap(page)['world']['doctor']=='heat' and snap(page)['musicEnabled'] is True
     portrait=page.locator('#patientPortrait');expect(portrait).to_be_visible();assert portrait.get_attribute('src').endswith('/office.webp');page.wait_for_function("()=>patientPortrait.complete&&patientPortrait.naturalWidth>0")
-    done('DR. HEAT persists and patient rail uses a single portrait, not the four-frame strip')
+    assert page.locator('.stage-head h1').evaluate("el=>parseFloat(getComputedStyle(el).fontSize)")>=26
+    for level in [55,75,90]:
+        assert page.evaluate("(l)=>CKR11.__qaTriggerComplaint(l)",level)
+        expect(page.locator('#eventOverlay')).to_be_visible()
+        assert f'complaint_{level}.webp' in page.locator('#eventArt').get_attribute('src')
+        page.wait_for_function("()=>eventArt.complete&&eventArt.naturalWidth>0")
+        assert page.locator('#eventTitle').evaluate("el=>parseFloat(getComputedStyle(el).fontSize)")>=26
+        page.locator('#eventDismissBtn').click();expect(page.locator('#eventOverlay')).to_be_hidden()
+    done('larger typography, tension music UI and all three patient complaint cut-ins are active')
 
     before=snap(page)['irritation'];page.wait_for_timeout(900);assert snap(page)['irritation']>before+.2
     page.evaluate('CKR11.__qaSetHidden(true)');paused=snap(page)['irritation'];page.wait_for_timeout(700);assert abs(snap(page)['irritation']-paused)<.08;page.evaluate('CKR11.__qaSetHidden(false)');done('patient timer runs and hidden-tab pause works')
@@ -81,7 +90,12 @@ try:
     box=page.locator('#serveDoneBtn').bounding_box();assert box and box['height']>=54;done('rice/miso controls are manual, visible and mobile-sized')
 
     ticket=snap(page)['ticket'];patient_id=snap(page)['patient']['id']
-    page.locator('#serveDoneBtn').click();page.wait_for_function("()=>CKR11.snapshot().stage==='result'",timeout=5000)
+    page.locator('#serveDoneBtn').click();page.wait_for_function("()=>CKR11.snapshot().stage==='victory'",timeout=5000)
+    expect(page.locator('#victoryArt')).to_be_visible();assert 'assets/r11/events/victory.webp' in page.locator('#victoryArt').get_attribute('src')
+    page.wait_for_function("()=>victoryArt.complete&&victoryArt.naturalWidth>0")
+    assert page.locator('.victory-native-copy strong').evaluate("el=>parseFloat(getComputedStyle(el).fontSize)")>=34
+    page.screenshot(path=str(out/'desktop-victory-clear.png'))
+    page.locator('#victoryContinueBtn').click();page.wait_for_function("()=>CKR11.snapshot().stage==='result'",timeout=5000)
     final=snap(page)['finalResult'];assert final and final['won'] and snap(page)['won'] is True and snap(page)['ordersCompleted']==1 and snap(page)['streak']==1
     assert snap(page)['serviceResult']['pass'] is True and page.locator('.score-card').count()==5
     expect(page.locator('.result-hero-r11.is-win')).to_be_visible();expect(page.locator('.result-rank')).to_be_visible();expect(page.locator('.result-detail-grid')).to_be_visible();assert page.locator('.cook-breakdown-chip').count()==5

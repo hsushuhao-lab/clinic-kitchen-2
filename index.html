@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#123f5a">
 <title>Clinic Kitchen R11 · Interactive Kitchen</title>
-<link rel="stylesheet" href="r11.css?v=r11-m3-result-fit-1">
+<link rel="stylesheet" href="r11.css?v=r11-m3-drama-1">
 </head>
 <body>
 <div id="app">
@@ -15,6 +15,7 @@
       <div><strong>CLINIC KITCHEN</strong><small>MAPO RESCUE SHIFT</small></div>
     </div>
     <div class="hud-cluster">
+      <button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true" title="切換背景音樂">♪ 緊張音樂 ON</button>
       <div id="shiftHud" class="shift-hud"><span>SHIFT</span><strong>0 CLEAR · STREAK 0</strong></div>
       <div id="doctorHud" class="doctor-hud" aria-live="polite"><span>DOCTOR</span><strong>尚未選擇</strong></div>
       <div id="pressureHud" class="pressure-hud" aria-label="病人等待煩躁度">
@@ -76,8 +77,20 @@
   <footer id="statusBar">R11 M3 loading…</footer>
 </div>
 
-<script src="src/clinic-rules.js?v=r11-m3-result-fit-1"></script>
-<script src="src/r11-world.js?v=r11-m3-result-fit-1"></script>
-<script src="src/r11-game.js?v=r11-m3-result-fit-1"></script>
+<div id="eventOverlay" class="event-overlay" hidden aria-live="assertive">
+  <div class="event-card" role="dialog" aria-modal="true" aria-labelledby="eventTitle">
+    <img id="eventArt" class="event-art" src="" alt="">
+    <div class="event-native-copy">
+      <small id="eventKicker">PATIENT ALERT</small>
+      <strong id="eventTitle">病人在催單！</strong>
+      <span id="eventBody">動作快一點！</span>
+    </div>
+    <button id="eventDismissBtn" class="event-dismiss" type="button">繼續救餐 →</button>
+  </div>
+</div>
+
+<script src="src/clinic-rules.js?v=r11-m3-drama-1"></script>
+<script src="src/r11-world.js?v=r11-m3-drama-1"></script>
+<script src="src/r11-game.js?v=r11-m3-drama-1"></script>
 </body>
 </html>
