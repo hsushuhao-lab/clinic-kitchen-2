@@ -576,8 +576,9 @@
     Object.entries(INGREDIENTS).map(([id, meta]) => [id, Object.freeze({ ...meta, fixed: false })])
   ));
 
-  function evaluateR11Portions(portions, patient) {
+  function evaluateR11Portions(portions, patient, options = {}) {
     const expected = buildExpectedPortions(patient);
+    const doctor = options && options.doctor ? String(options.doctor) : '';
     const labelMap = {
       tofu: '豆腐', pork: '絞肉', douban: '豆瓣醬→Craving', garlic: '蒜→Irritability',
       scallion: '蔥→Concentration', chili: '辣椒→Restlessness', pepper: '花椒→Anxiety'
@@ -587,12 +588,12 @@
       const target = Number(expected[id] || 0);
       const actual = Number(portions && portions[id] || 0);
       const diff = Math.abs(actual - target);
-      const itemPenalty = diff >= 1 ? 15 : diff >= 0.5 ? 7 : 0;
+      const itemPenalty = diff >= 1 ? (doctor === 'strategy' ? 12 : 15) : diff >= 0.5 ? (doctor === 'strategy' ? 3 : 7) : 0;
       penalty += itemPenalty;
       return { id, name: labelMap[id], target, actual, diff, penalty: itemPenalty, ok: itemPenalty === 0 };
     });
     const fidelity = Math.max(0, 100 - penalty);
-    return { expected, fidelity, gateB_pass: fidelity >= 70, checks };
+    return { expected, fidelity, gateB_pass: fidelity >= 70, checks, modifier: doctor === 'strategy' ? 'strategy' : null };
   }
 
   root.CKClinicRules = {

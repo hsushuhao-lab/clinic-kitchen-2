@@ -29,3 +29,16 @@ test('R11: tofu and pork mismatches are actually scored',()=>{
   assert.equal(pork.penalty,7);
   assert.equal(r.fidelity,78);
 });
+
+
+test('R11 M4: DR. STRATEGY reduces portion mismatch penalties without changing exact matches',()=>{
+  const patient=rules.patients[0];
+  const expected=rules.buildExpectedPortions(patient);
+  const mismatched={...expected,tofu:0,pork:0.5};
+  const normal=rules.evaluateR11Portions(mismatched,patient);
+  const strategy=rules.evaluateR11Portions(mismatched,patient,{doctor:'strategy'});
+  assert.equal(normal.fidelity,78);
+  assert.equal(strategy.fidelity,85);
+  assert.equal(strategy.modifier,'strategy');
+  assert.equal(rules.evaluateR11Portions(expected,patient,{doctor:'strategy'}).fidelity,100);
+});
