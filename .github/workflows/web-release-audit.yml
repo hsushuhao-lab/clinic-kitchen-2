@@ -33,17 +33,17 @@ jobs:
         run: |
           python -m pip install -r requirements-qa.txt
           python -m playwright install --with-deps chromium
-      - name: Build and validate R10 runtime
+      - name: Build and validate R11 runtime
         run: |
           python tests/smoke_test.py
           python tools/verify_assets.py
           python tools/verify_shift_assets.py
           python tools/build_web_release.py
-      - name: Test runtime-only R10 kitchen flow
+      - name: Test runtime-only R11 M1 flow
         run: |
-          python -m http.server 8000 --bind 127.0.0.1 --directory web-dist > /tmp/ck-r10-release-http.log 2>&1 &
+          python -m http.server 8000 --bind 127.0.0.1 --directory web-dist > /tmp/ck-r11-release-http.log 2>&1 &
           sleep 2
-          python tests/test_r10_flow.py --base-url http://127.0.0.1:8000/ --output qa/current/r10
+          python tests/test_r11_flow.py --base-url http://127.0.0.1:8000/ --output qa/current/r11
           python - <<'PY'
           from urllib.request import urlopen
           from urllib.error import HTTPError
@@ -54,18 +54,18 @@ jobs:
                   assert e.code==404,(path,e.code)
               else:
                   raise AssertionError('Non-runtime path was served: '+path)
-          print('R10 release privacy smoke: PASS')
+          print('R11 release privacy smoke: PASS')
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: clinic-kitchen-r10-runtime
+          name: clinic-kitchen-r11-runtime
           path: web-dist/
           retention-days: 14
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: clinic-kitchen-r10-audit
+          name: clinic-kitchen-r11-audit
           path: qa/current/
           retention-days: 14
       - name: Upload GitHub Pages artifact

@@ -1,4 +1,4 @@
-"""R10 runtime-only build. Legacy R2-R9 sources stay in Git but are not shipped."""
+"""R11 runtime-only build. Legacy R2-R10 sources stay in Git but are not shipped."""
 from pathlib import Path
 from html.parser import HTMLParser
 from urllib.parse import urlsplit,unquote
@@ -16,7 +16,7 @@ from build_r6_art import main as build_r6
 
 ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'web-dist'
-CORE=('index.html','r10.css','src/clinic-rules.js','src/r10-world.js','src/r10-game.js')
+CORE=('index.html','r11.css','src/clinic-rules.js','src/r11-world.js','src/r11-game.js')
 
 class References(HTMLParser):
     def __init__(self):super().__init__();self.paths=[]
@@ -76,9 +76,9 @@ def main():
 
     manifest={
         'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
-        'renderer':'canvas-chibi-r10',
+        'renderer':'canvas-chibi-r11',
         'release_status':'BUILD_VERIFIED_PENDING_DEPLOYMENT',
-        'gameplay_version':'R10_KITCHEN_REBUILD',
+        'gameplay_version':'R11_INTERACTIVE_KITCHEN_M1',
         'files':[]
     }
     for rel in sorted(files):
@@ -86,6 +86,6 @@ def main():
         manifest['files'].append({'path':rel,'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()})
     (OUT/'build-info.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     assert {p.relative_to(OUT).as_posix() for p in OUT.rglob('*') if p.is_file()}==set(files)|{'build-info.json'}
-    print('R10 runtime allowlist PASS:',len(files),'files')
+    print('R11 runtime allowlist PASS:',len(files),'files')
 
 if __name__=='__main__':main()

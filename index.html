@@ -3,49 +3,58 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Craving Kitchen R10</title>
-<link rel="stylesheet" href="r10.css?v=r10-mobileflow-2">
+<meta name="theme-color" content="#123f5a">
+<title>Clinic Kitchen R11 · Interactive Kitchen</title>
+<link rel="stylesheet" href="r11.css?v=r11-m1-1">
 </head>
 <body>
 <div id="app">
   <header class="topbar">
     <div class="brand">
-      <strong>CRAVING KITCHEN</strong>
-      <small>R10 · KITCHEN REBUILD</small>
+      <strong>CLINIC KITCHEN</strong>
+      <small>R11 · INTERACTIVE KITCHEN · M1</small>
     </div>
-    <div class="now-serving"><span>NOW SERVING</span><strong id="ticketNumber">001</strong></div>
+    <div class="hud-cluster">
+      <div id="doctorHud" class="doctor-hud" aria-live="polite"><span>DOCTOR</span><strong>尚未選擇</strong></div>
+      <div id="pressureHud" class="pressure-hud" aria-label="病人等待煩躁度">
+        <div class="pressure-copy"><span>病人煩躁度</span><strong id="irritationText">等待選醫師</strong></div>
+        <div class="pressure-track"><i id="irritationFill"></i></div>
+      </div>
+      <div class="now-serving"><span>NOW SERVING</span><strong id="ticketNumber">001</strong></div>
+    </div>
   </header>
 
   <aside id="patientRail" aria-label="病人資訊">
     <button id="patientRailToggle" class="patient-rail-toggle" type="button" aria-expanded="false">病人資料 ▾</button>
-    <section class="patient-card">
+    <section class="patient-card rail-detail">
       <img id="patientPortrait" class="patient-portrait" src="" alt="">
       <div class="patient-copy">
         <small id="patientRole">CURRENT PATIENT</small>
         <h2 id="patientName">病人</h2>
+        <span id="patientMood" class="mood-pill">🙂 等待中</span>
       </div>
     </section>
 
-    <section class="complaint-card">
+    <section class="complaint-card rail-detail">
       <small>PATIENT SAYS</small>
       <p id="patientComplaint"></p>
     </section>
 
-    <details class="ftnd-card">
+    <details class="ftnd-card rail-detail">
       <summary><span>FTND BASELINE</span><strong><b id="ftndScore">-</b>/10 · <i id="ftndSeverity"></i></strong></summary>
       <div id="ftndItems" class="ftnd-items"></div>
-      <small>唯讀基線，不因料理改變。</small>
+      <small>唯讀基線；本作的等待速度只是遊戲機制，不代表臨床因果。</small>
     </details>
 
-    <section class="symptom-card">
+    <section class="symptom-card rail-detail">
       <div class="rail-head"><strong>WITHDRAWAL PROFILE</strong><small>0–4</small></div>
       <div id="symptomList" class="symptom-list"></div>
     </section>
 
-    <section class="rx-card-panel">
-      <div class="rail-head"><strong>CLINICAL PRESCRIPTION</strong><small>料理目標</small></div>
+    <details class="rx-card-panel rail-detail" open>
+      <summary class="rail-head"><strong>CLINICAL PRESCRIPTION</strong><small>Easy mode 提示</small></summary>
       <div id="prescriptionGrid" class="prescription-grid"></div>
-    </section>
+    </details>
   </aside>
 
   <main id="gameMain">
@@ -54,20 +63,20 @@
       <div class="station-labels" aria-hidden="true">
         <span><b>01 CONSULT</b><small>問診</small></span>
         <span><b>02 PREP</b><small>備料</small></span>
-        <span><b>03 WOK</b><small>翻炒</small></span>
-        <span><b>04 SERVE</b><small>配餐</small></span>
+        <span><b>03 WOK</b><small>M2</small></span>
+        <span><b>04 SERVE</b><small>M3</small></span>
       </div>
-      <div id="worldMessage" class="world-message">醫師待命</div>
+      <div id="worldMessage" class="world-message">先選擇值班醫師</div>
     </section>
 
     <section id="stagePanel" class="stage-panel" aria-live="polite"></section>
   </main>
 
-  <footer id="statusBar">R10 loading…</footer>
+  <footer id="statusBar">R11 M1 loading…</footer>
 </div>
 
-<script src="src/clinic-rules.js?v=r10-rebuild-1"></script>
-<script src="src/r10-world.js?v=r10-mobileflow-2"></script>
-<script src="src/r10-game.js?v=r10-mobileflow-2"></script>
+<script src="src/clinic-rules.js?v=r11-m1-1"></script>
+<script src="src/r11-world.js?v=r11-m1-1"></script>
+<script src="src/r11-game.js?v=r11-m1-1"></script>
 </body>
 </html>
