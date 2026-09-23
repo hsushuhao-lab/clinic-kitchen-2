@@ -41,6 +41,21 @@ try:
     page.locator('#introSkipBtn').click();expect(page.locator('#introOverlay')).to_be_hidden()
     done('intro persists: returning players keep title screen, PRESS START skips story, replay remains available')
 
+    assert page.locator('.difficulty-btn').count()==3
+    easy_rate=snap(page)['irritationRate']
+    page.locator('[data-difficulty="normal"]').click();assert snap(page)['difficulty']=='normal'
+    assert all(x=='?' for x in page.locator('#symptomList .symptom-row > strong').all_text_contents())
+    assert '份' not in page.locator('#prescriptionGrid').inner_text()
+    page.locator('[data-difficulty="hard"]').click();assert snap(page)['difficulty']=='hard'
+    hard_rate=snap(page)['irritationRate'];assert abs(hard_rate/easy_rate-1.20)<0.02,(easy_rate,hard_rate)
+    assert page.locator('#symptomList .symptom-row.is-qualitative').count()==7
+    assert page.locator('#symptomList .symptom-bar').count()==0
+    assert '處方份量已隱藏' in page.locator('#prescriptionGrid').inner_text()
+    page.locator('[data-difficulty="easy"]').click();assert snap(page)['difficulty']=='easy'
+    assert page.locator('#symptomList .symptom-bar').count()==7
+    assert '份' in page.locator('#prescriptionGrid').inner_text()
+    done('Easy / Normal / Hard change CONSULT information and HARD pressure is exactly +20%')
+
     assert page.locator('.doctor-card').count()==3
     for doctor in ['speed','heat','strategy']:
         art=page.locator(f'.doctor-card[data-doctor="{doctor}"] .doctor-art')
@@ -51,7 +66,7 @@ try:
     assert '偏差扣分降低' in page.locator('[data-doctor="strategy"]').inner_text()
     page.screenshot(path=str(out/'desktop-doctor-select.png'),full_page=True);done('three doctors expose distinct SPEED / HEAT / STRATEGY mechanics')
     expect(page.locator('#soundToggle')).to_be_visible()
-    page.locator('[data-doctor="heat"]').click();wait_stage(page,'consult');assert snap(page)['doctor']=='heat' and snap(page)['world']['doctor']=='heat' and snap(page)['musicEnabled'] is True
+    page.locator('[data-doctor="heat"]').click();wait_stage(page,'consult');assert snap(page)['doctor']=='heat' and snap(page)['difficulty']=='easy' and snap(page)['world']['doctor']=='heat' and snap(page)['musicEnabled'] is True
     portrait=page.locator('#patientPortrait');expect(portrait).to_be_visible();assert portrait.get_attribute('src').endswith('/office.webp');page.wait_for_function("()=>patientPortrait.complete&&patientPortrait.naturalWidth>0")
     assert page.locator('.stage-head h1').evaluate("el=>parseFloat(getComputedStyle(el).fontSize)")>=29
     assert page.locator('#patientComplaint').evaluate("el=>parseFloat(getComputedStyle(el).fontSize)")>=16

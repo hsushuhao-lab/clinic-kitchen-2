@@ -182,3 +182,21 @@ img{display:block;max-width:100%}
   #gameMain.is-result-mode .result-rank>strong{font-size:40px}
   #gameMain.is-result-mode .result-stars{font-size:14px;overflow-wrap:anywhere}
 }
+
+/* R11 M4 difficulty modes */
+.difficulty-select{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.difficulty-btn{min-width:0;border:2px solid #c7d7d0;border-radius:14px;background:#fffdf8;padding:11px 12px;text-align:left;cursor:pointer;color:#2d555d}
+.difficulty-btn small{display:block;font-size:9px;font-weight:1000;letter-spacing:.08em;color:#8a6b39}
+.difficulty-btn strong{display:block;margin-top:2px;font-size:15px;color:#174b5e}
+.difficulty-btn span{display:block;margin-top:4px;font-size:10px;line-height:1.45;color:#65797a}
+.difficulty-btn[aria-pressed="true"]{border-color:#2f8e87;background:linear-gradient(145deg,#e6f6f1,#fff8df);box-shadow:inset 0 0 0 2px #72c7ae55}
+#patientRail[data-difficulty="normal"] .rx-chip.is-hidden-target strong{font-size:10px;color:#6f7f7d}
+#patientRail[data-difficulty="hard"] .prescription-grid{display:block}
+.rx-hidden-card{padding:12px;border:1px dashed #b9c8c2;border-radius:12px;background:#fff8e7}
+.rx-hidden-card small{display:block;font-size:9px;font-weight:1000;color:#a16f31}
+.rx-hidden-card strong{display:block;margin-top:3px;font-size:14px;color:#174b5e}
+.rx-hidden-card span{display:block;margin-top:4px;font-size:10px;line-height:1.45;color:#65797a}
+.symptom-row.is-qualitative{grid-template-columns:1fr auto;gap:8px}
+.symptom-row.is-qualitative .symptom-label{min-width:0}
+.symptom-row.is-qualitative>strong{min-width:48px;padding:3px 7px;border-radius:99px;background:#eef3ef;text-align:center;font-size:10px}
+@media(max-width:900px){.difficulty-select{grid-template-columns:1fr}.difficulty-btn{padding:9px 10px}}

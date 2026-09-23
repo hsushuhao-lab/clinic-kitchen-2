@@ -42,3 +42,22 @@ test('R11 M4: DR. STRATEGY reduces portion mismatch penalties without changing e
   assert.equal(strategy.modifier,'strategy');
   assert.equal(rules.evaluateR11Portions(expected,patient,{doctor:'strategy'}).fidelity,100);
 });
+
+
+test('R11 M4: structured patient wishes stay aligned with the clinical prescription contract',()=>{
+  for(const patient of rules.patients){
+    const pres=rules.buildClinicalPrescription(patient);
+    assert.equal(pres.rice,patient.rice,patient.id+' rice narrative drift');
+    assert.equal(pres.miso,patient.miso,patient.id+' miso narrative drift');
+    assert.equal(pres.portions.scallion,patient.scallion?1:0,patient.id+' scallion narrative drift');
+    if(patient.spicy==='重辣'){
+      assert.equal(pres.portions.chili,1,patient.id+' heavy-spice chili drift');
+      assert.equal(pres.portions.pepper,1,patient.id+' heavy-spice pepper drift');
+    }else if(patient.spicy==='正常'){
+      assert.equal(pres.portions.chili,0,patient.id+' normal-spice chili drift');
+      assert.equal(pres.portions.pepper,0,patient.id+' normal-spice pepper drift');
+    }else{
+      assert.fail(patient.id+' has unsupported structured spicy narrative: '+patient.spicy);
+    }
+  }
+});

@@ -45,12 +45,17 @@
   const symptomMeta=[
     ['craving','Craving','菸癮'],['irritability','Irritability','煩躁'],['anxiety','Anxiety','焦慮'],['concentration','Concentration','注意力'],['restlessness','Restlessness','坐立難安'],['appetite','Appetite','食慾'],['sleep','Sleep','睡眠']
   ];
+  const difficulties={
+    easy:{id:'easy',name:'實習醫 · EASY',tag:'完整提示',detail:'顯示症狀數值與處方目標，適合熟悉規則。'},
+    normal:{id:'normal',name:'主治醫 · NORMAL',tag:'自行換算',detail:'保留症狀長條但隱藏數字與份量答案。'},
+    hard:{id:'hard',name:'夜班急診 · HARD',tag:'高壓推理',detail:'只顯示症狀強弱，隱藏長條與處方份量；煩躁速度 +20%。'}
+  };
   const INTRO_KEY='clinic_kitchen_intro_seen_v11';
   const introSeenAtLoad=(()=>{try{return localStorage.getItem(INTRO_KEY)==='true';}catch(_){return false;}})();
   const blankPortions=()=>Object.fromEntries(foodOrder.map(id=>[id,0]));
   const blankTouched=()=>Object.fromEntries(foodOrder.map(id=>[id,false]));
   const state={
-    version:'R11_INTERACTIVE_KITCHEN_M4',ticket:1,patientIndex:0,doctor:null,stage:'doctor-select',traveling:false,
+    version:'R11_INTERACTIVE_KITCHEN_M4',ticket:1,patientIndex:0,doctor:null,difficulty:'easy',stage:'doctor-select',traveling:false,
     portions:blankPortions(),touched:blankTouched(),activeFood:'tofu',prepResult:null,
     irritation:0,paused:document.hidden,lastTick:performance.now(),gameOver:false,
     heatLevel:'off',wokPhase:'heat',stirCount:0,stirPulse:false,dropPulse:false,lastStirAt:0,lastDropAt:0,heatSamples:[],dropIndex:0,dropScores:[],combo:0,maxCombo:0,lastStirTiming:'',microEvent:null,eventSchedule:[],rescuedEvents:0,eventMisses:0,actionFeedback:'',simmerSeconds:0,simmerQuality:null,cookingResult:null,
@@ -176,7 +181,16 @@
   function irritationRate(){
     const p=patient(),s=p.clinicalStatus||{},f=p.ftnd||{};
     const base=.65+(Number(f.total)||0)*.04+(Number(s.irritability)||0)*.08+(Number(s.restlessness)||0)*.06+(Number(s.craving)||0)*.04;
-    return state.doctor==='speed'?base*.85:base;
+    const doctorAdjusted=state.doctor==='speed'?base*.85:base;
+    return state.difficulty==='hard'?doctorAdjusted*1.20:doctorAdjusted;
+  }
+  function qualitativeSymptom(v){
+    v=Number(v)||0;
+    return v===0?'無':v<=2?'輕–中':'重';
+  }
+  function setDifficulty(id){
+    if(state.doctor||!difficulties[id])return;
+    state.difficulty=id;renderPatient();renderStage();
   }
   function renderPressure(){
     const value=Math.max(0,Math.min(100,state.irritation)),[emoji,label]=mood();
@@ -217,13 +231,25 @@
 
   function renderPatient(){
     const p=patient();
+    rail.dataset.difficulty=state.difficulty;
     $('ticketNumber').textContent=String(state.ticket).padStart(3,'0');
     $('patientPortrait').src=`assets/service/${p.id}.webp`;$('patientPortrait').alt=p.name;
-    $('patientRole').textContent='CURRENT PATIENT';$('patientName').textContent=p.name;$('patientComplaint').textContent=p.complaint;
+    $('patientRole').textContent=`CURRENT PATIENT · ${difficulties[state.difficulty].name}`;$('patientName').textContent=p.name;$('patientComplaint').textContent=p.complaint;
     $('ftndScore').textContent=p.ftnd.total;$('ftndSeverity').textContent=p.ftnd.severity;
     $('ftndItems').innerHTML=Array.from({length:6},(_,i)=>`<span>Q${i+1}<b>${p.ftnd['q'+(i+1)]}</b></span>`).join('');
-    $('symptomList').innerHTML=symptomMeta.map(([key,en,zh])=>{const v=p.clinicalStatus[key];return `<div class="symptom-row"><div class="symptom-label"><b>${zh}</b><span>${en}</span></div><div class="symptom-bar"><i style="width:${v/4*100}%"></i></div><strong>${v}</strong></div>`;}).join('');
-    const pres=rx();$('prescriptionGrid').innerHTML=foodOrder.map(id=>`<div class="rx-chip"><img src="${food[id].img}" alt=""><div><small>${food[id].target}</small><strong>${food[id].name} ${portionLabel(pres.portions[id])}</strong></div></div>`).join('');
+    $('symptomList').innerHTML=symptomMeta.map(([key,en,zh])=>{
+      const v=p.clinicalStatus[key];
+      if(state.difficulty==='hard')return `<div class="symptom-row is-qualitative"><div class="symptom-label"><b>${zh}</b><span>${en}</span></div><strong>${qualitativeSymptom(v)}</strong></div>`;
+      return `<div class="symptom-row"><div class="symptom-label"><b>${zh}</b><span>${en}</span></div><div class="symptom-bar"><i style="width:${v/4*100}%"></i></div><strong>${state.difficulty==='easy'?v:'?'}</strong></div>`;
+    }).join('');
+    const pres=rx(),grid=$('prescriptionGrid');
+    if(state.difficulty==='easy'){
+      grid.innerHTML=foodOrder.map(id=>`<div class="rx-chip"><img src="${food[id].img}" alt=""><div><small>${food[id].target}</small><strong>${food[id].name} ${portionLabel(pres.portions[id])}</strong></div></div>`).join('');
+    }else if(state.difficulty==='normal'){
+      grid.innerHTML=foodOrder.map(id=>`<div class="rx-chip is-hidden-target"><img src="${food[id].img}" alt=""><div><small>${food[id].target}</small><strong>${food[id].name} · 自行換算</strong></div></div>`).join('');
+    }else{
+      grid.innerHTML='<div class="rx-hidden-card"><small>HARD MODE</small><strong>處方份量已隱藏</strong><span>依主訴與症狀強弱自行判斷。</span></div>';
+    }
     renderPressure();
   }
   function updateShiftHud(){
@@ -243,15 +269,23 @@
     startMusic();world.setDoctor(id);world.reset();updateDoctorHud();renderPatient();renderStage();statusBar.textContent='R11 M4 · 病人等候計時中';
   }
   function renderDoctorSelect(){
-    const n=shell('SHIFT START · CHOOSE YOUR DOCTOR','今天由誰值班？','三位醫師都是主角；其他人物全部是病人。選定後整個 shift 使用同一位醫師。');
+    const n=shell('SHIFT START · CHOOSE YOUR DOCTOR','今天由誰值班？','先選難度，再選醫師。難度決定 CONSULT 提示量與病人壓力。');
+    const difficulty=document.createElement('div');difficulty.className='difficulty-select';
+    Object.values(difficulties).forEach(d=>{const b=button('',d.name,'difficulty-btn');b.dataset.difficulty=d.id;b.setAttribute('aria-pressed',String(state.difficulty===d.id));b.innerHTML=`<small>${d.tag}</small><strong>${d.name}</strong><span>${d.detail}</span>`;b.addEventListener('click',()=>setDifficulty(d.id));difficulty.append(b);});
+    n.append(difficulty);
     const grid=document.createElement('div');grid.className='doctor-grid';Object.values(doctors).forEach(d=>grid.append(doctorCard(d)));n.append(grid);
-    const note=document.createElement('div');note.className='game-note';note.innerHTML='<strong>R11 M4</strong><span>完整流程已接通：手動備料 → 火力/翻炒/收汁 → 配飯與味噌湯 → 送餐 → 結算。</span>';n.append(note);return n;
+    const note=document.createElement('div');note.className='game-note';note.innerHTML=`<strong>R11 M4 · ${difficulties[state.difficulty].name}</strong><span>手動備料 → 火力/翻炒/收汁 → 配飯與味噌湯 → 送餐 → 結算。</span>`;n.append(note);return n;
   }
   function renderConsult(){
-    const p=patient(),pres=rx(),n=shell('01 CONSULT · 問診','先讀病人，再決定配料','病人叫號後煩躁會持續累積；Easy mode 先保留完整處方提示。');
+    const p=patient(),pres=rx(),d=difficulties[state.difficulty];
+    const desc=state.difficulty==='easy'?'完整處方提示已開啟；先熟悉症狀與配料規則。':state.difficulty==='normal'?'症狀長條仍可見，但數字與份量答案已隱藏。':'只看主訴與症狀強弱；病人煩躁速度提高 20%。';
+    const n=shell(`01 CONSULT · 問診 · ${d.name}`,'先讀病人，再決定配料',desc);
     const layout=document.createElement('div');layout.className='consult-layout';
     const quote=document.createElement('article');quote.className='consult-box quote-box';quote.innerHTML=`<small>PATIENT SAYS</small><blockquote>「${p.wish}」</blockquote><p>${p.complaint}</p>`;
-    const target=document.createElement('article');target.className='consult-box target-box';target.innerHTML=`<small>EASY PRESCRIPTION</small><strong>豆腐 ${portionLabel(pres.portions.tofu)} · 絞肉 ${portionLabel(pres.portions.pork)}</strong><p>七種食材都必須由玩家親自選 0／半份／1份；不會自動套用。</p><div class="doctor-ability-inline">${doctors[state.doctor].name}：${doctors[state.doctor].ability}</div>`;
+    const target=document.createElement('article');target.className='consult-box target-box';
+    if(state.difficulty==='easy')target.innerHTML=`<small>EASY PRESCRIPTION</small><strong>完整份量提示已顯示於左側</strong><p>七種食材仍須親自選 0／半份／1份；提示不會自動套用。</p><div class="doctor-ability-inline">${doctors[state.doctor].name}：${doctors[state.doctor].ability}</div>`;
+    else if(state.difficulty==='normal')target.innerHTML=`<small>NORMAL · CLINICAL REASONING</small><strong>0 → 0份 · 1–2 → 半份 · 3–4 → 1份</strong><p>左側保留症狀長條，但不再顯示症狀數字與處方份量。</p><div class="doctor-ability-inline">${doctors[state.doctor].name}：${doctors[state.doctor].ability}</div>`;
+    else target.innerHTML=`<small>HARD · NIGHT SHIFT</small><strong>無直接處方答案</strong><p>依病人主訴與「無／輕–中／重」症狀強弱推理；豆腐與絞肉仍是麻婆豆腐基底。</p><div class="doctor-ability-inline">${doctors[state.doctor].name}：${doctors[state.doctor].ability}</div>`;
     layout.append(quote,target);n.append(layout);
     const b=button('consultConfirmBtn',state.traveling?'醫師前往備料檯…':'看懂需求 → 前往備料檯','primary-action',state.traveling);
     b.addEventListener('click',async()=>{if(state.traveling)return;state.traveling=true;renderStage();await world.goTo('prep',{messageText:'Q版醫師跑向備料檯'});state.traveling=false;state.stage='prep';renderStage();});n.append(actionRow(b));return n;
@@ -259,7 +293,8 @@
 
   function ingredientCard(id){
     const pres=rx(),m=food[id],card=document.createElement('article');card.className='ingredient-card'+(state.activeFood===id?' is-active':'')+(state.touched[id]?' is-decided':'');card.dataset.food=id;
-    card.innerHTML=`<img src="${m.img}" alt="${m.name}"><div class="ingredient-copy"><small>${m.target}</small><strong>${m.name}</strong><span>處方目標 ${portionLabel(pres.portions[id])}</span></div>`;
+    const hint=state.difficulty==='easy'?`處方目標 ${portionLabel(pres.portions[id])}`:state.difficulty==='normal'?`依 ${m.target} 長條自行換算`:`依 ${m.target} 症狀強弱判斷`;
+    card.innerHTML=`<img src="${m.img}" alt="${m.name}"><div class="ingredient-copy"><small>${m.target}</small><strong>${m.name}</strong><span>${hint}</span></div>`;
     card.addEventListener('click',e=>{if(e.target.closest('button'))return;state.activeFood=id;renderStage();});
     const row=document.createElement('div');row.className='portion-row';[0,.5,1].forEach(v=>{const b=button('',v===0?'0':v===.5?'半份':'1份','portion-btn');b.dataset.food=id;b.dataset.portion=String(v);b.setAttribute('aria-pressed',String(state.touched[id]&&state.portions[id]===v));b.addEventListener('click',e=>{e.stopPropagation();state.portions[id]=v;state.touched[id]=true;state.activeFood=id;renderStage();});row.append(b);});card.append(row);return card;
   }
@@ -553,7 +588,7 @@
   }
 
   window.CKR11={
-    snapshot:()=>({version:state.version,ticket:state.ticket,patient:patient(),prescription:rx(),doctor:state.doctor,stage:state.stage,traveling:state.traveling,portions:{...state.portions},touched:{...state.touched},prepResult:state.prepResult,irritation:Number(state.irritation.toFixed(3)),paused:state.paused,gameOver:state.gameOver,heatLevel:state.heatLevel,wokPhase:state.wokPhase,stirCount:state.stirCount,simmerSeconds:Number(state.simmerSeconds.toFixed(3)),simmerQuality:state.simmerQuality,cookingResult:state.cookingResult,dropIndex:state.dropIndex,wokBatchCount:activeWokBatches().length,combo:state.combo,maxCombo:state.maxCombo,lastStirTiming:state.lastStirTiming,microEvent:state.microEvent,eventSchedule:state.eventSchedule.map(e=>({...e})),rescuedEvents:state.rescuedEvents,eventMisses:state.eventMisses,rice:state.rice,miso:state.miso,serviceResult:state.serviceResult,finalResult:state.finalResult,won:state.won,ordersCompleted:state.ordersCompleted,streak:state.streak,musicEnabled:state.musicEnabled,musicInterval:musicInterval(),cutInActive:state.cutInActive,complaintShown:{...state.complaintShown},introStep:state.introStep,introFinished:state.introFinished,introSeen:state.introSeen,introReplay:state.introReplay,world:world.snapshot()}),
+    snapshot:()=>({version:state.version,ticket:state.ticket,patient:patient(),prescription:rx(),doctor:state.doctor,difficulty:state.difficulty,irritationRate:Number(irritationRate().toFixed(4)),stage:state.stage,traveling:state.traveling,portions:{...state.portions},touched:{...state.touched},prepResult:state.prepResult,irritation:Number(state.irritation.toFixed(3)),paused:state.paused,gameOver:state.gameOver,heatLevel:state.heatLevel,wokPhase:state.wokPhase,stirCount:state.stirCount,simmerSeconds:Number(state.simmerSeconds.toFixed(3)),simmerQuality:state.simmerQuality,cookingResult:state.cookingResult,dropIndex:state.dropIndex,wokBatchCount:activeWokBatches().length,combo:state.combo,maxCombo:state.maxCombo,lastStirTiming:state.lastStirTiming,microEvent:state.microEvent,eventSchedule:state.eventSchedule.map(e=>({...e})),rescuedEvents:state.rescuedEvents,eventMisses:state.eventMisses,rice:state.rice,miso:state.miso,serviceResult:state.serviceResult,finalResult:state.finalResult,won:state.won,ordersCompleted:state.ordersCompleted,streak:state.streak,musicEnabled:state.musicEnabled,musicInterval:musicInterval(),cutInActive:state.cutInActive,complaintShown:{...state.complaintShown},introStep:state.introStep,introFinished:state.introFinished,introSeen:state.introSeen,introReplay:state.introReplay,world:world.snapshot()}),
     __qaSetHidden:v=>handleVisibility(!!v),
     __qaSetIrritation:v=>{state.irritation=Math.max(0,Math.min(100,Number(v)||0));renderPressure();},
     __qaTriggerComplaint:v=>showComplaintCutIn(Number(v)),
