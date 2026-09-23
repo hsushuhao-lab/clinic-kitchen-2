@@ -108,7 +108,7 @@
     level=Number(level);
     const meta=complaintEvents[level];
     if(!meta||state.complaintShown[level]||state.gameOver)return false;
-    state.complaintShown[level]=true;state.cutInActive=true;state.lastTick=performance.now();
+    Object.keys(complaintEvents).forEach(k=>{if(Number(k)<=level)state.complaintShown[k]=true;});state.cutInActive=true;state.lastTick=performance.now();
     eventArt.src=meta.art;eventArt.alt=meta.title;
     eventKicker.textContent=meta.kicker;eventTitle.textContent=meta.title;eventBody.textContent=meta.body;
     eventOverlay.hidden=false;
