@@ -112,7 +112,10 @@ try:
     done('next patient advances ticket while keeping selected doctor for the shift')
 
     page.set_viewport_size({'width':1200,'height':900});page.goto(args.base_url,wait_until='networkidle');page.wait_for_function("()=>window.CKR11&&CKR11World.snapshot().ready")
-    page.locator('[data-doctor="speed"]').click();wait_stage(page,'consult');page.evaluate('CKR11.__qaSetIrritation(99.9)');page.wait_for_function("()=>CKR11.snapshot().stage==='fail-table-flip'",timeout=5000)
+    page.locator('[data-doctor="speed"]').click();wait_stage(page,'consult');page.evaluate('CKR11.__qaSetIrritation(99.9)')
+    page.wait_for_function("()=>CKR11.snapshot().cutInActive===true",timeout=5000);expect(page.locator('#eventOverlay')).to_be_visible()
+    assert 'complaint_90.webp' in page.locator('#eventArt').get_attribute('src');page.locator('#eventDismissBtn').click()
+    page.wait_for_function("()=>CKR11.snapshot().stage==='fail-table-flip'",timeout=5000)
     expect(page.locator('.failure-table')).to_be_visible();src=page.locator('.failure-doctor').get_attribute('src');assert 'assets/r11/doctors/doctor_speed_bump.webp' in src,src
     page.screenshot(path=str(out/'desktop-timeout-failure.png'),full_page=True);done('patient timeout still triggers table flip with selected doctor reaction')
 
