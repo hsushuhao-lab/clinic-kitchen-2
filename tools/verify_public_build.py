@@ -18,7 +18,7 @@ for attempt in range(12):
     time.sleep(10)
 
 assert info['renderer']=='canvas-chibi-r11',info
-assert info['gameplay_version']=='R11_INTERACTIVE_KITCHEN_M1',info
+assert info['gameplay_version']=='R11_INTERACTIVE_KITCHEN_M2',info
 for entry in info['files']:
     raw=fetch(entry['path']+'?verify='+args.expect_sha)
     assert len(raw)==entry['bytes'] and hashlib.sha256(raw).hexdigest()==entry['sha256'],entry['path']
