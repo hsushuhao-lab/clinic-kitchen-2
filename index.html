@@ -3,51 +3,70 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Craving Kitchen R9</title>
-<link rel="stylesheet" href="r9.css?v=r9-clean-1">
+<title>Craving Kitchen R10</title>
+<link rel="stylesheet" href="r10.css?v=r10-rebuild-1">
 </head>
 <body>
 <div id="app">
-<header class="topbar">
-  <div class="brand"><span class="brand-mark">🍳</span><div><strong>CRAVING KITCHEN</strong><small>R9 · CLEAN CLINIC FLOW</small></div></div>
-  <div class="ticket-box"><span>NOW SERVING</span><strong id="ticketNumber">001</strong></div>
-</header>
-<aside id="patientPanel" aria-label="病人臨床資訊">
-  <section class="patient-card">
-    <div class="patient-portrait-wrap"><img id="patientPortrait" src="" alt=""></div>
-    <h2 id="patientName">病人</h2>
-    <blockquote id="patientComplaint"></blockquote>
-  </section>
-  <section class="ftnd-card">
-    <div class="section-title"><strong>FTND BASELINE</strong><small>唯讀，不因料理改變</small></div>
-    <div class="ftnd-main"><strong id="ftndScore">-</strong><span>/10 · <b id="ftndSeverity"></b></span></div>
-    <div class="ftnd-items" id="ftndItems"></div>
-  </section>
-  <section class="symptom-card">
-    <div class="section-title"><strong>WITHDRAWAL PROFILE</strong><small>0–4</small></div>
-    <div class="symptom-list" id="symptomList"></div>
-  </section>
-  <section class="rx-panel">
-    <div class="section-title"><strong>CLINICAL PRESCRIPTION</strong><small>遊戲化對照</small></div>
-    <div class="rx-grid" id="prescriptionGrid"></div>
-  </section>
-</aside>
-<main id="main">
-  <section class="workflow-card" aria-label="固定料理流程">
-    <div id="workflow" data-stage="consult">
-      <div class="workflow-line"></div>
-      <div class="station is-active" data-stage="consult"><span class="station-icon">🩺</span><strong>01 CONSULT</strong><small>問診</small><i class="station-dot"></i></div>
-      <div class="station" data-stage="prep"><span class="station-icon">🔪</span><strong>02 PREP</strong><small>備料</small><i class="station-dot"></i></div>
-      <div class="station" data-stage="wok"><span class="station-icon">🍳</span><strong>03 WOK</strong><small>翻炒</small><i class="station-dot"></i></div>
-      <div class="station" data-stage="serve"><span class="station-icon">🍚</span><strong>04 SERVE</strong><small>配餐</small><i class="station-dot"></i></div>
-      <div id="doctorMarker" class="doctor-marker" style="left:12.5%"><img src="assets/ui/doctor-speed.webp" alt="值班醫師"></div>
+  <header class="topbar">
+    <div class="brand">
+      <strong>CRAVING KITCHEN</strong>
+      <small>R10 · KITCHEN REBUILD</small>
     </div>
-  </section>
-  <section id="stagePanel" aria-live="polite"></section>
-</main>
-<footer id="statusBar">載入中</footer>
+    <div class="now-serving"><span>NOW SERVING</span><strong id="ticketNumber">001</strong></div>
+  </header>
+
+  <aside id="patientRail" aria-label="病人資訊">
+    <section class="patient-card">
+      <img id="patientPortrait" class="patient-portrait" src="" alt="">
+      <div class="patient-copy">
+        <small id="patientRole">CURRENT PATIENT</small>
+        <h2 id="patientName">病人</h2>
+      </div>
+    </section>
+
+    <section class="complaint-card">
+      <small>PATIENT SAYS</small>
+      <p id="patientComplaint"></p>
+    </section>
+
+    <details class="ftnd-card">
+      <summary><span>FTND BASELINE</span><strong><b id="ftndScore">-</b>/10 · <i id="ftndSeverity"></i></strong></summary>
+      <div id="ftndItems" class="ftnd-items"></div>
+      <small>唯讀基線，不因料理改變。</small>
+    </details>
+
+    <section class="symptom-card">
+      <div class="rail-head"><strong>WITHDRAWAL PROFILE</strong><small>0–4</small></div>
+      <div id="symptomList" class="symptom-list"></div>
+    </section>
+
+    <section class="rx-card-panel">
+      <div class="rail-head"><strong>CLINICAL PRESCRIPTION</strong><small>料理目標</small></div>
+      <div id="prescriptionGrid" class="prescription-grid"></div>
+    </section>
+  </aside>
+
+  <main id="gameMain">
+    <section id="worldStrip" class="world-strip" aria-label="Q版醫師自動跑圖">
+      <canvas id="worldCanvas"></canvas>
+      <div class="station-labels" aria-hidden="true">
+        <span><b>01 CONSULT</b><small>問診</small></span>
+        <span><b>02 PREP</b><small>備料</small></span>
+        <span><b>03 WOK</b><small>翻炒</small></span>
+        <span><b>04 SERVE</b><small>配餐</small></span>
+      </div>
+      <div id="worldMessage" class="world-message">醫師待命</div>
+    </section>
+
+    <section id="stagePanel" class="stage-panel" aria-live="polite"></section>
+  </main>
+
+  <footer id="statusBar">R10 loading…</footer>
 </div>
-<script src="src/clinic-rules.js?v=r9-clean-1"></script>
-<script src="src/r9-game.js?v=r9-clean-1"></script>
+
+<script src="src/clinic-rules.js?v=r10-rebuild-1"></script>
+<script src="src/r10-world.js?v=r10-rebuild-1"></script>
+<script src="src/r10-game.js?v=r10-rebuild-1"></script>
 </body>
 </html>
