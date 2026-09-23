@@ -570,10 +570,36 @@
     return { quality: Math.max(50, 100 - checks.reduce((n, c) => n + (c.ok ? 0 : c.penalty), 0)), checks, actual };
   }
 
+
+  // R11 keeps the legacy R8 ingredient contract intact while exposing a fully adjustable gameplay contract.
+  const R11_INGREDIENTS = Object.freeze(Object.fromEntries(
+    Object.entries(INGREDIENTS).map(([id, meta]) => [id, Object.freeze({ ...meta, fixed: false })])
+  ));
+
+  function evaluateR11Portions(portions, patient) {
+    const expected = buildExpectedPortions(patient);
+    const labelMap = {
+      tofu: '豆腐', pork: '絞肉', douban: '豆瓣醬→Craving', garlic: '蒜→Irritability',
+      scallion: '蔥→Concentration', chili: '辣椒→Restlessness', pepper: '花椒→Anxiety'
+    };
+    let penalty = 0;
+    const checks = Object.keys(R11_INGREDIENTS).map(id => {
+      const target = Number(expected[id] || 0);
+      const actual = Number(portions && portions[id] || 0);
+      const diff = Math.abs(actual - target);
+      const itemPenalty = diff >= 1 ? 15 : diff >= 0.5 ? 7 : 0;
+      penalty += itemPenalty;
+      return { id, name: labelMap[id], target, actual, diff, penalty: itemPenalty, ok: itemPenalty === 0 };
+    });
+    const fidelity = Math.max(0, 100 - penalty);
+    return { expected, fidelity, gateB_pass: fidelity >= 70, checks };
+  }
+
   root.CKClinicRules = {
     patients,
     stations,
     INGREDIENTS,
+    R11_INGREDIENTS,
     VALID_PORTIONS,
     isValidPortion,
     symptomToTargetPortion,
@@ -585,6 +611,7 @@
     heatPenaltyR6,
     evaluateR6,
     evaluateR8,
+    evaluateR11Portions,
     calculateMealOutcome,
     calculateClinicalMetrics,
     generatePatientReview,

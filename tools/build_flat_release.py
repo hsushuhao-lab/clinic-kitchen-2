@@ -34,7 +34,7 @@ def main():
     subprocess.run([
         'node','--test',
         'tests/shift_rules.test.cjs','tests/rush_rules.test.cjs','tests/clinic_rules.test.cjs',
-        'tests/service_rules.test.cjs','tests/r6_rules.test.cjs','tests/r7_rules.test.cjs','tests/r8_rules.test.cjs'
+        'tests/service_rules.test.cjs','tests/r6_rules.test.cjs','tests/r7_rules.test.cjs','tests/r8_rules.test.cjs','tests/r11_rules.test.cjs'
     ],cwd=ROOT,check=True)
 
     files=list(CORE)
@@ -78,7 +78,7 @@ def main():
         'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
         'renderer':'canvas-chibi-r11',
         'release_status':'BUILD_VERIFIED_PENDING_DEPLOYMENT',
-        'gameplay_version':'R11_INTERACTIVE_KITCHEN_M2',
+        'gameplay_version':'R11_INTERACTIVE_KITCHEN_M3',
         'files':[]
     }
     for rel in sorted(files):
