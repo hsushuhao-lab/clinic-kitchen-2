@@ -36,7 +36,7 @@ try:
         page.screenshot(path=str(out/f'desktop-intro-{step}.png'))
         page.locator('#introNextBtn').click()
     expect(page.locator('#introOverlay')).to_be_hidden();assert snap(page)['introFinished'] is True and snap(page)['introSeen'] is True
-    assert page.evaluate("()=>localStorage.getItem('clinic_kitchen_intro_seen_v11')")=='true'
+    assert page.evaluate("()=>localStorage.getItem('clinic_kitchen_intro_seen_v12_cg')")=='true'
     page.reload(wait_until='networkidle');page.wait_for_function("()=>window.CKR11&&CKR11World.snapshot().ready")
     expect(page.locator('#introOverlay')).to_be_visible();assert snap(page)['introStep']==0 and snap(page)['introSeen'] is True
     page.locator('#introNextBtn').click();expect(page.locator('#introOverlay')).to_be_hidden()
