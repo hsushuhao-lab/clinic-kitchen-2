@@ -129,7 +129,7 @@
   // R11/M5 uses a visible 0–100 symptom score on every ingredient card.
   // 0–40 => 0 portion; 41–70 => half; 71–100 => full.
   const R11_SYMPTOM_TARGETS = Object.freeze({
-    tofu:'craving',
+    tofu:'sleep',
     pork:'appetite',
     douban:'craving',
     garlic:'irritability',
@@ -151,9 +151,12 @@
 
   function buildR11ExpectedPortions(patient) {
     const status = patient && patient.clinicalStatus || {};
-    return Object.fromEntries(Object.entries(R11_SYMPTOM_TARGETS).map(([id,key]) => [
+    const portions = Object.fromEntries(Object.entries(R11_SYMPTOM_TARGETS).map(([id,key]) => [
       id, severity100ToPortion(symptomSeverity100(status[key]))
     ]));
+    portions.tofu = 1;
+    portions.pork = 1;
+    return portions;
   }
 
   function buildClinicalPrescription(patient) {
@@ -193,7 +196,7 @@
       rice: Number(s.appetite || 0) >= 3 ? '\u6b63\u5e38\u98ef' : '\u534a\u7897\u98ef',
       miso: Number(s.sleep || 0) >= 2,
       targets: Object.freeze({
-        tofu:'Craving',
+        tofu:'Sleep',
         pork:'Appetite',
         douban:'Craving',
         garlic:'Irritability',
@@ -635,6 +638,9 @@
       tofu:'豆腐→Craving', pork:'絞肉→Appetite', douban:'豆瓣醬→Craving', garlic:'蒜→Irritability',
       scallion:'蔥→Concentration', chili:'辣椒→Restlessness', pepper:'花椒→Anxiety'
     };
+    const tofuPresent = Number(portions && portions.tofu || 0) > 0;
+    const porkPresent = Number(portions && portions.pork || 0) > 0;
+    const missingBase = !tofuPresent || !porkPresent;
     let penalty = 0;
     const checks = Object.keys(R11_INGREDIENTS).map(id => {
       const target = Number(expected[id] || 0);
@@ -644,8 +650,16 @@
       penalty += itemPenalty;
       return { id, name: labelMap[id], target, actual, diff, penalty: itemPenalty, ok: itemPenalty === 0 };
     });
-    const fidelity = Math.max(0, 100 - penalty);
-    return { expected, fidelity, gateB_pass: fidelity >= 70, checks, modifier: doctor === 'strategy' ? 'strategy' : null };
+    const fidelity = missingBase ? 0 : Math.max(0, 100 - penalty);
+    return {
+      expected,
+      fidelity,
+      gateB_pass: !missingBase && fidelity >= 70,
+      checks,
+      missingBase,
+      basePresent: !missingBase,
+      modifier: doctor === 'strategy' ? 'strategy' : null
+    };
   }
 
   root.CKClinicRules = {

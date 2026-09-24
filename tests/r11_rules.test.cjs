@@ -20,27 +20,32 @@ test('R11: all seven exact portions score 100 and pass Gate B',()=>{
   assert.equal(r.gateB_pass,true);
 });
 
-test('R11: tofu and pork mismatches are actually scored',()=>{
+test('R11 M5 trap: missing tofu or pork hard-fails prescription to zero',()=>{
   const patient=rules.patients[0];
   const expected=rules.buildR11ExpectedPortions(patient);
-  const r=rules.evaluateR11Portions({...expected,tofu:0,pork:0.5},patient);
-  const tofu=r.checks.find(x=>x.id==='tofu'),pork=r.checks.find(x=>x.id==='pork');
-  assert.equal(tofu.penalty,15);
-  assert.equal(pork.penalty,7);
-  assert.equal(r.fidelity,78);
+  const noTofu=rules.evaluateR11Portions({...expected,tofu:0},patient);
+  const noPork=rules.evaluateR11Portions({...expected,pork:0},patient);
+  assert.equal(noTofu.fidelity,0);
+  assert.equal(noTofu.gateB_pass,false);
+  assert.equal(noTofu.missingBase,true);
+  assert.equal(noPork.fidelity,0);
+  assert.equal(noPork.gateB_pass,false);
+  assert.equal(noPork.missingBase,true);
 });
 
 
-test('R11 M4: DR. STRATEGY reduces portion mismatch penalties without changing exact matches',()=>{
+test('R11 M4: DR. STRATEGY reduces nonzero portion mismatch penalties without bypassing base trap',()=>{
   const patient=rules.patients[0];
   const expected=rules.buildR11ExpectedPortions(patient);
-  const mismatched={...expected,tofu:0,pork:0.5};
+  const mismatched={...expected,tofu:0.5,pork:0.5};
   const normal=rules.evaluateR11Portions(mismatched,patient);
   const strategy=rules.evaluateR11Portions(mismatched,patient,{doctor:'strategy'});
-  assert.equal(normal.fidelity,78);
-  assert.equal(strategy.fidelity,85);
+  assert.equal(normal.fidelity,86);
+  assert.equal(strategy.fidelity,94);
+  assert.equal(normal.missingBase,false);
   assert.equal(strategy.modifier,'strategy');
   assert.equal(rules.evaluateR11Portions(expected,patient,{doctor:'strategy'}).fidelity,100);
+  assert.equal(rules.evaluateR11Portions({...expected,tofu:0},patient,{doctor:'strategy'}).fidelity,0);
 });
 
 
@@ -77,21 +82,28 @@ test('R11 M5: visible 0-100 severity thresholds map exactly to 0 / half / full',
   assert.equal(rules.symptomSeverity100(4),100);
 });
 
-test('R11 M5: all seven ingredient targets derive from the displayed symptom score',()=>{
+test('R11 M5: each ingredient has one unique symptom clue and five adjustable targets follow score thresholds',()=>{
+  const symptomKeys=Object.values(rules.R11_SYMPTOM_TARGETS);
+  assert.equal(new Set(symptomKeys).size,7);
+  assert.equal(rules.R11_SYMPTOM_TARGETS.tofu,'sleep');
+  assert.equal(rules.R11_SYMPTOM_TARGETS.pork,'appetite');
   for(const patient of rules.patients){
     const expected=rules.buildR11ExpectedPortions(patient);
-    for(const [id,key] of Object.entries(rules.R11_SYMPTOM_TARGETS)){
+    for(const id of ['douban','garlic','scallion','chili','pepper']){
+      const key=rules.R11_SYMPTOM_TARGETS[id];
       const score=rules.symptomSeverity100(patient.clinicalStatus[key]);
       assert.equal(expected[id],rules.severity100ToPortion(score),patient.id+' '+id+' mismatch');
     }
+    assert.equal(expected.tofu,1);
+    assert.equal(expected.pork,1);
   }
 });
 
-test('R11 M5: office patient tofu visibly follows Craving and pork follows Appetite',()=>{
+test('R11 M5: office patient shows Sleep on tofu and Appetite on pork, but both remain mandatory',()=>{
   const patient=rules.patients.find(x=>x.id==='office');
   const expected=rules.buildR11ExpectedPortions(patient);
-  assert.equal(rules.symptomSeverity100(patient.clinicalStatus.craving),75);
-  assert.equal(expected.tofu,1);
+  assert.equal(rules.symptomSeverity100(patient.clinicalStatus.sleep),75);
   assert.equal(rules.symptomSeverity100(patient.clinicalStatus.appetite),25);
-  assert.equal(expected.pork,0);
+  assert.equal(expected.tofu,1);
+  assert.equal(expected.pork,1);
 });

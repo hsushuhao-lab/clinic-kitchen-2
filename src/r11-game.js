@@ -33,7 +33,7 @@
   const patientInterference=$('patientInterference');
   const foodOrder=['tofu','pork','douban','garlic','scallion','chili','pepper'];
   const food={
-    tofu:{name:'豆腐',target:'Craving',symptom:'craving',img:'assets/ingredients/mapo_tofu/tofu.png',wok:'assets/cooking/tofu_cubes.png'},
+    tofu:{name:'豆腐',target:'Sleep',symptom:'sleep',img:'assets/ingredients/mapo_tofu/tofu.png',wok:'assets/cooking/tofu_cubes.png'},
     pork:{name:'絞肉',target:'Appetite',symptom:'appetite',img:'assets/ingredients/mapo_tofu/pork.png',wok:'assets/cooking/pork_raw_mound.png'},
     douban:{name:'豆瓣醬',target:'Craving',symptom:'craving',img:'assets/ingredients/mapo_tofu/douban.png',wok:'assets/ingredients/mapo_tofu/douban.png'},
     garlic:{name:'蒜末',target:'Irritability',symptom:'irritability',img:'assets/ingredients/mapo_tofu/garlic.png',wok:'assets/cooking/garlic_mince.png'},
@@ -50,7 +50,7 @@
     ['craving','Craving','菸癮'],['irritability','Irritability','煩躁'],['anxiety','Anxiety','焦慮'],['concentration','Concentration','注意力'],['restlessness','Restlessness','坐立難安'],['appetite','Appetite','食慾'],['sleep','Sleep','睡眠']
   ];
   const difficulties={
-    easy:{id:'easy',name:'實習醫 · EASY',tag:'穩定值班',detail:'症狀與建議份量完整顯示。'},
+    easy:{id:'easy',name:'實習醫 · EASY',tag:'穩定值班',detail:'症狀分數完整顯示。'},
     normal:{id:'normal',name:'主治醫 · NORMAL',tag:'正常夜班',detail:'症狀資訊完整，病人等待照常累積。'},
     hard:{id:'hard',name:'夜班急診 · HARD',tag:'高壓值班',detail:'病人更沒耐心，煩躁速度 +20%。'}
   };
@@ -277,8 +277,8 @@
     }).join('');
     const pres=rx(),grid=$('prescriptionGrid');
     grid.innerHTML=foodOrder.map(id=>{
-      const score=symptomScore100(food[id].symptom),suggested=rules.severity100ToPortion(score);
-      return `<div class="rx-chip"><img src="${food[id].img}" alt=""><div><small>${food[id].target} ${score}分</small><strong>${food[id].name} · 建議 ${portionLabel(suggested)}</strong></div></div>`;
+      const score=symptomScore100(food[id].symptom);
+      return `<div class="rx-chip"><img src="${food[id].img}" alt=""><div><small>${food[id].target}</small><strong>${food[id].name} · 症狀 ${score}分</strong></div></div>`;
     }).join('');
     renderPressure();
   }
@@ -313,22 +313,22 @@
     const layout=document.createElement('div');layout.className='consult-layout';
     const quote=document.createElement('article');quote.className='consult-box quote-box';quote.innerHTML=`<small>PATIENT SAYS</small><blockquote>「${p.wish}」</blockquote><p>${p.complaint}</p>`;
     const target=document.createElement('article');target.className='consult-box target-box';
-    target.innerHTML=`<small>PORTION RULE</small><strong>0–40分 → 0份 · 41–70分 → 半份 · 71–100分 → 1份</strong><p>每張食材卡都會顯示目前症狀分數，照病人狀態下判斷。</p><div class="doctor-ability-inline">${doctors[state.doctor].name}：${doctors[state.doctor].ability}</div>`;
+    target.innerHTML=`<small>CLINICAL CLUES</small><strong>每種食材各有一個症狀線索</strong><p>卡片只顯示目前症狀分數，份量由你自己判斷。</p><div class="doctor-ability-inline">${doctors[state.doctor].name}：${doctors[state.doctor].ability}</div>`;
     layout.append(quote,target);n.append(layout);
     const b=button('consultConfirmBtn',state.traveling?'醫師前往備料檯…':'看懂需求 → 前往備料檯','primary-action',state.traveling);
     b.addEventListener('click',async()=>{if(state.traveling)return;state.traveling=true;renderStage();await world.goTo('prep',{messageText:'Q版醫師跑向備料檯'});state.traveling=false;state.stage='prep';renderStage();});n.append(actionRow(b));return n;
   }
 
   function ingredientCard(id){
-    const m=food[id],score=symptomScore100(m.symptom),suggested=rules.severity100ToPortion(score),card=document.createElement('article');card.className='ingredient-card'+(state.activeFood===id?' is-active':'')+(state.touched[id]?' is-decided':'');card.dataset.food=id;
-    card.innerHTML=`<img src="${m.img}" alt="${m.name}"><div class="ingredient-copy"><small>${m.target}</small><strong>${m.name}</strong><span class="severity-score">症狀 ${score}分</span><b class="severity-advice">建議 ${portionLabel(suggested)}</b></div>`;
+    const m=food[id],score=symptomScore100(m.symptom),card=document.createElement('article');card.className='ingredient-card'+(state.activeFood===id?' is-active':'')+(state.touched[id]?' is-decided':'');card.dataset.food=id;
+    card.innerHTML=`<img src="${m.img}" alt="${m.name}"><div class="ingredient-copy"><small>${m.target}</small><strong>${m.name}</strong><span class="severity-score">症狀 ${score}分</span></div>`;
     card.addEventListener('click',e=>{if(e.target.closest('button'))return;state.activeFood=id;renderStage();});
     const row=document.createElement('div');row.className='portion-row';[0,.5,1].forEach(v=>{const b=button('',v===0?'0':v===.5?'半份':'1份','portion-btn');b.dataset.food=id;b.dataset.portion=String(v);b.setAttribute('aria-pressed',String(state.touched[id]&&state.portions[id]===v));b.addEventListener('click',e=>{e.stopPropagation();state.portions[id]=v;state.touched[id]=true;state.activeFood=id;renderStage();});row.append(b);});card.append(row);return card;
   }
   function decidedCount(){return foodOrder.filter(id=>state.touched[id]).length;}
   function renderTray(target){target.innerHTML='';foodOrder.forEach(id=>{if(!state.touched[id])return;const v=state.portions[id],chip=document.createElement('span');chip.className=v===0?'tray-chip is-zero':'tray-chip';chip.innerHTML=`<img src="${food[id].img}" alt="">${food[id].name} ${portionLabel(v)}`;target.append(chip);});if(!target.children.length)target.innerHTML='<em>尚未選擇任何食材</em>';}
   function renderPrep(){
-    const n=shell('02 PREP · 備料','看分數，下份量','0–40分選 0份；41–70分選半份；71–100分選1份。病人正在旁邊等你。');
+    const n=shell('02 PREP · 備料','看分數，下份量','每張卡只給你一個症狀分數；份量自己判斷。病人正在旁邊等你。');
     const pressure=document.createElement('div');pressure.className='prep-banner';pressure.innerHTML=`<strong>病人在等餐 · ${Math.round(state.irritation)}%</strong><span>已決定 ${decidedCount()}/7 種食材</span>`;n.append(pressure);
     const layout=document.createElement('div');layout.className='prep-layout';const pantry=document.createElement('div');pantry.className='pantry';foodOrder.forEach(id=>pantry.append(ingredientCard(id)));
     const station=document.createElement('aside');station.className='prep-station';const active=food[state.activeFood];station.innerHTML=`<div class="prep-visual"><img class="board-img" src="assets/cooking/board_empty.png" alt="砧板"><img class="board-food-preview" src="${active.img}" alt="${active.name}"><img class="knife-img" src="assets/cooking/chef_knife.png" alt="菜刀"></div><div class="prep-station-copy"><small>NOW PREPPING</small><strong>${active.name}</strong><span>${state.touched[state.activeFood]?'你選了 '+portionLabel(state.portions[state.activeFood]):'尚未決定份量'}</span><div id="prepTray" class="prep-tray"></div></div>`;renderTray(station.querySelector('#prepTray'));layout.append(pantry,station);n.append(layout);
@@ -535,9 +535,9 @@
     const n=shell('DELIVERY','送餐中…','最後幾步也算等待時間，快把餐點送到病人面前。');
     const scene=document.createElement('div');scene.className='delivery-scene';scene.innerHTML=`<img src="assets/cooking/tray_served.png" alt="送餐托盤"><div><small>NOW SERVING</small><strong>${patient().name}</strong><span>${state.rice} · ${state.miso?'味噌湯':'不要湯'}</span></div>`;n.append(scene);return n;
   }
-  function scoreFinalMetrics({prescriptionFidelity,cookingQuality,serviceFidelity,speedScore,patientMood,gateBPass,servicePass}){
-    const total=Math.round(prescriptionFidelity*.25+cookingQuality*.25+serviceFidelity*.20+speedScore*.15+patientMood*.15);
-    const won=!!gateBPass&&cookingQuality>=60&&!!servicePass;
+  function scoreFinalMetrics({prescriptionFidelity,cookingQuality,serviceFidelity,speedScore,patientMood,gateBPass,servicePass,basePresent=true}){
+    const total=basePresent?Math.round(prescriptionFidelity*.25+cookingQuality*.25+serviceFidelity*.20+speedScore*.15+patientMood*.15):0;
+    const won=!!basePresent&&!!gateBPass&&cookingQuality>=60&&!!servicePass;
     const rawRank=total>=92?'S':total>=82?'A':total>=70?'B':'C';
     return {total,won,valid:won,rawRank,rank:won?rawRank:'—',stars:won?(total>=90?3:total>=75?2:1):0};
   }
@@ -545,10 +545,11 @@
     const prescriptionFidelity=state.prepResult.fidelity,cookingQuality=state.cookingResult.cookingQuality,serviceFidelity=state.serviceResult.fidelity;
     const speedScore=Math.max(0,Math.round(100-state.irritation));
     const patientMood=Math.max(0,Math.min(100,Math.round(100-state.irritation*.65-(state.prepResult.gateB_pass?0:22)-(state.serviceResult.pass?0:18)-(cookingQuality>=60?0:20))));
-    const scored=scoreFinalMetrics({prescriptionFidelity,cookingQuality,serviceFidelity,speedScore,patientMood,gateBPass:state.prepResult.gateB_pass,servicePass:state.serviceResult.pass});
+    const scored=scoreFinalMetrics({prescriptionFidelity,cookingQuality,serviceFidelity,speedScore,patientMood,gateBPass:state.prepResult.gateB_pass,servicePass:state.serviceResult.pass,basePresent:state.prepResult.basePresent});
     const {total,won,valid,rawRank,rank,stars}=scored;
     const problems=[];
-    if(!state.prepResult.gateB_pass)problems.push('配料處方未達 Gate B');
+    if(state.prepResult.missingBase)problems.push('缺少豆腐或絞肉：本單直接 0 分');
+    if(!state.prepResult.gateB_pass&&!state.prepResult.missingBase)problems.push('配料處方未達 Gate B');
     if(cookingQuality<60)problems.push('料理品質不足');
     if(!state.serviceResult.riceOk)problems.push('飯量不符合處方');
     if(!state.serviceResult.misoOk)problems.push('味噌湯不符合處方');
@@ -556,7 +557,7 @@
     const metrics={Prescription:prescriptionFidelity,Cooking:cookingQuality,Service:serviceFidelity,Speed:speedScore,'Patient Mood':patientMood};
     const weakest=Object.entries(metrics).sort((a,b)=>a[1]-b[1])[0];
     state.streak=won?state.streak+1:0;if(won)state.ordersCompleted+=1;
-    state.finalResult={prescriptionFidelity,cookingQuality,serviceFidelity,speedScore,patientMood,total,won,valid,rawRank,rank,stars,problems,weakest};
+    state.finalResult={prescriptionFidelity,cookingQuality,serviceFidelity,speedScore,patientMood,total,won,valid,rawRank,rank,stars,problems,weakest,basePresent:state.prepResult.basePresent,missingBase:state.prepResult.missingBase};
     state.won=won;state.gameOver=true;state.stage=won?'victory':'rejected-cutin';world.setMessage(won?'成功過關！MAPO RESCUE CLEAR':'ORDER REJECTED!');
     if(won)playVictoryJingle();else playFailureSting();
     renderStage();statusBar.textContent=won?'MAPO RESCUE CLEAR!':'ORDER REJECTED · 醫師被揍了';

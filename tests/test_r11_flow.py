@@ -44,10 +44,10 @@ try:
     assert page.locator('.difficulty-btn').count()==3
     easy_rate=snap(page)['irritationRate']
     page.locator('[data-difficulty="normal"]').click();assert snap(page)['difficulty']=='normal'
-    assert '分' in page.locator('#prescriptionGrid').inner_text() and '建議' in page.locator('#prescriptionGrid').inner_text()
+    assert '分' in page.locator('#prescriptionGrid').inner_text() and '建議' not in page.locator('#prescriptionGrid').inner_text()
     page.locator('[data-difficulty="hard"]').click();assert snap(page)['difficulty']=='hard'
     hard_rate=snap(page)['irritationRate'];assert abs(hard_rate/easy_rate-1.20)<0.02,(easy_rate,hard_rate)
-    assert '分' in page.locator('#prescriptionGrid').inner_text() and '建議' in page.locator('#prescriptionGrid').inner_text()
+    assert '分' in page.locator('#prescriptionGrid').inner_text() and '建議' not in page.locator('#prescriptionGrid').inner_text()
     page.locator('[data-difficulty="easy"]').click();assert snap(page)['difficulty']=='easy'
     assert page.locator('#symptomList .symptom-bar').count()==7
     done('all difficulties show ingredient severity scores while HARD pressure remains exactly +20%')
@@ -83,9 +83,10 @@ try:
 
     page.locator('#consultConfirmBtn').click();wait_stage(page,'prep');assert page.locator('.ingredient-card').count()==7
     for food in ['tofu','pork','douban','garlic','scallion','chili','pepper']:assert page.locator(f'.ingredient-card[data-food="{food}"] .portion-btn').count()==3
-    tofu_text=page.locator('.ingredient-card[data-food="tofu"]').inner_text();assert 'Craving' in tofu_text and '75分' in tofu_text and '建議 1份' in tofu_text,tofu_text
-    pork_text=page.locator('.ingredient-card[data-food="pork"]').inner_text();assert 'Appetite' in pork_text and '25分' in pork_text and '建議 0份' in pork_text,pork_text
-    assert page.locator('.fixed-pill').count()==0;done('seven PREP cards show 0-100 symptom severity and recommended portion')
+    tofu_text=page.locator('.ingredient-card[data-food="tofu"]').inner_text();assert 'Sleep' in tofu_text and '75分' in tofu_text and '建議' not in tofu_text,tofu_text
+    pork_text=page.locator('.ingredient-card[data-food="pork"]').inner_text();assert 'Appetite' in pork_text and '25分' in pork_text and '建議' not in pork_text,pork_text
+    assert '0–40' not in page.locator('.stage-shell').inner_text() and '41–70' not in page.locator('.stage-shell').inner_text()
+    assert page.locator('.fixed-pill').count()==0;done('PREP shows one symptom score per ingredient without exposing the portion answer')
     pres=snap(page)['prescription']
     for food,target in pres['portions'].items():
         value='0.5' if target==0.5 else str(int(target));page.locator(portion_selector(food,value)).click()
@@ -146,6 +147,8 @@ try:
     assert final['total']==expected_total
     invalid=page.evaluate("()=>CKR11.__qaScoreFinal({prescriptionFidelity:95,cookingQuality:90,serviceFidelity:100,speedScore:90,patientMood:90,gateBPass:false,servicePass:true})")
     assert invalid['total']>=90 and invalid['valid'] is False and invalid['rank']=='—'
+    missing_base=page.evaluate("()=>CKR11.__qaScoreFinal({prescriptionFidelity:100,cookingQuality:100,serviceFidelity:100,speedScore:100,patientMood:100,gateBPass:true,servicePass:true,basePresent:false})")
+    assert missing_base['total']==0 and missing_base['valid'] is False and missing_base['rank']=='—'
     assert snap(page)['serviceResult']['pass'] is True and page.locator('.score-card').count()==5
     expect(page.locator('.result-hero-r11.is-win')).to_be_visible();expect(page.locator('.result-rank')).to_be_visible();expect(page.locator('.result-detail-grid')).to_be_visible();assert page.locator('.cook-breakdown-chip').count()==5
     page.screenshot(path=str(out/'mobile-success-result.png'),full_page=True)
