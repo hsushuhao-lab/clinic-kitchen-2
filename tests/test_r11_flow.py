@@ -21,7 +21,7 @@ try:
     page=browser.new_page(viewport={'width':1536,'height':1024});page.set_default_timeout(20000)
     page.on('pageerror',lambda e:errors.append(str(e)));page.on('response',lambda r:failed.append(f'{r.status} {r.url}') if r.status>=400 else None)
     res=page.goto(args.base_url,wait_until='networkidle');assert res and res.status==200
-    page.wait_for_function("()=>window.CKR11&&window.CKR11World&&CKR11.snapshot().version==='R11_INTERACTIVE_KITCHEN_M6'&&CKR11World.snapshot().ready",timeout=30000)
+    page.wait_for_function("()=>window.CKR11&&window.CKR11World&&CKR11.snapshot().version==='R11_INTERACTIVE_KITCHEN_M7'&&CKR11World.snapshot().ready",timeout=30000)
 
     expect(page.locator('#introOverlay')).to_be_visible()
     page.wait_for_function("()=>CKR11.snapshot().cgReady.opening&&CKR11.snapshot().cgReady.clear",timeout=30000)
@@ -36,7 +36,7 @@ try:
         page.screenshot(path=str(out/f'desktop-intro-{step}.png'))
         page.locator('#introNextBtn').click()
     expect(page.locator('#introOverlay')).to_be_hidden();assert snap(page)['introFinished'] is True and snap(page)['introSeen'] is True
-    assert page.evaluate("()=>localStorage.getItem('clinic_kitchen_intro_seen_v12_cg')")=='true'
+    assert page.evaluate("()=>localStorage.getItem('clinic_kitchen_intro_seen_v13_cg3')")=='true'
     page.reload(wait_until='networkidle');page.wait_for_function("()=>window.CKR11&&CKR11World.snapshot().ready")
     expect(page.locator('#introOverlay')).to_be_visible();assert snap(page)['introStep']==0 and snap(page)['introSeen'] is True
     page.locator('#introNextBtn').click();expect(page.locator('#introOverlay')).to_be_hidden()
@@ -220,6 +220,9 @@ try:
     expect(rapid.locator('#rapidServeBtn')).to_be_visible()
     old_ticket=snap(rapid)['ticket'];rapid.locator('#rapidServeBtn').click();rapid.wait_for_function("()=>CKR11.snapshot().stage==='rapid-reward'",timeout=5000)
     expect(rapid.locator('#rapidRewardArt')).to_be_visible();rapid.wait_for_function("()=>rapidRewardArt.src.startsWith('data:image/webp;base64,')&&rapidRewardArt.complete&&rapidRewardArt.naturalWidth>0",timeout=10000)
+    expect(rapid.locator('#rapidRewardDoctor')).to_be_visible();expect(rapid.locator('#rapidRewardPatient')).to_be_visible()
+    assert rapid.locator('#rapidRewardDoctor').get_attribute('src').endswith('.webp')
+    assert rapid.locator('#rapidRewardPatient').get_attribute('src').endswith('.webp')
     assert snap(rapid)['ordersCompleted']==1 and snap(rapid)['streak']==1
     rapid.screenshot(path=str(out/'mobile-rapid-reward-cg.png'),full_page=True)
     rapid.locator('#rapidRewardContinueBtn').click();rapid.wait_for_function("(t)=>CKR11.snapshot().ticket===t+1",arg=old_ticket,timeout=5000)

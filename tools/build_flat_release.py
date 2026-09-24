@@ -78,7 +78,7 @@ def main():
         'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
         'renderer':'canvas-chibi-r11',
         'release_status':'BUILD_VERIFIED_PENDING_DEPLOYMENT',
-        'gameplay_version':'R11_INTERACTIVE_KITCHEN_M6',
+        'gameplay_version':'R11_INTERACTIVE_KITCHEN_M7',
         'files':[]
     }
     for rel in sorted(files):
