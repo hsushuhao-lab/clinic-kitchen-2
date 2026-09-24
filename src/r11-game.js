@@ -1,4 +1,4 @@
-/* R11 M5: doctor select + consult + deliberate prep + manual wok + serve/delivery/result + patient pressure/failure. */
+/* R11 M6: doctor select + consult + deliberate prep + manual wok + serve/delivery/result + patient pressure/failure. */
 (() => {
   'use strict';
   const rules=window.CKClinicRules;
@@ -54,18 +54,23 @@
     normal:{id:'normal',name:'主治醫 · NORMAL',tag:'正常夜班',detail:'症狀資訊完整，病人等待照常累積。'},
     hard:{id:'hard',name:'夜班急診 · HARD',tag:'高壓值班',detail:'病人更沒耐心，煩躁速度 +20%。'}
   };
+  const gameModes={
+    rapid:{id:'rapid',name:'RAPID ORDER ARCADE',tag:'NEW · 推薦',detail:'同一畫面快速選料、翻炒、出餐，連續接下一位病人。'},
+    classic:{id:'classic',name:'CLASSIC SHIFT',tag:'完整流程',detail:'保留 CONSULT → PREP → WOK → SERVE 的原本玩法。'}
+  };
   const INTRO_KEY='clinic_kitchen_intro_seen_v11';
   const introSeenAtLoad=(()=>{try{return localStorage.getItem(INTRO_KEY)==='true';}catch(_){return false;}})();
   const blankPortions=()=>Object.fromEntries(foodOrder.map(id=>[id,0]));
   const blankTouched=()=>Object.fromEntries(foodOrder.map(id=>[id,false]));
   const state={
-    version:'R11_INTERACTIVE_KITCHEN_M5',ticket:1,patientIndex:0,doctor:null,difficulty:'easy',stage:'doctor-select',traveling:false,
+    version:'R11_INTERACTIVE_KITCHEN_M6',ticket:1,patientIndex:0,doctor:null,difficulty:'easy',mode:'rapid',stage:'doctor-select',traveling:false,
     portions:blankPortions(),touched:blankTouched(),activeFood:'tofu',prepResult:null,
     irritation:0,paused:document.hidden,lastTick:performance.now(),gameOver:false,
     heatLevel:'off',wokPhase:'heat',stirCount:0,stirPulse:false,dropPulse:false,lastStirAt:0,lastDropAt:0,heatSamples:[],dropIndex:0,dropScores:[],combo:0,maxCombo:0,lastStirTiming:'',microEvent:null,eventSchedule:[],rescuedEvents:0,eventMisses:0,actionFeedback:'',simmerSeconds:0,simmerQuality:null,cookingResult:null,
     rice:null,miso:null,serviceResult:null,finalResult:null,won:null,ordersCompleted:0,streak:0,
     musicEnabled:true,cutInActive:false,complaintShown:{55:false,75:false,90:false},
     nextInterferenceAt:0,interferenceText:'',
+    rapidGoal:10,rapidStirs:0,rapidScore:0,rapidFeedback:'',
     introStep:0,introFinished:false,introSeen:introSeenAtLoad,introReplay:false
   };
 
@@ -170,7 +175,7 @@
   }
   function dismissComplaintCutIn(){
     eventOverlay.hidden=true;state.cutInActive=false;state.lastTick=performance.now();
-    statusBar.textContent='R11 M5 · 病人等候計時中';
+    statusBar.textContent='R11 M6 · 病人等候計時中';
   }
   function checkComplaintCutIns(){
     if(state.cutInActive||state.gameOver)return;
@@ -200,6 +205,7 @@
     consult:['「有看到我嗎？我真的很餓。」','「醫師，可以快一點嗎？」','「我今天真的沒耐心等太久。」'],
     prep:['「你有記住我的需求吧？」','「還要選多久？我快受不了了。」','「那個份量真的對嗎？」','「拜託不要弄錯，我已經很煩了。」'],
     wok:['「好香…但到底還要多久？」','「不要燒焦啊！」','「火是不是太大了？」','「快一點，我真的快翻桌了！」'],
+    arcade:['「下一份是我的吧？」','「你還在挑料嗎？快一點！」','「不要漏掉我的餐！」','「我已經盯著你炒很久了！」'],
     serve:['「我的餐好了沒？」','「飯跟湯別送錯喔。」','「拜託現在就送過來。」']
   };
   function scheduleInterference(now=performance.now()){state.nextInterferenceAt=now+4000+Math.random()*4000;}
@@ -213,13 +219,17 @@
   }
   function maybePatientInterference(now){
     if(!state.doctor||state.paused||state.gameOver||state.cutInActive)return;
-    if(!['consult','prep','wok','serve'].includes(state.stage))return;
+    if(!['consult','prep','wok','arcade','serve'].includes(state.stage))return;
     if(!state.nextInterferenceAt)scheduleInterference(now);
     if(now>=state.nextInterferenceAt)showPatientInterference();
   }
   function setDifficulty(id){
     if(state.doctor||!difficulties[id])return;
     state.difficulty=id;renderPatient();renderStage();
+  }
+  function setGameMode(id){
+    if(state.doctor||!gameModes[id])return;
+    state.mode=id;renderStage();
   }
   function renderPressure(){
     const value=Math.max(0,Math.min(100,state.irritation)),[emoji,label]=mood();
@@ -248,7 +258,7 @@
   function handleVisibility(hidden=document.hidden){
     state.paused=!!hidden;state.lastTick=performance.now();
     if(audioCtx){if(state.paused)audioCtx.suspend?.();else if(state.musicEnabled)audioCtx.resume?.();}
-    statusBar.textContent=state.paused?'遊戲暫停：切回頁面後繼續計時':'R11 M5 · 病人等候計時中';
+    statusBar.textContent=state.paused?'遊戲暫停：切回頁面後繼續計時':'R11 M6 · 病人等候計時中';
   }
   document.addEventListener('visibilitychange',()=>handleVisibility(document.hidden));
 
@@ -296,15 +306,18 @@
   function chooseDoctor(id){
     if(!doctors[id])return;state.doctor=id;state.stage='consult';state.irritation=0;state.lastTick=performance.now();state.paused=document.hidden;state.gameOver=false;
     state.cutInActive=false;state.complaintShown={55:false,75:false,90:false};eventOverlay.hidden=true;
-    scheduleInterference();startMusic();world.setDoctor(id);world.reset();updateDoctorHud();renderPatient();renderStage();statusBar.textContent='R11 M5 · 病人等候計時中';
+    scheduleInterference();startMusic();world.setDoctor(id);world.reset();updateDoctorHud();renderPatient();renderStage();statusBar.textContent='R11 M6 · 病人等候計時中';
   }
   function renderDoctorSelect(){
-    const n=shell('SHIFT START · CHOOSE YOUR DOCTOR','今天由誰值班？','選擇今晚的值班強度與主角醫師。');
+    const n=shell('SHIFT START · CHOOSE YOUR DOCTOR','今天由誰值班？','先選玩法，再選今晚的值班強度與主角醫師。');
+    const mode=document.createElement('div');mode.className='mode-select';
+    Object.values(gameModes).forEach(m=>{const b=button('',m.name,'mode-btn');b.dataset.mode=m.id;b.setAttribute('aria-pressed',String(state.mode===m.id));b.innerHTML=`<small>${m.tag}</small><strong>${m.name}</strong><span>${m.detail}</span>`;b.addEventListener('click',()=>setGameMode(m.id));mode.append(b);});
+    n.append(mode);
     const difficulty=document.createElement('div');difficulty.className='difficulty-select';
     Object.values(difficulties).forEach(d=>{const b=button('',d.name,'difficulty-btn');b.dataset.difficulty=d.id;b.setAttribute('aria-pressed',String(state.difficulty===d.id));b.innerHTML=`<small>${d.tag}</small><strong>${d.name}</strong><span>${d.detail}</span>`;b.addEventListener('click',()=>setDifficulty(d.id));difficulty.append(b);});
     n.append(difficulty);
     const grid=document.createElement('div');grid.className='doctor-grid';Object.values(doctors).forEach(d=>grid.append(doctorCard(d)));n.append(grid);
-    const note=document.createElement('div');note.className='game-note';note.innerHTML=`<strong>${difficulties[state.difficulty].name}</strong><span>看病人 → 選配料 → 炒鍋 → 配餐 → 送餐。</span>`;n.append(note);return n;
+    const note=document.createElement('div');note.className='game-note';note.innerHTML=`<strong>${gameModes[state.mode].name} · ${difficulties[state.difficulty].name}</strong><span>${state.mode==='rapid'?'快速選料 → 翻炒3次 → 立即出餐 → 下一位病人':'看病人 → 選配料 → 炒鍋 → 配餐 → 送餐'}</span>`;n.append(note);return n;
   }
   function renderConsult(){
     const p=patient(),pres=rx(),d=difficulties[state.difficulty];
@@ -315,8 +328,63 @@
     const target=document.createElement('article');target.className='consult-box target-box';
     target.innerHTML=`<small>CLINICAL CLUES</small><strong>每種食材各有一個症狀線索</strong><p>卡片只顯示目前症狀分數，份量由你自己判斷。</p><div class="doctor-ability-inline">${doctors[state.doctor].name}：${doctors[state.doctor].ability}</div>`;
     layout.append(quote,target);n.append(layout);
-    const b=button('consultConfirmBtn',state.traveling?'醫師前往備料檯…':'看懂需求 → 前往備料檯','primary-action',state.traveling);
-    b.addEventListener('click',async()=>{if(state.traveling)return;state.traveling=true;renderStage();await world.goTo('prep',{messageText:'Q版醫師跑向備料檯'});state.traveling=false;state.stage='prep';renderStage();});n.append(actionRow(b));return n;
+    const b=button('consultConfirmBtn',state.traveling?'準備中…':state.mode==='rapid'?'看懂需求 → 開始快炒':'看懂需求 → 前往備料檯','primary-action',state.traveling);
+    b.addEventListener('click',async()=>{
+      if(state.traveling)return;
+      if(state.mode==='rapid'){
+        state.stage='arcade';state.portions=blankPortions();state.touched=blankTouched();state.rapidStirs=0;state.rapidFeedback='';state.irritation=0;scheduleInterference();world.setMessage('RAPID ORDER：快速選料');renderStage();return;
+      }
+      state.traveling=true;renderStage();await world.goTo('prep',{messageText:'Q版醫師跑向備料檯'});state.traveling=false;state.stage='prep';renderStage();
+    });n.append(actionRow(b));return n;
+  }
+
+  function cycleRapidPortion(id){
+    const values=[0,.5,1],cur=state.touched[id]?state.portions[id]:0;
+    const next=state.touched[id]?values[(values.indexOf(cur)+1)%values.length]:0;
+    state.portions[id]=next;state.touched[id]=true;state.rapidFeedback=`${food[id].name}：${portionLabel(next)}`;renderStage();
+  }
+  function rapidLane(id){
+    const m=food[id],score=symptomScore100(m.symptom),lane=document.createElement('button');lane.type='button';lane.className='rapid-lane'+(state.touched[id]?' is-touched':'');lane.dataset.food=id;
+    const selected=state.touched[id]?portionLabel(state.portions[id]):'未選';
+    lane.innerHTML=`<small>${m.target}</small><strong>${m.name}</strong><b>${score}</b><div class="rapid-stack">${Array.from({length:5},()=>`<img src="${m.img}" alt="">`).join('')}</div><span>${selected}</span>`;
+    lane.addEventListener('click',()=>cycleRapidPortion(id));return lane;
+  }
+  function rapidDecided(){return foodOrder.every(id=>state.touched[id]);}
+  function rapidStir(){
+    if(!rapidDecided()||state.rapidStirs>=3)return;
+    state.rapidStirs+=1;state.rapidFeedback=state.rapidStirs===3?'🔥 炒好了！現在出餐':'翻炒！ COMBO ×'+state.rapidStirs;renderStage();
+  }
+  function resetRapidRound(){
+    state.portions=blankPortions();state.touched=blankTouched();state.rapidStirs=0;state.rapidFeedback='';state.irritation=0;state.cutInActive=false;state.complaintShown={55:false,75:false,90:false};eventOverlay.hidden=true;scheduleInterference();
+  }
+  function finishRapidOrder(){
+    if(!rapidDecided()||state.rapidStirs<3)return;
+    const prep=scorePrep();state.prepResult=prep;
+    if(!prep.gateB_pass){
+      state.streak=0;state.finalResult={total:prep.fidelity,won:false,valid:false,rawRank:'—',rank:'—',stars:0,problems:[prep.missingBase?'缺少豆腐或絞肉：本單直接 0 分':'配料處方未達 Gate B'],weakest:['Prescription',prep.fidelity],prescriptionFidelity:prep.fidelity,cookingQuality:100,serviceFidelity:100,speedScore:Math.max(0,Math.round(100-state.irritation)),patientMood:Math.max(0,Math.round(100-state.irritation)),basePresent:prep.basePresent,missingBase:prep.missingBase};
+      state.gameOver=true;state.stage='rejected-cutin';playFailureSting();world.setMessage('ORDER REJECTED!');renderStage();return;
+    }
+    state.ordersCompleted+=1;state.streak+=1;state.rapidScore+=100+Math.max(0,state.streak-1)*10;
+    state.rapidFeedback=`PERFECT ORDER! +${100+Math.max(0,state.streak-1)*10}`;
+    if(state.ordersCompleted>=state.rapidGoal){
+      state.finalResult={total:Math.min(100,80+state.streak*2),rank:state.streak>=8?'S':'A'};state.won=true;state.gameOver=true;state.stage='victory';playVictoryJingle();renderStage();return;
+    }
+    state.ticket+=1;state.patientIndex=(state.patientIndex+1)%rules.patients.length;resetRapidRound();renderPatient();renderStage();
+  }
+  function renderArcade(){
+    const p=patient(),n=document.createElement('div');n.className='stage-shell rapid-shell';
+    n.innerHTML=`<div class="rapid-top"><div><small>RAPID ORDER ARCADE</small><strong>ORDERS ${state.ordersCompleted}/${state.rapidGoal}</strong></div><div class="rapid-streak">STREAK ×${state.streak}</div></div>`;
+    const crowd=document.createElement('div');crowd.className='rapid-crowd';
+    const prev=rules.patients[(state.patientIndex+rules.patients.length-1)%rules.patients.length],next=rules.patients[(state.patientIndex+1)%rules.patients.length];
+    crowd.innerHTML=`<div class="rapid-customer side"><img src="assets/service/${prev.id}.webp" alt=""><span>WAITING</span></div><div class="rapid-kitchen"><img class="rapid-doctor" src="${doctors[state.doctor].art}" alt="${doctors[state.doctor].name}"><img class="rapid-dish" src="assets/cooking/dish_plated.png" alt="麻婆豆腐"><div class="rapid-order-card"><small>NOW SERVING ${String(state.ticket).padStart(3,'0')}</small><strong>${p.name}</strong><span>${p.complaint}</span></div><em>${state.rapidFeedback||'點下面食材欄決定份量'}</em></div><div class="rapid-customer side"><img src="assets/service/${next.id}.webp" alt=""><span>NEXT</span></div>`;
+    n.append(crowd);
+    const meter=document.createElement('div');meter.className='rapid-meter';meter.innerHTML=`<strong>${decidedCount()}/7 食材</strong><span>${Math.round(state.irritation)}% 煩躁</span><i><b style="width:${decidedCount()/7*100}%"></b></i>`;n.append(meter);
+    const lanes=document.createElement('div');lanes.className='rapid-lanes';foodOrder.forEach(id=>lanes.append(rapidLane(id)));n.append(lanes);
+    const action=document.createElement('div');action.className='rapid-action';
+    if(!rapidDecided())action.innerHTML=`<button type="button" disabled>還有 ${7-decidedCount()} 項未判斷</button>`;
+    else if(state.rapidStirs<3){const b=button('rapidStirBtn',`翻炒！ ${state.rapidStirs}/3`,'rapid-main-btn');b.addEventListener('click',rapidStir);action.append(b);}
+    else{const b=button('rapidServeBtn','立即出餐！','rapid-main-btn is-ready');b.addEventListener('click',finishRapidOrder);action.append(b);}
+    n.append(action);return n;
   }
 
   function ingredientCard(id){
@@ -447,7 +515,7 @@
     state.traveling=true;renderStage();world.setCarry(true);
     await world.goTo('serve',{carry:true,messageText:'起鍋！端去配餐檯'});
     world.setCarry(false);state.traveling=false;state.stage='serve';world.setMessage('配飯、味噌湯，再送餐');
-    renderStage();statusBar.textContent='R11 M5 · 配餐中，病人仍在等待';
+    renderStage();statusBar.textContent='R11 M6 · 配餐中，病人仍在等待';
   }
   function updateWokLive(){
     const timer=$('simmerSeconds');if(timer)timer.textContent=state.simmerSeconds.toFixed(1)+' 秒';
@@ -575,7 +643,7 @@
     const reason=(r.problems&&r.problems.length?r.problems:['餐點規格不符']).map(x=>'• '+x).join('<br>');
     scene.innerHTML=`<img class="rejected-bg" src="assets/r11/events/complaint_90.webp" alt="病人暴怒"><img class="rejected-doctor" src="${doctors[state.doctor].bump}" alt="${doctors[state.doctor].name} 頭上腫包"><div class="rejected-impact">砰！</div><div class="rejected-copy"><small>ORDER REJECTED</small><strong>${doctors[state.doctor].name} 被揍得頭上腫一包！</strong><span>${reason}</span></div>`;
     n.append(scene);
-    const b=button('rejectedContinueBtn','查看退回原因 →','primary-action');b.addEventListener('click',()=>{state.stage='result';renderStage();statusBar.textContent='R11 M5 · RESULT';});n.append(actionRow(b));return n;
+    const b=button('rejectedContinueBtn','查看退回原因 →','primary-action');b.addEventListener('click',()=>{state.stage='result';renderStage();statusBar.textContent='R11 M6 · RESULT';});n.append(actionRow(b));return n;
   }
   function renderResult(){
     const r=state.finalResult;
@@ -617,19 +685,20 @@
     state.stage='consult';state.traveling=false;state.portions=blankPortions();state.touched=blankTouched();state.activeFood='tofu';state.prepResult=null;state.irritation=0;state.gameOver=false;
     state.heatLevel='off';state.wokPhase='heat';state.stirCount=0;state.stirPulse=false;state.dropPulse=false;state.lastStirAt=0;state.lastDropAt=0;state.heatSamples=[];state.dropIndex=0;state.dropScores=[];state.combo=0;state.maxCombo=0;state.lastStirTiming='';state.microEvent=null;state.eventSchedule=buildEventSchedule();state.rescuedEvents=0;state.eventMisses=0;state.actionFeedback='';state.simmerSeconds=0;state.simmerQuality=null;state.cookingResult=null;
     state.rice=null;state.miso=null;state.serviceResult=null;state.finalResult=null;state.won=null;state.cutInActive=false;state.complaintShown={55:false,75:false,90:false};state.interferenceText='';patientInterference.hidden=true;eventOverlay.hidden=true;state.lastTick=performance.now();
-    scheduleInterference();startMusic();world.reset();world.setDoctor(state.doctor);renderStage();statusBar.textContent='R11 M5 · 病人等候計時中';
+    scheduleInterference();startMusic();world.reset();world.setDoctor(state.doctor);renderStage();statusBar.textContent='R11 M6 · 病人等候計時中';
   }
 
   function renderStage(){
     renderPatient();updateDoctorHud();
     gameMain.classList.toggle('is-result-mode',state.stage==='result');
     gameMain.classList.toggle('is-victory-mode',state.stage==='victory');
-    const views={'doctor-select':renderDoctorSelect,consult:renderConsult,prep:renderPrep,wok:renderWok,serve:renderServe,delivery:renderDelivery,victory:renderVictory,'rejected-cutin':renderRejected,result:renderResult,'fail-table-flip':renderFailure};
+    gameMain.classList.toggle('is-rapid-mode',state.stage==='arcade');
+    const views={'doctor-select':renderDoctorSelect,consult:renderConsult,arcade:renderArcade,prep:renderPrep,wok:renderWok,serve:renderServe,delivery:renderDelivery,victory:renderVictory,'rejected-cutin':renderRejected,result:renderResult,'fail-table-flip':renderFailure};
     const view=views[state.stage];if(!view)throw new Error('Unknown R11 stage '+state.stage);stagePanel.replaceChildren(view());
   }
 
   window.CKR11={
-    snapshot:()=>({version:state.version,ticket:state.ticket,patient:patient(),prescription:rx(),doctor:state.doctor,difficulty:state.difficulty,irritationRate:Number(irritationRate().toFixed(4)),stage:state.stage,traveling:state.traveling,portions:{...state.portions},touched:{...state.touched},prepResult:state.prepResult,irritation:Number(state.irritation.toFixed(3)),paused:state.paused,gameOver:state.gameOver,heatLevel:state.heatLevel,wokPhase:state.wokPhase,stirCount:state.stirCount,simmerSeconds:Number(state.simmerSeconds.toFixed(3)),simmerQuality:state.simmerQuality,cookingResult:state.cookingResult,dropIndex:state.dropIndex,wokBatchCount:activeWokBatches().length,combo:state.combo,maxCombo:state.maxCombo,lastStirTiming:state.lastStirTiming,microEvent:state.microEvent,eventSchedule:state.eventSchedule.map(e=>({...e})),rescuedEvents:state.rescuedEvents,eventMisses:state.eventMisses,rice:state.rice,miso:state.miso,serviceResult:state.serviceResult,finalResult:state.finalResult,won:state.won,ordersCompleted:state.ordersCompleted,streak:state.streak,musicEnabled:state.musicEnabled,musicInterval:musicInterval(),cutInActive:state.cutInActive,complaintShown:{...state.complaintShown},interferenceText:state.interferenceText,introStep:state.introStep,introFinished:state.introFinished,introSeen:state.introSeen,introReplay:state.introReplay,world:world.snapshot()}),
+    snapshot:()=>({version:state.version,ticket:state.ticket,patient:patient(),prescription:rx(),doctor:state.doctor,difficulty:state.difficulty,mode:state.mode,rapidGoal:state.rapidGoal,rapidStirs:state.rapidStirs,rapidScore:state.rapidScore,irritationRate:Number(irritationRate().toFixed(4)),stage:state.stage,traveling:state.traveling,portions:{...state.portions},touched:{...state.touched},prepResult:state.prepResult,irritation:Number(state.irritation.toFixed(3)),paused:state.paused,gameOver:state.gameOver,heatLevel:state.heatLevel,wokPhase:state.wokPhase,stirCount:state.stirCount,simmerSeconds:Number(state.simmerSeconds.toFixed(3)),simmerQuality:state.simmerQuality,cookingResult:state.cookingResult,dropIndex:state.dropIndex,wokBatchCount:activeWokBatches().length,combo:state.combo,maxCombo:state.maxCombo,lastStirTiming:state.lastStirTiming,microEvent:state.microEvent,eventSchedule:state.eventSchedule.map(e=>({...e})),rescuedEvents:state.rescuedEvents,eventMisses:state.eventMisses,rice:state.rice,miso:state.miso,serviceResult:state.serviceResult,finalResult:state.finalResult,won:state.won,ordersCompleted:state.ordersCompleted,streak:state.streak,musicEnabled:state.musicEnabled,musicInterval:musicInterval(),cutInActive:state.cutInActive,complaintShown:{...state.complaintShown},interferenceText:state.interferenceText,introStep:state.introStep,introFinished:state.introFinished,introSeen:state.introSeen,introReplay:state.introReplay,world:world.snapshot()}),
     __qaSetHidden:v=>handleVisibility(!!v),
     __qaSetIrritation:v=>{state.irritation=Math.max(0,Math.min(100,Number(v)||0));renderPressure();},
     __qaTriggerComplaint:v=>showComplaintCutIn(Number(v)),
@@ -637,7 +706,8 @@
     __qaSetEventSchedule:(first,second)=>qaSetEventSchedule(first,second),
     __qaScoreFinal:m=>scoreFinalMetrics(m),
     __qaTriggerInterference:t=>{showPatientInterference(t);return state.interferenceText;},
-    __qaShowRejected:()=>{if(!state.doctor)return false;state.finalResult=state.finalResult||{total:88,won:false,valid:false,rawRank:'A',rank:'—',stars:0,problems:['配料份量不符'],weakest:['Prescription',50],prescriptionFidelity:50,cookingQuality:90,serviceFidelity:100,speedScore:90,patientMood:70};state.stage='rejected-cutin';state.gameOver=true;renderStage();return true;}
+    __qaShowRejected:()=>{if(!state.doctor)return false;state.finalResult=state.finalResult||{total:88,won:false,valid:false,rawRank:'A',rank:'—',stars:0,problems:['配料份量不符'],weakest:['Prescription',50],prescriptionFidelity:50,cookingQuality:90,serviceFidelity:100,speedScore:90,patientMood:70};state.stage='rejected-cutin';state.gameOver=true;renderStage();return true;},
+    __qaSetMode:id=>{if(!gameModes[id])return false;state.mode=id;renderStage();return true;}
   };
   renderSoundToggle();renderIntro();world.setMessage('先選擇值班醫師');renderStage();
 })();

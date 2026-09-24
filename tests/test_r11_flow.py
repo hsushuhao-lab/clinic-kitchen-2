@@ -1,4 +1,4 @@
-"""R11 M5 acceptance: doctor select + deliberate prep + manual wok + serve/delivery/result + timeout failure."""
+"""R11 M6 acceptance: doctor select + deliberate prep + manual wok + serve/delivery/result + timeout failure."""
 import argparse,json
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
@@ -21,7 +21,7 @@ try:
     page=browser.new_page(viewport={'width':1536,'height':1024});page.set_default_timeout(20000)
     page.on('pageerror',lambda e:errors.append(str(e)));page.on('response',lambda r:failed.append(f'{r.status} {r.url}') if r.status>=400 else None)
     res=page.goto(args.base_url,wait_until='networkidle');assert res and res.status==200
-    page.wait_for_function("()=>window.CKR11&&window.CKR11World&&CKR11.snapshot().version==='R11_INTERACTIVE_KITCHEN_M5'&&CKR11World.snapshot().ready",timeout=30000)
+    page.wait_for_function("()=>window.CKR11&&window.CKR11World&&CKR11.snapshot().version==='R11_INTERACTIVE_KITCHEN_M6'&&CKR11World.snapshot().ready",timeout=30000)
 
     expect(page.locator('#introOverlay')).to_be_visible()
     intro_paths=['title.webp','intro01.webp','complaint_55.webp','intro02.webp']
@@ -40,6 +40,11 @@ try:
     page.locator('#introReplayBtn').click();expect(page.locator('#introOverlay')).to_be_visible();page.locator('#introNextBtn').click();assert snap(page)['introStep']==1
     page.locator('#introSkipBtn').click();expect(page.locator('#introOverlay')).to_be_hidden()
     done('intro persists: returning players keep title screen, PRESS START skips story, replay remains available')
+
+    assert page.locator('.mode-btn').count()==2 and snap(page)['mode']=='rapid'
+    assert 'RAPID ORDER ARCADE' in page.locator('[data-mode="rapid"]').inner_text()
+    page.locator('[data-mode="classic"]').click();assert snap(page)['mode']=='classic'
+    done('Rapid Arcade is the default mode and Classic Shift remains available')
 
     assert page.locator('.difficulty-btn').count()==3
     easy_rate=snap(page)['irritationRate']
@@ -187,6 +192,30 @@ try:
     page.screenshot(path=str(out/'desktop-timeout-failure.png'),full_page=True);done('patient timeout still triggers table flip with selected doctor reaction')
 
     assert not errors,errors;assert not failed,failed;done('no uncaught JavaScript errors or failed runtime requests')
+    rapid=browser.new_page(viewport={'width':390,'height':844});rapid.set_default_timeout(20000)
+    rapid.goto(args.base_url,wait_until='networkidle');rapid.wait_for_function("()=>window.CKR11&&CKR11World.snapshot().ready")
+    rapid.locator('#introSkipBtn').click();expect(rapid.locator('#introOverlay')).to_be_hidden()
+    assert rapid.locator('.mode-btn').count()==2 and rapid.evaluate("()=>CKR11.snapshot().mode")=='rapid'
+    rapid.locator('[data-doctor="strategy"]').click();wait_stage(rapid,'consult')
+    rapid.locator('#consultConfirmBtn').click();wait_stage(rapid,'arcade')
+    assert rapid.locator('.rapid-lane').count()==7
+    expect(rapid.locator('.rapid-kitchen')).to_be_visible();expect(rapid.locator('.rapid-customer')).to_have_count(2)
+    assert rapid.evaluate('document.documentElement.scrollWidth<=innerWidth+2')
+    rapid_pres=snap(rapid)['prescription']['portions']
+    click_count={0:1,0.5:2,1:3}
+    for food,target in rapid_pres.items():
+        for _ in range(click_count[target]):rapid.locator(f'.rapid-lane[data-food="{food}"]').click()
+    assert rapid.locator('.rapid-lane.is-touched').count()==7
+    for i in range(3):
+        rapid.locator('#rapidStirBtn').click();assert snap(rapid)['rapidStirs']==i+1
+    expect(rapid.locator('#rapidServeBtn')).to_be_visible()
+    old_ticket=snap(rapid)['ticket'];rapid.locator('#rapidServeBtn').click();rapid.wait_for_function("(t)=>CKR11.snapshot().ticket===t+1",arg=old_ticket,timeout=5000)
+    assert snap(rapid)['stage']=='arcade' and snap(rapid)['ordersCompleted']==1 and snap(rapid)['streak']==1
+    assert rapid.locator('.rapid-lane').count()==7 and rapid.locator('.rapid-lane.is-touched').count()==0
+    rapid.screenshot(path=str(out/'mobile-rapid-arcade.png'),full_page=True)
+    done('M6 Rapid Arcade completes a full select → 3 stirs → serve → next patient loop on mobile')
+    rapid.close()
+
     browser.close()
 finally:
   (out/'report.json').write_text(json.dumps({'base_url':args.base_url,'checks':checks,'errors':errors,'failed_requests':failed},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
