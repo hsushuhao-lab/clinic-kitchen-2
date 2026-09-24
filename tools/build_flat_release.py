@@ -39,7 +39,7 @@ def main():
 
     files=list(CORE)
     for directory in ('assets/cooking','assets/ingredients/mapo_tofu','assets/ui','assets/r11/doctors','assets/r11/events','assets/r11/intro'):
-        files.extend(p.relative_to(ROOT).as_posix() for p in (ROOT/directory).iterdir() if p.is_file() and p.suffix in ('.png','.webp'))
+        files.extend(p.relative_to(ROOT).as_posix() for p in (ROOT/directory).iterdir() if p.is_file() and p.suffix in ('.png','.webp','.b64'))
     for directory in ('chibi','clinic','service'):
         manifest=json.loads((ROOT/f'assets/{directory}/manifest.json').read_text(encoding='utf-8'))
         files.extend(e['path'] for e in manifest['assets'])

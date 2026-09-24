@@ -24,10 +24,13 @@ try:
     page.wait_for_function("()=>window.CKR11&&window.CKR11World&&CKR11.snapshot().version==='R11_INTERACTIVE_KITCHEN_M6'&&CKR11World.snapshot().ready",timeout=30000)
 
     expect(page.locator('#introOverlay')).to_be_visible()
-    intro_paths=['title.webp','intro01.webp','complaint_55.webp','intro02.webp']
+    page.wait_for_function("()=>CKR11.snapshot().cgReady.opening&&CKR11.snapshot().cgReady.clear",timeout=30000)
+    intro_paths=[None,'intro01.webp','complaint_55.webp','intro02.webp']
     for step,path in enumerate(intro_paths):
         assert snap(page)['introStep']==step
-        assert path in page.locator('#introArt').get_attribute('src')
+        src=page.locator('#introArt').get_attribute('src')
+        if step==0: assert src.startswith('data:image/webp;base64,')
+        else: assert path in src
         page.wait_for_function("()=>introArt.complete&&introArt.naturalWidth>0")
         assert page.locator('#introTitle').evaluate("el=>parseFloat(getComputedStyle(el).fontSize)")>=38
         page.screenshot(path=str(out/f'desktop-intro-{step}.png'))
@@ -144,7 +147,7 @@ try:
 
     ticket=snap(page)['ticket'];patient_id=snap(page)['patient']['id']
     page.locator('#serveDoneBtn').click();page.wait_for_function("()=>CKR11.snapshot().stage==='victory'",timeout=5000)
-    expect(page.locator('#victoryArt')).to_be_visible();assert 'assets/r11/events/victory.webp' in page.locator('#victoryArt').get_attribute('src')
+    expect(page.locator('#victoryArt')).to_be_visible();assert page.locator('#victoryArt').get_attribute('src').startswith('data:image/webp;base64,')
     page.wait_for_function("()=>victoryArt.complete&&victoryArt.naturalWidth>0")
     assert page.locator('.victory-native-copy strong').evaluate("el=>parseFloat(getComputedStyle(el).fontSize)")>=34
     page.screenshot(path=str(out/'desktop-victory-clear.png'))

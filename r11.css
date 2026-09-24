@@ -330,3 +330,21 @@ img{display:block;max-width:100%}
   .rapid-lane .rapid-food-name{font-size:9px}
   .rapid-lane .rapid-symptom-line{font-size:7px}
 }
+
+/* R11 M6 cinematic CG integration */
+.intro-overlay.has-cg-opening .intro-art{animation:introCgPush 9s ease-out both;transform-origin:50% 45%}
+.intro-overlay.has-cg-opening .intro-vignette{background:linear-gradient(90deg,#07192240,#07192206 48%,#07192222),linear-gradient(0deg,#061823e6 0,#06182355 29%,transparent 61%)}
+.intro-overlay.has-cg-opening .intro-copy{filter:drop-shadow(0 5px 13px #000a)}
+@keyframes introCgPush{from{transform:scale(1.01)}to{transform:scale(1.075) translateY(-.7%)}}
+
+.cg-victory-shell .victory-art-wrap{background:#311a0b}
+.cg-victory-shell .victory-art{animation:victoryCgIn .72s cubic-bezier(.18,.85,.25,1) both;object-position:center}
+.cg-victory-shell .victory-art-wrap::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(circle at 50% 54%,transparent 35%,#4a1e0018 70%,#19090080 100%)}
+.victory-cg-glow{position:absolute;inset:-15%;z-index:2;pointer-events:none;background:radial-gradient(circle at 50% 48%,#ffd65a4f 0,transparent 35%);animation:victoryGlow 1s ease-in-out infinite alternate}
+.cg-victory-shell .victory-native-copy{z-index:3;background:linear-gradient(90deg,#083d52e8,#173f5ad4 62%,#173f5a3b)}
+@keyframes victoryCgIn{from{opacity:0;transform:scale(1.10)}to{opacity:1;transform:scale(1)}}
+@keyframes victoryGlow{to{opacity:.48;transform:scale(1.03)}}
+@media(max-width:720px){
+  .intro-overlay.has-cg-opening .intro-art{object-position:center center}
+  .cg-victory-shell .victory-art{object-fit:cover;object-position:center}
+}
