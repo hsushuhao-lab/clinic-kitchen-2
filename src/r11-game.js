@@ -58,7 +58,7 @@
     rapid:{id:'rapid',name:'RAPID ORDER ARCADE',tag:'NEW · 推薦',detail:'同一畫面快速選料、翻炒、出餐，連續接下一位病人。'},
     classic:{id:'classic',name:'CLASSIC SHIFT',tag:'完整流程',detail:'保留 CONSULT → PREP → WOK → SERVE 的原本玩法。'}
   };
-  const INTRO_KEY='clinic_kitchen_intro_seen_v11';
+  const INTRO_KEY='clinic_kitchen_intro_seen_v12_cg';
   const introSeenAtLoad=(()=>{try{return localStorage.getItem(INTRO_KEY)==='true';}catch(_){return false;}})();
   const blankPortions=()=>Object.fromEntries(foodOrder.map(id=>[id,0]));
   const blankTouched=()=>Object.fromEntries(foodOrder.map(id=>[id,false]));
@@ -76,7 +76,7 @@
 
   const cgAssets={opening:null,clear:null};
   async function loadChunkedCg(prefix,count=4){
-    const parts=await Promise.all(Array.from({length:count},(_,i)=>fetch(`${prefix}_${i}.b64?v=r11-m6-cg-1`).then(r=>{if(!r.ok)throw new Error('CG asset '+r.status);return r.text();})));
+    const parts=await Promise.all(Array.from({length:count},(_,i)=>fetch(`${prefix}_${i}.b64?v=r11-m6-cg-2`).then(r=>{if(!r.ok)throw new Error('CG asset '+r.status);return r.text();})));
     return 'data:image/webp;base64,'+parts.join('');
   }
   async function preloadCg(){
@@ -86,7 +86,7 @@
         loadChunkedCg('assets/r11/events/stage_clear_cg')
       ]);
       cgAssets.opening=opening;cgAssets.clear=clear;
-      if(!state.introFinished&&state.introStep===0&&introArt)introArt.src=opening;
+      if(!state.introFinished&&state.introStep===0&&introArt){introArt.src=opening;renderIntro();}
     }catch(err){console.warn('Clinic Kitchen CG preload failed',err);}
   }
 
@@ -387,7 +387,16 @@
     if(state.ordersCompleted>=state.rapidGoal){
       state.finalResult={total:Math.min(100,80+state.streak*2),rank:state.streak>=8?'S':'A'};state.won=true;state.gameOver=true;state.stage='victory';playVictoryJingle();renderStage();return;
     }
-    state.ticket+=1;state.patientIndex=(state.patientIndex+1)%rules.patients.length;resetRapidRound();renderPatient();renderStage();
+    state.gameOver=true;state.stage='rapid-reward';playVictoryJingle();renderStage();
+  }
+  function continueRapidAfterReward(){
+    state.gameOver=false;state.ticket+=1;state.patientIndex=(state.patientIndex+1)%rules.patients.length;resetRapidRound();renderPatient();state.stage='arcade';startMusic();renderStage();
+  }
+  function renderRapidReward(){
+    const p=patient(),n=document.createElement('div');n.className='stage-shell rapid-reward-shell cg-victory-shell';
+    const src=cgAssets.clear||'assets/r11/events/victory.webp';
+    n.innerHTML=`<div class="rapid-reward-art-wrap"><img id="rapidRewardArt" class="rapid-reward-art" src="${src}" alt="${p.name} 過關獎勵 CG"><div class="rapid-reward-glow" aria-hidden="true"></div><div class="rapid-reward-copy"><small>ORDER CLEAR · STREAK ×${state.streak}</small><strong>${p.name} 滿意了！</strong><span>${doctors[state.doctor].name} 完成這一單 · RAPID SCORE ${state.rapidScore}</span></div></div>`;
+    const b=button('rapidRewardContinueBtn','下一位病人 →','primary-action');b.addEventListener('click',continueRapidAfterReward);n.append(actionRow(b));return n;
   }
   function renderArcade(){
     const p=patient(),n=document.createElement('div');n.className='stage-shell rapid-shell';
@@ -710,9 +719,9 @@
   function renderStage(){
     renderPatient();updateDoctorHud();
     gameMain.classList.toggle('is-result-mode',state.stage==='result');
-    gameMain.classList.toggle('is-victory-mode',state.stage==='victory');
+    gameMain.classList.toggle('is-victory-mode',state.stage==='victory'||state.stage==='rapid-reward');
     gameMain.classList.toggle('is-rapid-mode',state.stage==='arcade');
-    const views={'doctor-select':renderDoctorSelect,consult:renderConsult,arcade:renderArcade,prep:renderPrep,wok:renderWok,serve:renderServe,delivery:renderDelivery,victory:renderVictory,'rejected-cutin':renderRejected,result:renderResult,'fail-table-flip':renderFailure};
+    const views={'doctor-select':renderDoctorSelect,consult:renderConsult,arcade:renderArcade,'rapid-reward':renderRapidReward,prep:renderPrep,wok:renderWok,serve:renderServe,delivery:renderDelivery,victory:renderVictory,'rejected-cutin':renderRejected,result:renderResult,'fail-table-flip':renderFailure};
     const view=views[state.stage];if(!view)throw new Error('Unknown R11 stage '+state.stage);stagePanel.replaceChildren(view());
   }
 

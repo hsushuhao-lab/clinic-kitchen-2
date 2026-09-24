@@ -199,6 +199,8 @@ try:
     assert not errors,errors;assert not failed,failed;done('no uncaught JavaScript errors or failed runtime requests')
     rapid=browser.new_page(viewport={'width':390,'height':844});rapid.set_default_timeout(20000)
     rapid.goto(args.base_url,wait_until='networkidle');rapid.wait_for_function("()=>window.CKR11&&CKR11World.snapshot().ready")
+    rapid.wait_for_function("()=>introArt.src.startsWith('data:image/webp;base64,')",timeout=10000)
+    expect(rapid.locator('#introArt')).to_be_visible();rapid.screenshot(path=str(out/'mobile-opening-cg.png'))
     rapid.locator('#introSkipBtn').click();expect(rapid.locator('#introOverlay')).to_be_hidden()
     assert rapid.locator('.mode-btn').count()==2 and rapid.evaluate("()=>CKR11.snapshot().mode")=='rapid'
     rapid.locator('[data-doctor="strategy"]').click();wait_stage(rapid,'consult')
@@ -216,11 +218,14 @@ try:
     for i in range(3):
         rapid.locator('#rapidStirBtn').click();assert snap(rapid)['rapidStirs']==i+1
     expect(rapid.locator('#rapidServeBtn')).to_be_visible()
-    old_ticket=snap(rapid)['ticket'];rapid.locator('#rapidServeBtn').click();rapid.wait_for_function("(t)=>CKR11.snapshot().ticket===t+1",arg=old_ticket,timeout=5000)
-    assert snap(rapid)['stage']=='arcade' and snap(rapid)['ordersCompleted']==1 and snap(rapid)['streak']==1
+    old_ticket=snap(rapid)['ticket'];rapid.locator('#rapidServeBtn').click();rapid.wait_for_function("()=>CKR11.snapshot().stage==='rapid-reward'",timeout=5000)
+    expect(rapid.locator('#rapidRewardArt')).to_be_visible();rapid.wait_for_function("()=>rapidRewardArt.src.startsWith('data:image/webp;base64,')&&rapidRewardArt.complete&&rapidRewardArt.naturalWidth>0",timeout=10000)
+    assert snap(rapid)['ordersCompleted']==1 and snap(rapid)['streak']==1
+    rapid.screenshot(path=str(out/'mobile-rapid-reward-cg.png'),full_page=True)
+    rapid.locator('#rapidRewardContinueBtn').click();rapid.wait_for_function("(t)=>CKR11.snapshot().ticket===t+1",arg=old_ticket,timeout=5000)
+    assert snap(rapid)['stage']=='arcade'
     assert rapid.locator('.rapid-lane').count()==7 and rapid.locator('.rapid-lane.is-touched').count()==0
-    rapid.screenshot(path=str(out/'mobile-rapid-arcade.png'),full_page=True)
-    done('M6 Rapid Arcade completes a full select → 3 stirs → serve → next patient loop on mobile')
+    done('M6 Rapid Arcade visibly plays CG reward before advancing to the next patient')
     rapid.close()
 
     browser.close()
