@@ -26,7 +26,7 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Verify live R11 source SHA and runtime files
         run: python tools/verify_public_build.py --url https://hsushuhao-lab.github.io/clinic-kitchen-2/ --expect-sha $(git rev-parse HEAD)
-      - name: Play published R11 M4 kitchen flow
+      - name: Play published R11 M5 kitchen flow
         run: python tests/test_r11_flow.py --base-url https://hsushuhao-lab.github.io/clinic-kitchen-2/ --output qa/public-r11
       - uses: actions/upload-artifact@v4
         if: always()

@@ -126,6 +126,36 @@
     };
   }
 
+  // R11/M5 uses a visible 0–100 symptom score on every ingredient card.
+  // 0–40 => 0 portion; 41–70 => half; 71–100 => full.
+  const R11_SYMPTOM_TARGETS = Object.freeze({
+    tofu:'craving',
+    pork:'appetite',
+    douban:'craving',
+    garlic:'irritability',
+    scallion:'concentration',
+    chili:'restlessness',
+    pepper:'anxiety'
+  });
+
+  function symptomSeverity100(value) {
+    return Math.max(0, Math.min(100, Math.round((Number(value) || 0) * 25)));
+  }
+
+  function severity100ToPortion(score) {
+    const v = Math.max(0, Math.min(100, Number(score) || 0));
+    if (v <= 40) return 0;
+    if (v <= 70) return 0.5;
+    return 1;
+  }
+
+  function buildR11ExpectedPortions(patient) {
+    const status = patient && patient.clinicalStatus || {};
+    return Object.fromEntries(Object.entries(R11_SYMPTOM_TARGETS).map(([id,key]) => [
+      id, severity100ToPortion(symptomSeverity100(status[key]))
+    ]));
+  }
+
   function buildClinicalPrescription(patient) {
     const s = patient.clinicalStatus || {};
     const portions = buildExpectedPortions(patient);
@@ -150,6 +180,28 @@
         chili: 'Restlessness',
         rice: 'Appetite',
         miso: 'Sleep'
+      })
+    });
+  }
+
+  function buildR11ClinicalPrescription(patient) {
+    const s = patient.clinicalStatus || {};
+    const portions = buildR11ExpectedPortions(patient);
+    return Object.freeze({
+      patientId: patient.id,
+      portions: Object.freeze({ ...portions }),
+      rice: Number(s.appetite || 0) >= 3 ? '\u6b63\u5e38\u98ef' : '\u534a\u7897\u98ef',
+      miso: Number(s.sleep || 0) >= 2,
+      targets: Object.freeze({
+        tofu:'Craving',
+        pork:'Appetite',
+        douban:'Craving',
+        garlic:'Irritability',
+        scallion:'Concentration',
+        chili:'Restlessness',
+        pepper:'Anxiety',
+        rice:'Appetite',
+        miso:'Sleep'
       })
     });
   }
@@ -577,11 +629,11 @@
   ));
 
   function evaluateR11Portions(portions, patient, options = {}) {
-    const expected = buildExpectedPortions(patient);
+    const expected = buildR11ExpectedPortions(patient);
     const doctor = options && options.doctor ? String(options.doctor) : '';
     const labelMap = {
-      tofu: '豆腐', pork: '絞肉', douban: '豆瓣醬→Craving', garlic: '蒜→Irritability',
-      scallion: '蔥→Concentration', chili: '辣椒→Restlessness', pepper: '花椒→Anxiety'
+      tofu:'豆腐→Craving', pork:'絞肉→Appetite', douban:'豆瓣醬→Craving', garlic:'蒜→Irritability',
+      scallion:'蔥→Concentration', chili:'辣椒→Restlessness', pepper:'花椒→Anxiety'
     };
     let penalty = 0;
     const checks = Object.keys(R11_INGREDIENTS).map(id => {
@@ -606,6 +658,11 @@
     symptomToTargetPortion,
     buildExpectedPortions,
     buildClinicalPrescription,
+    R11_SYMPTOM_TARGETS,
+    symptomSeverity100,
+    severity100ToPortion,
+    buildR11ExpectedPortions,
+    buildR11ClinicalPrescription,
     createWok,
     addBatchToWok,
     equivalentSimmerTime,

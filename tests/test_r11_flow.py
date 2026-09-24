@@ -1,4 +1,4 @@
-"""R11 M4 acceptance: doctor select + deliberate prep + manual wok + serve/delivery/result + timeout failure."""
+"""R11 M5 acceptance: doctor select + deliberate prep + manual wok + serve/delivery/result + timeout failure."""
 import argparse,json
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
@@ -21,10 +21,10 @@ try:
     page=browser.new_page(viewport={'width':1536,'height':1024});page.set_default_timeout(20000)
     page.on('pageerror',lambda e:errors.append(str(e)));page.on('response',lambda r:failed.append(f'{r.status} {r.url}') if r.status>=400 else None)
     res=page.goto(args.base_url,wait_until='networkidle');assert res and res.status==200
-    page.wait_for_function("()=>window.CKR11&&window.CKR11World&&CKR11.snapshot().version==='R11_INTERACTIVE_KITCHEN_M4'&&CKR11World.snapshot().ready",timeout=30000)
+    page.wait_for_function("()=>window.CKR11&&window.CKR11World&&CKR11.snapshot().version==='R11_INTERACTIVE_KITCHEN_M5'&&CKR11World.snapshot().ready",timeout=30000)
 
     expect(page.locator('#introOverlay')).to_be_visible()
-    intro_paths=['title.webp','intro01.webp','intro02.webp']
+    intro_paths=['title.webp','intro01.webp','complaint_55.webp','intro02.webp']
     for step,path in enumerate(intro_paths):
         assert snap(page)['introStep']==step
         assert path in page.locator('#introArt').get_attribute('src')
@@ -44,17 +44,13 @@ try:
     assert page.locator('.difficulty-btn').count()==3
     easy_rate=snap(page)['irritationRate']
     page.locator('[data-difficulty="normal"]').click();assert snap(page)['difficulty']=='normal'
-    assert all(x=='?' for x in page.locator('#symptomList .symptom-row > strong').all_text_contents())
-    assert '份' not in page.locator('#prescriptionGrid').inner_text()
+    assert '分' in page.locator('#prescriptionGrid').inner_text() and '建議' in page.locator('#prescriptionGrid').inner_text()
     page.locator('[data-difficulty="hard"]').click();assert snap(page)['difficulty']=='hard'
     hard_rate=snap(page)['irritationRate'];assert abs(hard_rate/easy_rate-1.20)<0.02,(easy_rate,hard_rate)
-    assert page.locator('#symptomList .symptom-row.is-qualitative').count()==7
-    assert page.locator('#symptomList .symptom-bar').count()==0
-    assert '處方份量已隱藏' in page.locator('#prescriptionGrid').inner_text()
+    assert '分' in page.locator('#prescriptionGrid').inner_text() and '建議' in page.locator('#prescriptionGrid').inner_text()
     page.locator('[data-difficulty="easy"]').click();assert snap(page)['difficulty']=='easy'
     assert page.locator('#symptomList .symptom-bar').count()==7
-    assert '份' in page.locator('#prescriptionGrid').inner_text()
-    done('Easy / Normal / Hard change CONSULT information and HARD pressure is exactly +20%')
+    done('all difficulties show ingredient severity scores while HARD pressure remains exactly +20%')
 
     assert page.locator('.doctor-card').count()==3
     for doctor in ['speed','heat','strategy']:
@@ -68,6 +64,9 @@ try:
     expect(page.locator('#soundToggle')).to_be_visible()
     page.locator('[data-doctor="heat"]').click();wait_stage(page,'consult');assert snap(page)['doctor']=='heat' and snap(page)['difficulty']=='easy' and snap(page)['world']['doctor']=='heat' and snap(page)['musicEnabled'] is True
     portrait=page.locator('#patientPortrait');expect(portrait).to_be_visible();assert portrait.get_attribute('src').endswith('/office.webp');page.wait_for_function("()=>patientPortrait.complete&&patientPortrait.naturalWidth>0")
+    assert page.evaluate("()=>CKR11.__qaTriggerInterference('「工程驗收：病人正在催單！」')").startswith('「工程驗收')
+    expect(page.locator('#patientInterference')).to_be_visible()
+    done('patient interference bubble can interrupt the active shift without pausing gameplay')
     assert page.locator('.stage-head h1').evaluate("el=>parseFloat(getComputedStyle(el).fontSize)")>=29
     assert page.locator('#patientComplaint').evaluate("el=>parseFloat(getComputedStyle(el).fontSize)")>=16
     for level in [55,75,90]:
@@ -84,7 +83,9 @@ try:
 
     page.locator('#consultConfirmBtn').click();wait_stage(page,'prep');assert page.locator('.ingredient-card').count()==7
     for food in ['tofu','pork','douban','garlic','scallion','chili','pepper']:assert page.locator(f'.ingredient-card[data-food="{food}"] .portion-btn').count()==3
-    assert page.locator('.fixed-pill').count()==0;done('all seven ingredients expose 0 / half / full controls')
+    tofu_text=page.locator('.ingredient-card[data-food="tofu"]').inner_text();assert 'Craving' in tofu_text and '75分' in tofu_text and '建議 1份' in tofu_text,tofu_text
+    pork_text=page.locator('.ingredient-card[data-food="pork"]').inner_text();assert 'Appetite' in pork_text and '25分' in pork_text and '建議 0份' in pork_text,pork_text
+    assert page.locator('.fixed-pill').count()==0;done('seven PREP cards show 0-100 symptom severity and recommended portion')
     pres=snap(page)['prescription']
     for food,target in pres['portions'].items():
         value='0.5' if target==0.5 else str(int(target));page.locator(portion_selector(food,value)).click()
@@ -112,7 +113,11 @@ try:
     done('WOK uses per-round event schedule and <300ms spam becomes TOO FAST with combo reset')
 
     page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(250)
-    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+2');box=page.locator('#startSimmerBtn').bounding_box();assert box and box['height']>=54
+    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+2')
+    expect(page.locator('#mobilePatientPeek')).to_be_visible();page.wait_for_function("()=>mobilePatientPortrait.complete&&mobilePatientPortrait.naturalWidth>0")
+    assert '上班族' in page.locator('#mobilePatientPeek').inner_text()
+    assert page.locator('.wok-main-action-slot .wok-action').count()==1
+    box=page.locator('#startSimmerBtn').bounding_box();assert box and box['height']>=54
     page.locator('#startSimmerBtn').click();page.wait_for_timeout(4700);sec=snap(page)['simmerSeconds'];assert 4.3<=sec<=5.6,sec
     page.locator('#finishSimmerBtn').click();wait_stage(page,'serve')
     result=snap(page)['cookingResult'];assert result and result['simmerKey']=='perfect' and result['cookingQuality']>=75,result
@@ -157,6 +162,13 @@ try:
             btn=page.locator(selector);btn.scroll_into_view_if_needed();box=btn.bounding_box();assert box and box['height']>=40 and box['width']>0
     page.set_viewport_size({'width':1536,'height':1024});page.wait_for_timeout(120)
     done('1366x768 and 810x1080 have no horizontal overflow and result actions remain reachable')
+
+    assert page.evaluate("()=>CKR11.__qaShowRejected()") is True
+    page.wait_for_function("()=>CKR11.snapshot().stage==='rejected-cutin'")
+    expect(page.locator('.rejected-doctor')).to_be_visible();assert 'doctor_heat_bump.webp' in page.locator('.rejected-doctor').get_attribute('src')
+    assert '被揍' in page.locator('.rejected-copy').inner_text() and 'ORDER REJECTED' in page.locator('.rejected-copy').inner_text()
+    page.locator('#rejectedContinueBtn').click();wait_stage(page,'result')
+    done('ORDER REJECTED plays doctor bump / hit cut-in before the result screen')
 
     page.locator('#nextPatientBtn').click();wait_stage(page,'consult')
     assert snap(page)['ticket']==ticket+1 and snap(page)['patient']['id']!=patient_id and snap(page)['doctor']=='heat'

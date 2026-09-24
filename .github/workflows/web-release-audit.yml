@@ -39,7 +39,7 @@ jobs:
           python tools/verify_assets.py
           python tools/verify_shift_assets.py
           python tools/build_web_release.py
-      - name: Test runtime-only R11 M4 flow
+      - name: Test runtime-only R11 M5 flow
         run: |
           python -m http.server 8000 --bind 127.0.0.1 --directory web-dist > /tmp/ck-r11-release-http.log 2>&1 &
           sleep 2

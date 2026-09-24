@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#123f5a">
 <title>Clinic Kitchen R11 · Interactive Kitchen</title>
-<link rel="stylesheet" href="r11.css?v=r11-m4-difficulty-1">
+<link rel="stylesheet" href="r11.css?v=r11-m5-pressure-1">
 </head>
 <body>
 <div id="app">
@@ -46,7 +46,7 @@
     <details class="ftnd-card rail-detail">
       <summary><span>FTND BASELINE</span><strong><b id="ftndScore">-</b>/10 · <i id="ftndSeverity"></i></strong></summary>
       <div id="ftndItems" class="ftnd-items"></div>
-      <small>唯讀基線；本作的等待速度只是遊戲機制，不代表臨床因果。</small>
+      <small>戒菸基線資料</small>
     </details>
 
     <section class="symptom-card rail-detail">
@@ -63,6 +63,11 @@
   <main id="gameMain">
     <section id="worldStrip" class="world-strip" aria-label="Q版醫師自動跑圖">
       <canvas id="worldCanvas"></canvas>
+      <div id="mobilePatientPeek" class="mobile-patient-peek" aria-live="polite">
+        <img id="mobilePatientPortrait" src="" alt="">
+        <div><small id="mobilePatientName">病人</small><strong id="mobilePatientSpeech">正在等餐…</strong></div>
+      </div>
+      <div id="patientInterference" class="patient-interference" hidden aria-live="assertive"></div>
       <div class="station-labels" aria-hidden="true">
         <span><b>01 CONSULT</b><small>問診</small></span>
         <span><b>02 PREP</b><small>備料</small></span>
@@ -87,7 +92,7 @@
       <h1 id="introTitle">MAPO RESCUE SHIFT</h1>
       <p id="introBody">夜班開始前，準備接手今天最混亂的一班。</p>
     </div>
-    <div id="introProgress" class="intro-progress" aria-label="開場進度"><i></i><i></i><i></i></div>
+    <div id="introProgress" class="intro-progress" aria-label="開場進度"><i></i><i></i><i></i><i></i></div>
     <button id="introNextBtn" class="intro-next" type="button">PRESS START ▶</button>
     <button id="introSkipBtn" class="intro-skip" type="button">略過開場</button>
   </div>
@@ -105,8 +110,8 @@
   </div>
 </div>
 
-<script src="src/clinic-rules.js?v=r11-m4-difficulty-1"></script>
-<script src="src/r11-world.js?v=r11-m4-difficulty-1"></script>
-<script src="src/r11-game.js?v=r11-m4-difficulty-1"></script>
+<script src="src/clinic-rules.js?v=r11-m5-pressure-1"></script>
+<script src="src/r11-world.js?v=r11-m5-pressure-1"></script>
+<script src="src/r11-game.js?v=r11-m5-pressure-1"></script>
 </body>
 </html>
