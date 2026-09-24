@@ -50,6 +50,8 @@ try:
     easy_rate=snap(page)['irritationRate']
     page.locator('[data-difficulty="normal"]').click();assert snap(page)['difficulty']=='normal'
     assert '分' in page.locator('#prescriptionGrid').inner_text() and '建議' not in page.locator('#prescriptionGrid').inner_text()
+    first_clue=page.locator('#prescriptionGrid .rx-chip').first
+    assert first_clue.locator('.clue-food').count()==1 and first_clue.locator('.clue-symptom').count()==1
     page.locator('[data-difficulty="hard"]').click();assert snap(page)['difficulty']=='hard'
     hard_rate=snap(page)['irritationRate'];assert abs(hard_rate/easy_rate-1.20)<0.02,(easy_rate,hard_rate)
     assert '分' in page.locator('#prescriptionGrid').inner_text() and '建議' not in page.locator('#prescriptionGrid').inner_text()
@@ -199,6 +201,8 @@ try:
     rapid.locator('[data-doctor="strategy"]').click();wait_stage(rapid,'consult')
     rapid.locator('#consultConfirmBtn').click();wait_stage(rapid,'arcade')
     assert rapid.locator('.rapid-lane').count()==7
+    assert rapid.locator('.rapid-lane .rapid-food-name').count()==7
+    assert rapid.locator('.rapid-lane .rapid-symptom-line').count()==7
     expect(rapid.locator('.rapid-kitchen')).to_be_visible();expect(rapid.locator('.rapid-customer')).to_have_count(2)
     assert rapid.evaluate('document.documentElement.scrollWidth<=innerWidth+2')
     rapid_pres=snap(rapid)['prescription']['portions']

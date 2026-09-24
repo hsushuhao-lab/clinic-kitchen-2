@@ -310,3 +310,23 @@ img{display:block;max-width:100%}
   .rapid-lane>span{font-size:8px;left:2px;right:2px;bottom:3px}
   .rapid-action{min-height:52px}.rapid-action>button{min-height:50px;font-size:16px}
 }
+
+/* R11 M6 clue readability pass */
+.rx-chip{grid-template-columns:40px minmax(0,1fr);gap:8px;padding:7px 8px;align-items:center}
+.rx-chip img{width:40px;height:40px}
+.rx-chip .clue-copy{min-width:0;display:flex;flex-direction:column;gap:2px}
+.rx-chip .clue-food{display:block;font-size:12px;line-height:1.15;color:#174b5e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rx-chip .clue-symptom{display:block;font-size:10px;line-height:1.2;color:#7a8988;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.rapid-lane .rapid-food-name{display:block;margin-top:0;font-size:11px;line-height:1.15;color:white;text-shadow:0 1px 2px #654329;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rapid-lane .rapid-symptom-line{display:block;margin-top:3px;font-size:8px;line-height:1.15;color:#fff6d9;text-shadow:0 1px 2px #654329;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+@media(max-width:720px){
+  .prescription-grid{gap:7px}
+  .rx-chip{grid-template-columns:44px minmax(0,1fr);gap:8px;padding:8px}
+  .rx-chip img{width:44px;height:44px}
+  .rx-chip .clue-food{font-size:13px}
+  .rx-chip .clue-symptom{font-size:11px}
+  .rapid-lane .rapid-food-name{font-size:9px}
+  .rapid-lane .rapid-symptom-line{font-size:7px}
+}

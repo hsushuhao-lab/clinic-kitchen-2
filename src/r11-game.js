@@ -288,7 +288,7 @@
     const pres=rx(),grid=$('prescriptionGrid');
     grid.innerHTML=foodOrder.map(id=>{
       const score=symptomScore100(food[id].symptom);
-      return `<div class="rx-chip"><img src="${food[id].img}" alt=""><div><small>${food[id].target}</small><strong>${food[id].name} · 症狀 ${score}分</strong></div></div>`;
+      return `<div class="rx-chip"><img src="${food[id].img}" alt="${food[id].name}"><div class="clue-copy"><strong class="clue-food">${food[id].name}</strong><small class="clue-symptom">${food[id].target} · ${score}分</small></div></div>`;
     }).join('');
     renderPressure();
   }
@@ -346,7 +346,7 @@
   function rapidLane(id){
     const m=food[id],score=symptomScore100(m.symptom),lane=document.createElement('button');lane.type='button';lane.className='rapid-lane'+(state.touched[id]?' is-touched':'');lane.dataset.food=id;
     const selected=state.touched[id]?portionLabel(state.portions[id]):'未選';
-    lane.innerHTML=`<small>${m.target}</small><strong>${m.name}</strong><b>${score}</b><div class="rapid-stack">${Array.from({length:5},()=>`<img src="${m.img}" alt="">`).join('')}</div><span>${selected}</span>`;
+    lane.innerHTML=`<strong class="rapid-food-name">${m.name}</strong><small class="rapid-symptom-line">${m.target} · ${score}分</small><div class="rapid-stack">${Array.from({length:5},()=>`<img src="${m.img}" alt="${m.name}">`).join('')}</div><span>${selected}</span>`;
     lane.addEventListener('click',()=>cycleRapidPortion(id));return lane;
   }
   function rapidDecided(){return foodOrder.every(id=>state.touched[id]);}
